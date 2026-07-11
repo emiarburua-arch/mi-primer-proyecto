@@ -25,12 +25,15 @@ permitirte perder.
 Scalping de tendencia pensado para un **chart de 1 minuto de MES** durante las **primeras 2
 horas** después de la apertura del mercado americano (09:30–11:30 hora de mercado).
 
-Una operación solo se abre cuando **coinciden tres condiciones**:
+Una operación solo se abre cuando **coinciden cuatro condiciones**:
 
 1. **Dirección de tendencia**: la EMA rápida cruza a la EMA lenta.
 2. **Fuerza de tendencia** (define qué es "una tendencia"): el **ADX** está por encima de
    `TrendAdxThreshold`. Debajo de ese valor el mercado está lateral y no opera.
-3. **Volatilidad**: el **ATR** está dentro del rango `[MinAtrTicks, MaxAtrTicks]`. Filtra
+3. **Tendencia de mayor timeframe**: el precio de **60 minutos** está del lado correcto de su
+   EMA (largos solo si está por encima, cortos solo si está por debajo). Evita operar contra la
+   tendencia dominante.
+4. **Volatilidad**: el **ATR** está dentro del rango `[MinAtrTicks, MaxAtrTicks]`. Filtra
    mercado muerto (sin recorrido) y mercado demasiado errático.
 
 ### Parámetros
@@ -44,12 +47,19 @@ Una operación solo se abre cuando **coinciden tres condiciones**:
 - `MinEmaSeparationAtr` (0.10): las EMAs deben estar separadas al menos ese × ATR (evita
   whipsaw cuando están entrelazadas).
 
-**3. Volatility — define la volatilidad del mercado**
+**3. Higher-Timeframe Filter — tendencia de 60 min**
+- `UseHigherTimeframeFilter` (true): activa/desactiva el filtro. Con `false` opera solo con las
+  condiciones de 1 minuto.
+- `HtfMinutes` (60): timeframe de la serie de confirmación.
+- `HtfEmaPeriod` (50): EMA sobre la serie de 60 min. Solo permite **largos** si el cierre de 60
+  min está por encima de esa EMA, y **cortos** si está por debajo.
+
+**4. Volatility — define la volatilidad del mercado**
 - `AtrPeriod` (14): período del ATR.
 - `MinAtrTicks` (4 ≈ 1 punto) / `MaxAtrTicks` (40 ≈ 10 puntos): rango de volatilidad válido
   para operar. 1 tick de MES = 0.25 puntos = $1.25.
 
-**4. Exits — salidas adaptadas a la volatilidad**
+**5. Exits — salidas adaptadas a la volatilidad**
 - `StopAtrMultiple` (1.0) / `TargetAtrMultiple` (1.5): stop y objetivo en múltiplos de ATR
   (riesgo/beneficio dinámico según la volatilidad, no ticks fijos).
 - `BreakevenTriggerAtrMultiple` (1.0; 0 = desactivado): mueve el stop a la entrada cuando el
@@ -57,14 +67,14 @@ Una operación solo se abre cuando **coinciden tres condiciones**:
 - `MaxBarsInTrade` (15; 0 = desactivado): time-stop, cierra la operación tras N velas si no
   tocó stop ni objetivo.
 
-**5. Daily Risk — controles diarios**
+**6. Daily Risk — controles diarios**
 - `MaxDailyLossDollars` ($300): kill-switch; al alcanzar esa pérdida (realizada + abierta)
   cierra todo y no opera más ese día.
 - `MaxDailyTrades` (15): tope de operaciones por día.
 - `MaxConsecutiveLosses` (3): frena el día tras esa racha de pérdidas seguidas.
 - `CooldownBars` (1): velas de espera tras cerrar antes de volver a entrar.
 
-**6. Session — ventana horaria**
+**7. Session — ventana horaria**
 - `SessionStartHHMM` (930) / `SessionEndHHMM` (1130): opera solo en esa franja y se aplana al
   salir de ella. Ajustá estos valores a tu **zona horaria de la plataforma** (ver nota abajo).
 

@@ -29,6 +29,7 @@ namespace NinjaTrader.NinjaScript.Strategies
         private EMA slowEma;
         private ADX adx;
         private ATR atr;
+        private EMA htfEma;
 
         private double dailyRealizedPnL;
         private int dailyTradeCount;
@@ -73,6 +74,11 @@ namespace NinjaTrader.NinjaScript.Strategies
                 TrendAdxThreshold = 20;         // ADX above this = trending; below = chop, no trade
                 MinEmaSeparationAtr = 0.10;     // EMAs must be at least this * ATR apart
 
+                // --- Higher-timeframe trend filter ---
+                UseHigherTimeframeFilter = true;
+                HtfMinutes = 60;                // 60-minute confirmation series
+                HtfEmaPeriod = 50;              // longs only above this EMA, shorts only below
+
                 // --- Volatility definition / filter ---
                 AtrPeriod = 14;
                 MinAtrTicks = 4;                // ~1 MES point; below this the market is too dead
@@ -96,6 +102,10 @@ namespace NinjaTrader.NinjaScript.Strategies
             }
             else if (State == State.Configure)
             {
+                // Secondary 60-minute series used only for the higher-timeframe trend filter.
+                // Added unconditionally so BarsArray indexes stay stable; it is ignored when
+                // the filter is disabled.
+                AddDataSeries(BarsPeriodType.Minute, HtfMinutes);
             }
             else if (State == State.DataLoaded)
             {
@@ -103,6 +113,7 @@ namespace NinjaTrader.NinjaScript.Strategies
                 slowEma = EMA(SlowEmaPeriod);
                 adx = ADX(TrendAdxPeriod);
                 atr = ATR(AtrPeriod);
+                htfEma = EMA(BarsArray[1], HtfEmaPeriod);   // EMA on the 60-minute series
 
                 AddChartIndicator(fastEma);
                 AddChartIndicator(slowEma);
@@ -113,6 +124,11 @@ namespace NinjaTrader.NinjaScript.Strategies
 
         protected override void OnBarUpdate()
         {
+            // OnBarUpdate fires for every data series; run the logic only on the primary
+            // (1-minute) series. The 60-minute series just feeds htfEma.
+            if (BarsInProgress != 0)
+                return;
+
             if (CurrentBar < BarsRequiredToTrade)
                 return;
 
@@ -184,10 +200,20 @@ namespace NinjaTrader.NinjaScript.Strategies
             if (Math.Abs(fastEma[0] - slowEma[0]) < MinEmaSeparationAtr * atr[0])
                 return;
 
+            // Higher-timeframe (60-min) trend filter: only trade in the direction of the
+            // 60-minute trend. Longs require the 60-min close above its EMA, shorts below it.
+            bool htfReady = !UseHigherTimeframeFilter ||
+                (CurrentBars[1] >= HtfEmaPeriod);
+            if (!htfReady)
+                return;
+
+            bool htfUptrend = !UseHigherTimeframeFilter || Closes[1][0] > htfEma[0];
+            bool htfDowntrend = !UseHigherTimeframeFilter || Closes[1][0] < htfEma[0];
+
             int stopTicks = Math.Max(1, (int)Math.Round(atr[0] * StopAtrMultiple / TickSize));
             int targetTicks = Math.Max(1, (int)Math.Round(atr[0] * TargetAtrMultiple / TickSize));
 
-            if (CrossAbove(fastEma, slowEma, 1))
+            if (CrossAbove(fastEma, slowEma, 1) && htfUptrend)
             {
                 SetStopLoss("Long", CalculationMode.Ticks, stopTicks, false);
                 SetProfitTarget("Long", CalculationMode.Ticks, targetTicks);
@@ -195,7 +221,7 @@ namespace NinjaTrader.NinjaScript.Strategies
                 entryBar = CurrentBar;
                 movedToBreakeven = false;
             }
-            else if (CrossBelow(fastEma, slowEma, 1))
+            else if (CrossBelow(fastEma, slowEma, 1) && htfDowntrend)
             {
                 SetStopLoss("Short", CalculationMode.Ticks, stopTicks, false);
                 SetProfitTarget("Short", CalculationMode.Ticks, targetTicks);
@@ -300,68 +326,82 @@ namespace NinjaTrader.NinjaScript.Strategies
         public double MinEmaSeparationAtr { get; set; }
 
         [NinjaScriptProperty]
+        [Display(Name = "Use 60-min Trend Filter", Order = 1, GroupName = "3. Higher-Timeframe Filter")]
+        public bool UseHigherTimeframeFilter { get; set; }
+
+        [NinjaScriptProperty]
         [Range(1, int.MaxValue)]
-        [Display(Name = "ATR Period", Order = 1, GroupName = "3. Volatility")]
+        [Display(Name = "Higher-Timeframe Minutes", Order = 2, GroupName = "3. Higher-Timeframe Filter")]
+        public int HtfMinutes { get; set; }
+
+        [NinjaScriptProperty]
+        [Range(1, int.MaxValue)]
+        [Display(Name = "Higher-Timeframe EMA Period", Order = 3, GroupName = "3. Higher-Timeframe Filter")]
+        public int HtfEmaPeriod { get; set; }
+
+        [NinjaScriptProperty]
+        [Range(1, int.MaxValue)]
+        [Display(Name = "ATR Period", Order = 1, GroupName = "4. Volatility")]
         public int AtrPeriod { get; set; }
 
         [NinjaScriptProperty]
         [Range(0, double.MaxValue)]
-        [Display(Name = "Min ATR (ticks)", Order = 2, GroupName = "3. Volatility")]
+        [Display(Name = "Min ATR (ticks)", Order = 2, GroupName = "4. Volatility")]
         public double MinAtrTicks { get; set; }
 
         [NinjaScriptProperty]
         [Range(1, double.MaxValue)]
-        [Display(Name = "Max ATR (ticks)", Order = 3, GroupName = "3. Volatility")]
+        [Display(Name = "Max ATR (ticks)", Order = 3, GroupName = "4. Volatility")]
         public double MaxAtrTicks { get; set; }
 
         [NinjaScriptProperty]
         [Range(0.1, double.MaxValue)]
-        [Display(Name = "Stop Loss (x ATR)", Order = 1, GroupName = "4. Exits")]
+        [Display(Name = "Stop Loss (x ATR)", Order = 1, GroupName = "5. Exits")]
         public double StopAtrMultiple { get; set; }
 
         [NinjaScriptProperty]
         [Range(0.1, double.MaxValue)]
-        [Display(Name = "Take Profit (x ATR)", Order = 2, GroupName = "4. Exits")]
+        [Display(Name = "Take Profit (x ATR)", Order = 2, GroupName = "5. Exits")]
         public double TargetAtrMultiple { get; set; }
 
         [NinjaScriptProperty]
         [Range(0, double.MaxValue)]
-        [Display(Name = "Break-even Trigger (x ATR, 0=off)", Order = 3, GroupName = "4. Exits")]
+        [Display(Name = "Break-even Trigger (x ATR, 0=off)", Order = 3, GroupName = "5. Exits")]
         public double BreakevenTriggerAtrMultiple { get; set; }
 
         [NinjaScriptProperty]
         [Range(0, int.MaxValue)]
-        [Display(Name = "Max Bars In Trade (0=off)", Order = 4, GroupName = "4. Exits")]
+        [Display(Name = "Max Bars In Trade (0=off)", Order = 4, GroupName = "5. Exits")]
         public int MaxBarsInTrade { get; set; }
 
         [NinjaScriptProperty]
         [Range(1, double.MaxValue)]
-        [Display(Name = "Max Daily Loss ($)", Order = 1, GroupName = "5. Daily Risk")]
+        [Display(Name = "Max Daily Loss ($)", Order = 1, GroupName = "6. Daily Risk")]
         public double MaxDailyLossDollars { get; set; }
 
         [NinjaScriptProperty]
         [Range(1, int.MaxValue)]
-        [Display(Name = "Max Trades Per Day", Order = 2, GroupName = "5. Daily Risk")]
+        [Display(Name = "Max Trades Per Day", Order = 2, GroupName = "6. Daily Risk")]
         public int MaxDailyTrades { get; set; }
 
         [NinjaScriptProperty]
         [Range(1, int.MaxValue)]
-        [Display(Name = "Max Consecutive Losses", Order = 3, GroupName = "5. Daily Risk")]
+        [Display(Name = "Max Consecutive Losses", Order = 3, GroupName = "6. Daily Risk")]
         public int MaxConsecutiveLosses { get; set; }
 
         [NinjaScriptProperty]
         [Range(0, int.MaxValue)]
-        [Display(Name = "Cooldown Bars", Order = 4, GroupName = "5. Daily Risk")]
+        [Display(Name = "Cooldown Bars", Order = 4, GroupName = "6. Daily Risk")]
         public int CooldownBars { get; set; }
 
         [NinjaScriptProperty]
         [Range(0, 2359)]
-        [Display(Name = "Session Start (HHMM)", Order = 1, GroupName = "6. Session")]
+        [Display(Name = "Session Start (HHMM)", Order = 1, GroupName = "7. Session")]
         public int SessionStartHHMM { get; set; }
 
         [NinjaScriptProperty]
         [Range(0, 2359)]
-        [Display(Name = "Session End (HHMM)", Order = 2, GroupName = "6. Session")]
+        [Display(Name = "Session End (HHMM)", Order = 2, GroupName = "7. Session")]
         public int SessionEndHHMM { get; set; }
 
         #endregion
