@@ -44,8 +44,9 @@ Una operación solo se abre cuando **coinciden cuatro condiciones**:
 
 **2. Trend Strength — define qué es una tendencia**
 - `TrendAdxPeriod` (14) / `TrendAdxThreshold` (20): solo opera si ADX ≥ umbral.
-- `MinEmaSeparationAtr` (0.10): las EMAs deben estar separadas al menos ese × ATR (evita
-  whipsaw cuando están entrelazadas).
+- `EmaSlopeLookbackBars` (3) / `MinEmaSlopeTicks` (1): la EMA lenta debe haber avanzado al
+  menos esos ticks en la dirección del trade durante las últimas N velas (la "base" ya tiene
+  que apuntar hacia donde entramos; evita cruces en mercado plano).
 
 **3. Higher-Timeframe Filter — tendencia de 60 min**
 - `UseHigherTimeframeFilter` (true): activa/desactiva el filtro. Con `false` opera solo con las
@@ -56,14 +57,18 @@ Una operación solo se abre cuando **coinciden cuatro condiciones**:
 
 **4. Volatility — define la volatilidad del mercado**
 - `AtrPeriod` (14): período del ATR.
-- `MinAtrTicks` (4 ≈ 1 punto) / `MaxAtrTicks` (40 ≈ 10 puntos): rango de volatilidad válido
-  para operar. 1 tick de MES = 0.25 puntos = $1.25.
+- `MinAtrTicks` (8 ≈ 2 puntos) / `MaxAtrTicks` (40 ≈ 10 puntos): rango de volatilidad válido
+  para operar. 1 tick de MES = 0.25 puntos = $1.25. El mínimo de 8 ticks garantiza que cada
+  trade tenga recorrido suficiente para pagar comisiones y slippage (~$4 por round-trip).
 
 **5. Exits — salidas adaptadas a la volatilidad**
 - `StopAtrMultiple` (1.0) / `TargetAtrMultiple` (1.5): stop y objetivo en múltiplos de ATR
   (riesgo/beneficio dinámico según la volatilidad, no ticks fijos).
-- `BreakevenTriggerAtrMultiple` (1.0; 0 = desactivado): mueve el stop a la entrada cuando el
-  precio avanza ese × ATR a favor.
+- `BreakevenTriggerAtrMultiple` (0.65; 0 = desactivado): mueve el stop cerca de la entrada
+  cuando el precio avanza ese × ATR a favor.
+- `BreakevenOffsetTicks` (2): el stop de break-even se coloca esos ticks *más allá* de la
+  entrada, para que un trade "scratcheado" cubra las comisiones en vez de cerrar en pérdida
+  neta.
 - `MaxBarsInTrade` (15; 0 = desactivado): time-stop, cierra la operación tras N velas si no
   tocó stop ni objetivo.
 
@@ -73,10 +78,17 @@ Una operación solo se abre cuando **coinciden cuatro condiciones**:
 - `MaxDailyTrades` (15): tope de operaciones por día.
 - `MaxConsecutiveLosses` (3): frena el día tras esa racha de pérdidas seguidas.
 - `CooldownBars` (1): velas de espera tras cerrar antes de volver a entrar.
+- `MaxDailyProfitDollars` (0 = desactivado): al alcanzar esa ganancia diaria (realizada +
+  abierta) cierra todo y bloquea el día en verde.
 
-**7. Session — ventana horaria**
-- `SessionStartHHMM` (930) / `SessionEndHHMM` (1130): opera solo en esa franja y se aplana al
-  salir de ella. Ajustá estos valores a tu **zona horaria de la plataforma** (ver nota abajo).
+**7. Session — ventana horaria y noticias**
+- `SessionStartHHMM` (940) / `SessionEndHHMM` (1130): opera solo en esa franja y se aplana al
+  salir de ella. Arranca 09:40 para dejar pasar los primeros minutos caóticos del open (y que
+  el ATR deje de arrastrar velas de la sesión anterior). Ajustá estos valores a tu **zona
+  horaria de la plataforma** (ver nota abajo).
+- `UseNewsBlock` (true) / `NewsBlockStartHHMM` (958) / `NewsBlockEndHHMM` (1005): ventana sin
+  entradas nuevas alrededor de los datos económicos de las 10:00 ET (ISM, confianza del
+  consumidor, etc.). Las posiciones abiertas siguen gestionadas por sus stops.
 
 Todos estos valores son parámetros configurables desde la UI de NinjaTrader, no hace falta
 tocar el código para ajustarlos.
@@ -109,6 +121,18 @@ Usá **Strategy Analyzer** (menú Control Center → New → Strategy Analyzer) 
 `EmaCrossoverMES` sobre datos históricos de MES antes de operarla en vivo. Ajustá los
 parámetros ahí y revisá métricas como drawdown máximo, win rate y profit factor antes de
 tocar una cuenta real.
+
+**Configuración obligatoria para que el backtest no mienta** (en velas de 1 min el stop y el
+target suelen caber dentro del rango de una misma vela, y en resolución estándar NinjaTrader
+*adivina* cuál se tocó primero):
+
+- **Order Fill Resolution = High**, con serie secundaria de **1 tick**.
+- **Commission**: cargá tu plan real de comisiones de MES (típicamente ~$1.30–1.60 por
+  round-trip con exchange fees).
+- **Slippage**: al menos **1 tick** por lado.
+
+Sin estos tres ajustes, cualquier resultado positivo del backtest es ficción. Los costos son
+el factor decisivo en trades tan cortos.
 
 ## Conexión al bróker
 

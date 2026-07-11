@@ -72,7 +72,8 @@ namespace NinjaTrader.NinjaScript.Strategies
                 // --- Trend-strength definition (this is what "a trend" means) ---
                 TrendAdxPeriod = 14;
                 TrendAdxThreshold = 20;         // ADX above this = trending; below = chop, no trade
-                MinEmaSeparationAtr = 0.10;     // EMAs must be at least this * ATR apart
+                EmaSlopeLookbackBars = 3;       // bars used to measure the slow-EMA slope
+                MinEmaSlopeTicks = 1;           // slow EMA must have moved at least this many ticks in the trade direction
 
                 // --- Higher-timeframe trend filter ---
                 UseHigherTimeframeFilter = true;
@@ -81,13 +82,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 
                 // --- Volatility definition / filter ---
                 AtrPeriod = 14;
-                MinAtrTicks = 4;                // ~1 MES point; below this the market is too dead
+                MinAtrTicks = 8;                // ~2 MES points; below this the round-trip costs eat too much of the move
                 MaxAtrTicks = 40;               // ~10 MES points; above this it is too erratic to scalp
 
                 // --- ATR-based exits ---
                 StopAtrMultiple = 1.0;
                 TargetAtrMultiple = 1.5;
-                BreakevenTriggerAtrMultiple = 1.0;  // move stop to entry after +1 ATR (0 = disabled)
+                BreakevenTriggerAtrMultiple = 0.65; // move stop near entry after +0.65 ATR (0 = disabled)
+                BreakevenOffsetTicks = 2;           // park the BE stop this many ticks past entry to cover costs
                 MaxBarsInTrade = 15;                // time stop: exit after N bars if neither stop nor target hit
 
                 // --- Daily risk controls ---
@@ -95,10 +97,16 @@ namespace NinjaTrader.NinjaScript.Strategies
                 MaxDailyTrades = 15;
                 MaxConsecutiveLosses = 3;
                 CooldownBars = 1;                   // bars to wait after an exit before re-entering
+                MaxDailyProfitDollars = 0;          // lock in the day once reached (0 = disabled)
 
                 // --- Session window (first 2 hours after US cash open) ---
-                SessionStartHHMM = 930;             // 09:30
+                SessionStartHHMM = 940;             // 09:40 - skip the chaotic first minutes of the open
                 SessionEndHHMM = 1130;              // 11:30
+
+                // --- News blackout (no new entries around scheduled releases) ---
+                UseNewsBlock = true;
+                NewsBlockStartHHMM = 958;           // block entries 09:58...
+                NewsBlockEndHHMM = 1005;            // ...through 10:05 (10:00 ET economic releases)
             }
             else if (State == State.Configure)
             {
@@ -170,6 +178,16 @@ namespace NinjaTrader.NinjaScript.Strategies
                 return;
             }
 
+            // --- Profit lock: bank a good day and stop trading (0 = disabled) ---
+            if (MaxDailyProfitDollars > 0 && dailyRealizedPnL + openPnL >= MaxDailyProfitDollars)
+            {
+                Print(string.Format("{0}: Daily profit target reached ({1:C}). Flattening and halting for the day.",
+                    Time[0], dailyRealizedPnL + openPnL));
+                tradingHaltedForDay = true;
+                Flatten("DailyProfitLock");
+                return;
+            }
+
             // --- In-trade management (break-even + time stop) ---
             if (Position.MarketPosition != MarketPosition.Flat)
             {
@@ -187,6 +205,10 @@ namespace NinjaTrader.NinjaScript.Strategies
             if (CurrentBar - lastExitBar < CooldownBars)
                 return;
 
+            // News blackout: no fresh entries around scheduled economic releases.
+            if (UseNewsBlock && nowHHMM >= NewsBlockStartHHMM && nowHHMM < NewsBlockEndHHMM)
+                return;
+
             // Volatility filter.
             double atrTicks = atr[0] / TickSize;
             if (atrTicks < MinAtrTicks || atrTicks > MaxAtrTicks)
@@ -196,9 +218,13 @@ namespace NinjaTrader.NinjaScript.Strategies
             if (adx[0] < TrendAdxThreshold)
                 return;
 
-            // EMA separation filter (avoid entering when EMAs are tangled).
-            if (Math.Abs(fastEma[0] - slowEma[0]) < MinEmaSeparationAtr * atr[0])
-                return;
+            // Slow-EMA slope filter: the baseline must already point in the trade direction.
+            // (Measured over a lookback window, unlike EMA separation which is ~zero on the
+            // very bar a cross happens.)
+            double slopeThreshold = MinEmaSlopeTicks * TickSize;
+            double slowEmaSlope = slowEma[0] - slowEma[Math.Min(EmaSlopeLookbackBars, CurrentBar)];
+            bool slopeUp = slowEmaSlope >= slopeThreshold;
+            bool slopeDown = slowEmaSlope <= -slopeThreshold;
 
             // Higher-timeframe (60-min) trend filter: only trade in the direction of the
             // 60-minute trend. Longs require the 60-min close above its EMA, shorts below it.
@@ -213,7 +239,7 @@ namespace NinjaTrader.NinjaScript.Strategies
             int stopTicks = Math.Max(1, (int)Math.Round(atr[0] * StopAtrMultiple / TickSize));
             int targetTicks = Math.Max(1, (int)Math.Round(atr[0] * TargetAtrMultiple / TickSize));
 
-            if (CrossAbove(fastEma, slowEma, 1) && htfUptrend)
+            if (CrossAbove(fastEma, slowEma, 1) && htfUptrend && slopeUp)
             {
                 SetStopLoss("Long", CalculationMode.Ticks, stopTicks, false);
                 SetProfitTarget("Long", CalculationMode.Ticks, targetTicks);
@@ -221,7 +247,7 @@ namespace NinjaTrader.NinjaScript.Strategies
                 entryBar = CurrentBar;
                 movedToBreakeven = false;
             }
-            else if (CrossBelow(fastEma, slowEma, 1) && htfDowntrend)
+            else if (CrossBelow(fastEma, slowEma, 1) && htfDowntrend && slopeDown)
             {
                 SetStopLoss("Short", CalculationMode.Ticks, stopTicks, false);
                 SetProfitTarget("Short", CalculationMode.Ticks, targetTicks);
@@ -236,19 +262,21 @@ namespace NinjaTrader.NinjaScript.Strategies
             double entryPrice = Position.AveragePrice;
 
             // Break-even: once price has moved BreakevenTriggerAtrMultiple * ATR in our favor,
-            // pull the stop to the entry price so the trade can no longer become a loser.
+            // pull the stop a couple of ticks past entry (BreakevenOffsetTicks) so a scratched
+            // trade still covers commissions instead of exiting at a small net loss.
             if (BreakevenTriggerAtrMultiple > 0 && !movedToBreakeven)
             {
                 double trigger = atr[0] * BreakevenTriggerAtrMultiple;
+                double beOffset = BreakevenOffsetTicks * TickSize;
 
                 if (Position.MarketPosition == MarketPosition.Long && Close[0] - entryPrice >= trigger)
                 {
-                    SetStopLoss("Long", CalculationMode.Price, entryPrice, false);
+                    SetStopLoss("Long", CalculationMode.Price, entryPrice + beOffset, false);
                     movedToBreakeven = true;
                 }
                 else if (Position.MarketPosition == MarketPosition.Short && entryPrice - Close[0] >= trigger)
                 {
-                    SetStopLoss("Short", CalculationMode.Price, entryPrice, false);
+                    SetStopLoss("Short", CalculationMode.Price, entryPrice - beOffset, false);
                     movedToBreakeven = true;
                 }
             }
@@ -321,9 +349,14 @@ namespace NinjaTrader.NinjaScript.Strategies
         public double TrendAdxThreshold { get; set; }
 
         [NinjaScriptProperty]
+        [Range(1, int.MaxValue)]
+        [Display(Name = "EMA Slope Lookback (bars)", Order = 3, GroupName = "2. Trend Strength")]
+        public int EmaSlopeLookbackBars { get; set; }
+
+        [NinjaScriptProperty]
         [Range(0, double.MaxValue)]
-        [Display(Name = "Min EMA Separation (x ATR)", Order = 3, GroupName = "2. Trend Strength")]
-        public double MinEmaSeparationAtr { get; set; }
+        [Display(Name = "Min Slow-EMA Slope (ticks)", Order = 4, GroupName = "2. Trend Strength")]
+        public double MinEmaSlopeTicks { get; set; }
 
         [NinjaScriptProperty]
         [Display(Name = "Use 60-min Trend Filter", Order = 1, GroupName = "3. Higher-Timeframe Filter")]
@@ -371,7 +404,12 @@ namespace NinjaTrader.NinjaScript.Strategies
 
         [NinjaScriptProperty]
         [Range(0, int.MaxValue)]
-        [Display(Name = "Max Bars In Trade (0=off)", Order = 4, GroupName = "5. Exits")]
+        [Display(Name = "Break-even Offset (ticks)", Order = 4, GroupName = "5. Exits")]
+        public int BreakevenOffsetTicks { get; set; }
+
+        [NinjaScriptProperty]
+        [Range(0, int.MaxValue)]
+        [Display(Name = "Max Bars In Trade (0=off)", Order = 5, GroupName = "5. Exits")]
         public int MaxBarsInTrade { get; set; }
 
         [NinjaScriptProperty]
@@ -395,6 +433,11 @@ namespace NinjaTrader.NinjaScript.Strategies
         public int CooldownBars { get; set; }
 
         [NinjaScriptProperty]
+        [Range(0, double.MaxValue)]
+        [Display(Name = "Max Daily Profit ($, 0=off)", Order = 5, GroupName = "6. Daily Risk")]
+        public double MaxDailyProfitDollars { get; set; }
+
+        [NinjaScriptProperty]
         [Range(0, 2359)]
         [Display(Name = "Session Start (HHMM)", Order = 1, GroupName = "7. Session")]
         public int SessionStartHHMM { get; set; }
@@ -403,6 +446,20 @@ namespace NinjaTrader.NinjaScript.Strategies
         [Range(0, 2359)]
         [Display(Name = "Session End (HHMM)", Order = 2, GroupName = "7. Session")]
         public int SessionEndHHMM { get; set; }
+
+        [NinjaScriptProperty]
+        [Display(Name = "Use News Blackout", Order = 3, GroupName = "7. Session")]
+        public bool UseNewsBlock { get; set; }
+
+        [NinjaScriptProperty]
+        [Range(0, 2359)]
+        [Display(Name = "News Block Start (HHMM)", Order = 4, GroupName = "7. Session")]
+        public int NewsBlockStartHHMM { get; set; }
+
+        [NinjaScriptProperty]
+        [Range(0, 2359)]
+        [Display(Name = "News Block End (HHMM)", Order = 5, GroupName = "7. Session")]
+        public int NewsBlockEndHHMM { get; set; }
 
         #endregion
     }
