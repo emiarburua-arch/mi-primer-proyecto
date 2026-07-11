@@ -22,22 +22,60 @@ permitirte perder.
 
 ## Qué hace la estrategia (`NinjaTrader/Strategies/EmaCrossoverMES.cs`)
 
-- **Señal de entrada**: EMA rápida (por defecto 9 períodos) cruza por encima de la EMA lenta
-  (por defecto 21 períodos) → entra **largo**. Cruce a la inversa → entra **corto**. Solo una
-  posición a la vez; si hay una posición contraria abierta, se cierra antes de abrir la nueva.
-- **Stop-loss / take-profit por operación**: se fijan automáticamente en ticks al entrar
-  (por defecto 40 ticks / 10 puntos de stop, 80 ticks / 20 puntos de objetivo — 1 tick de MES
-  = 0.25 puntos = $1.25).
-- **Límite de pérdida diaria** (`MaxDailyLossDollars`, por defecto $500): si la pérdida
-  realizada + no realizada del día alcanza ese monto, la estrategia **cierra todo y deja de
-  operar por el resto de la sesión**.
-- **Límite de operaciones por día** (`MaxDailyTrades`, por defecto 10): evita sobre-operar.
-- **Ventana de sesión** (`SessionStartHHMM` / `SessionEndHHMM`, por defecto 09:30–15:55 hora
-  de mercado): solo opera en el horario regular de mayor liquidez y se aplana antes del
-  cierre.
+Scalping de tendencia pensado para un **chart de 1 minuto de MES** durante las **primeras 2
+horas** después de la apertura del mercado americano (09:30–11:30 hora de mercado).
+
+Una operación solo se abre cuando **coinciden tres condiciones**:
+
+1. **Dirección de tendencia**: la EMA rápida cruza a la EMA lenta.
+2. **Fuerza de tendencia** (define qué es "una tendencia"): el **ADX** está por encima de
+   `TrendAdxThreshold`. Debajo de ese valor el mercado está lateral y no opera.
+3. **Volatilidad**: el **ATR** está dentro del rango `[MinAtrTicks, MaxAtrTicks]`. Filtra
+   mercado muerto (sin recorrido) y mercado demasiado errático.
+
+### Parámetros
+
+**1. Trend / Signal**
+- `FastEmaPeriod` / `SlowEmaPeriod` (por defecto 8 / 21): las EMAs cuyo cruce da la señal.
+- `Contracts` (1): tamaño de la posición.
+
+**2. Trend Strength — define qué es una tendencia**
+- `TrendAdxPeriod` (14) / `TrendAdxThreshold` (20): solo opera si ADX ≥ umbral.
+- `MinEmaSeparationAtr` (0.10): las EMAs deben estar separadas al menos ese × ATR (evita
+  whipsaw cuando están entrelazadas).
+
+**3. Volatility — define la volatilidad del mercado**
+- `AtrPeriod` (14): período del ATR.
+- `MinAtrTicks` (4 ≈ 1 punto) / `MaxAtrTicks` (40 ≈ 10 puntos): rango de volatilidad válido
+  para operar. 1 tick de MES = 0.25 puntos = $1.25.
+
+**4. Exits — salidas adaptadas a la volatilidad**
+- `StopAtrMultiple` (1.0) / `TargetAtrMultiple` (1.5): stop y objetivo en múltiplos de ATR
+  (riesgo/beneficio dinámico según la volatilidad, no ticks fijos).
+- `BreakevenTriggerAtrMultiple` (1.0; 0 = desactivado): mueve el stop a la entrada cuando el
+  precio avanza ese × ATR a favor.
+- `MaxBarsInTrade` (15; 0 = desactivado): time-stop, cierra la operación tras N velas si no
+  tocó stop ni objetivo.
+
+**5. Daily Risk — controles diarios**
+- `MaxDailyLossDollars` ($300): kill-switch; al alcanzar esa pérdida (realizada + abierta)
+  cierra todo y no opera más ese día.
+- `MaxDailyTrades` (15): tope de operaciones por día.
+- `MaxConsecutiveLosses` (3): frena el día tras esa racha de pérdidas seguidas.
+- `CooldownBars` (1): velas de espera tras cerrar antes de volver a entrar.
+
+**6. Session — ventana horaria**
+- `SessionStartHHMM` (930) / `SessionEndHHMM` (1130): opera solo en esa franja y se aplana al
+  salir de ella. Ajustá estos valores a tu **zona horaria de la plataforma** (ver nota abajo).
 
 Todos estos valores son parámetros configurables desde la UI de NinjaTrader, no hace falta
 tocar el código para ajustarlos.
+
+> **Nota sobre el horario**: `SessionStartHHMM`/`SessionEndHHMM` usan la hora del reloj de los
+> datos en NinjaTrader (definida por tu Trading Hours template y la zona horaria de la
+> plataforma). Si tu NinjaTrader no está en horario del Este de EE. UU. (ET), ajustá estos
+> valores para que representen 09:30–11:30 ET. Verificá con un chart de MES que las velas de la
+> apertura caen donde esperás.
 
 ## Instalación en NinjaTrader 8
 
@@ -47,8 +85,8 @@ tocar el código para ajustarlos.
    `NinjaTrader/Strategies/EmaCrossoverMES.cs` de este repositorio 
    (o copiá el archivo manualmente a `Documentos\NinjaTrader 8\bin\Custom\Strategies\`).
 4. Compilá con **F5** (o el botón *Compile*). No debería haber errores.
-5. Abrí un chart de **MES** (el contrato vigente, ej. `MES 09-26`) con el timeframe que quieras
-   operar (ej. velas de 5 minutos).
+5. Abrí un chart de **MES** (el contrato vigente, ej. `MES 09-26`) en **velas de 1 minuto**
+   (la estrategia está calibrada para ese timeframe).
 6. Click derecho en el chart → **Strategies…** → seleccioná `EmaCrossoverMES` → **Add**.
 7. Configurá los parámetros (períodos de EMA, contratos, stops, límites de riesgo, horario).
 8. En la pestaña **Account**, elegí primero **Sim101** para probar. Cuando estés listo para
