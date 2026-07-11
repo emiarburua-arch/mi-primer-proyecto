@@ -134,6 +134,8 @@ target suelen caber dentro del rango de una misma vela, y en resolución estánd
 Sin estos tres ajustes, cualquier resultado positivo del backtest es ficción. Los costos son
 el factor decisivo en trades tan cortos.
 
+Guía completa paso a paso en [`BACKTEST.md`](BACKTEST.md).
+
 ## Conexión al bróker
 
 NinjaTrader 8 se conecta a tu cuenta de futuros a través de una **conexión de datos/brokerage**
