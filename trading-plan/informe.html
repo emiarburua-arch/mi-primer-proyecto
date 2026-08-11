@@ -1,0 +1,618 @@
+<title>TPP EA n01 — Diagnóstico y correcciones</title>
+<style>
+  :root{
+    --ground:#F1F3F1; --surface:#FBFCFB; --surface-2:#E8EBE8;
+    --ink:#141D1B; --ink-2:#3A4845; --muted:#64726E;
+    --line:#D2D8D5; --line-2:#BEC6C2;
+    --accent:#A3610C; --accent-soft:#EFE3CF;
+    --neg:#9E3226; --neg-soft:#F0DCD8;
+    --pos:#2A6349; --pos-soft:#D9E7DF;
+    --shadow:0 1px 2px rgba(20,29,27,.05), 0 8px 24px -16px rgba(20,29,27,.22);
+    --serif:ui-serif,Georgia,'Iowan Old Style','Times New Roman',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#0D1312; --surface:#151D1B; --surface-2:#1E2725;
+      --ink:#E3E9E6; --ink-2:#BAC4C0; --muted:#8B9994;
+      --line:#26302E; --line-2:#35403D;
+      --accent:#DE9A42; --accent-soft:#2E2618;
+      --neg:#DE6E5C; --neg-soft:#2E1C19;
+      --pos:#5DBC8B; --pos-soft:#16281F;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0D1312; --surface:#151D1B; --surface-2:#1E2725;
+    --ink:#E3E9E6; --ink-2:#BAC4C0; --muted:#8B9994;
+    --line:#26302E; --line-2:#35403D;
+    --accent:#DE9A42; --accent-soft:#2E2618;
+    --neg:#DE6E5C; --neg-soft:#2E1C19;
+    --pos:#5DBC8B; --pos-soft:#16281F;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--ground); color:var(--ink);
+    font-family:var(--sans); font-size:17px; line-height:1.62;
+    margin:0; padding:0 20px 96px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:60px}
+  .col{max-width:64ch}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;text-wrap:balance;margin:0;letter-spacing:-.012em}
+  p{margin:0}
+  a{color:var(--accent)}
+
+  /* ---------- masthead ---------- */
+  .mast{padding:56px 0 0;display:flex;flex-direction:column;gap:26px}
+  .eyebrow{
+    font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--muted);display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  }
+  .eyebrow .dot{width:3px;height:3px;border-radius:50%;background:var(--line-2);flex:none}
+  h1{font-size:clamp(2.1rem,5.4vw,3.5rem);line-height:1.06}
+  .standfirst{font-size:1.16rem;color:var(--ink-2);max-width:58ch;line-height:1.55}
+
+  /* ---------- headline metric ---------- */
+  .verdict{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    border-top:1px solid var(--ink);border-bottom:1px solid var(--line);
+  }
+  .vcell{padding:22px 22px 24px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:5px}
+  .vcell:last-child{border-right:0}
+  .vlabel{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+  .vnum{font-family:var(--mono);font-size:2.1rem;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .vnote{font-size:.86rem;color:var(--muted);line-height:1.4}
+  .is-neg{color:var(--neg)} .is-pos{color:var(--pos)} .is-acc{color:var(--accent)}
+
+  /* ---------- sections ---------- */
+  section{display:flex;flex-direction:column;gap:22px}
+  .kicker{
+    font-family:var(--mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;
+    color:var(--accent);display:flex;align-items:center;gap:11px;
+  }
+  .kicker::after{content:"";height:1px;background:var(--line);flex:1}
+  h2{font-size:clamp(1.5rem,3vw,2.05rem);line-height:1.15}
+  h3{font-size:1.09rem;line-height:1.35}
+  .lede{font-size:1.06rem;color:var(--ink-2)}
+
+  /* ---------- tape ---------- */
+  .panel{
+    background:var(--surface);border:1px solid var(--line);border-radius:3px;
+    padding:24px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:16px;
+  }
+  .panel-hd{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;justify-content:space-between}
+  .panel-t{font-family:var(--serif);font-size:1.02rem;font-weight:600}
+  .panel-s{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+  .tape-scroll{overflow-x:auto;padding-bottom:4px}
+  .tape{display:flex;gap:3px;min-width:520px}
+  .tk{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:74px;gap:2px;min-width:14px}
+  .tk .bar{border-radius:1px}
+  .tk.w .bar{height:52px;background:var(--pos)}
+  .tk.l .bar{height:27px;background:var(--neg);opacity:.82}
+  .tk.s .bar{height:5px;background:var(--muted)}
+  .tk .n{font-family:var(--mono);font-size:8.5px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 20px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .legend span{display:flex;align-items:center;gap:7px}
+  .sw{width:11px;height:11px;border-radius:1px;flex:none}
+
+  /* ---------- chart ---------- */
+  .chart{width:100%;height:auto;display:block;overflow:visible}
+  .grid-l{stroke:var(--line);stroke-width:.4;vector-effect:non-scaling-stroke}
+  .zero-l{stroke:var(--line-2);stroke-width:.7;stroke-dasharray:2 2;vector-effect:non-scaling-stroke}
+  .ln{fill:none;stroke-width:1.7;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round}
+  .ln-bt{stroke:var(--pos)} .ln-r{stroke:var(--neg)}
+  .clab{font-family:var(--mono);font-size:3.1px;fill:var(--muted);letter-spacing:.04em}
+
+  /* ---------- tables ---------- */
+  .tscroll{overflow-x:auto;border:1px solid var(--line);border-radius:3px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.92rem;min-width:440px}
+  caption{
+    text-align:left;padding:15px 18px 13px;font-family:var(--mono);font-size:10.5px;
+    letter-spacing:.13em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);
+  }
+  th,td{padding:10px 18px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{
+    font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);font-weight:400;background:var(--surface-2);
+  }
+  tbody tr:last-child td{border-bottom:0}
+  td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.88rem}
+  tr.hi td{background:var(--neg-soft)}
+  tr.ok td{background:var(--pos-soft)}
+  .tag{
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+    padding:2px 7px;border-radius:2px;background:var(--surface-2);color:var(--muted);white-space:nowrap;
+  }
+  .tag.crit{background:var(--neg-soft);color:var(--neg)}
+  .tag.good{background:var(--pos-soft);color:var(--pos)}
+  .tag.warn{background:var(--accent-soft);color:var(--accent)}
+
+  /* ---------- pull ---------- */
+  .pull{
+    border-left:2px solid var(--accent);padding:4px 0 4px 22px;
+    font-family:var(--serif);font-size:1.2rem;line-height:1.5;color:var(--ink-2);max-width:56ch;
+  }
+  .quotes{display:flex;flex-direction:column;gap:11px;max-width:60ch}
+  .q{
+    font-family:var(--mono);font-size:.83rem;line-height:1.5;color:var(--ink-2);
+    background:var(--surface);border:1px solid var(--line);border-left:2px solid var(--accent);
+    padding:11px 15px;border-radius:2px;
+  }
+
+  /* ---------- ATR bar ---------- */
+  .atr{display:flex;flex-direction:column;gap:13px}
+  .atr-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .atr-key{font-family:var(--mono);font-size:11px;color:var(--muted);width:132px;flex:none;letter-spacing:.05em}
+  .atr-track{flex:1;min-width:180px;height:15px;background:var(--surface-2);border-radius:2px;position:relative;overflow:hidden}
+  .atr-fill{height:100%;border-radius:2px}
+  .atr-val{font-family:var(--mono);font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--ink-2);width:74px;text-align:right;flex:none}
+
+  /* ---------- corrections ---------- */
+  .fixes{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--ink)}
+  .fix{
+    display:grid;grid-template-columns:56px 1fr auto;gap:8px 20px;align-items:start;
+    padding:19px 0;border-bottom:1px solid var(--line);
+  }
+  .fix-id{font-family:var(--mono);font-size:.95rem;color:var(--accent);letter-spacing:.04em;padding-top:2px}
+  .fix-b{display:flex;flex-direction:column;gap:5px}
+  .fix-t{font-family:var(--serif);font-size:1.06rem;font-weight:600;line-height:1.35}
+  .fix-d{font-size:.93rem;color:var(--muted);line-height:1.52;max-width:56ch}
+  .fix-tag{padding-top:4px}
+
+  .note{
+    background:var(--accent-soft);border:1px solid var(--line);border-radius:3px;
+    padding:20px 22px;display:flex;flex-direction:column;gap:9px;max-width:66ch;
+  }
+  .note-t{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent)}
+  .note p{font-size:.95rem;color:var(--ink-2);line-height:1.58}
+
+  footer{
+    border-top:1px solid var(--line);padding-top:22px;
+    font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.8;letter-spacing:.03em;
+  }
+  @media (max-width:620px){
+    body{font-size:16px;padding:0 15px 64px}
+    .vcell{padding:17px 16px 19px}
+    .vnum{font-size:1.72rem}
+    .fix{grid-template-columns:40px 1fr;gap:6px 13px}
+    .fix-tag{grid-column:2}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <div class="eyebrow">
+      <span>TPP EA n01</span><span class="dot"></span>
+      <span>CL / MCL · Ankora</span><span class="dot"></span>
+      <span>Backtest feb 24 – ene 25 · Real feb – may 25</span>
+    </div>
+    <h1>El plan no falla por disciplina.<br>Falla por 13 puntos de winrate.</h1>
+    <p class="standfirst">
+      Diagnóstico sobre 129 operaciones registradas en las planillas B20x50: 102 de backtesting
+      y 27 en tiempo real. El sistema pierde porque su tasa de acierto real quedó muy por debajo
+      del umbral que necesita para pagar el stop — y ese hueco no se explica por azar.
+    </p>
+  </header>
+
+  <div class="verdict">
+    <div class="vcell">
+      <span class="vlabel">Winrate real · 27 ops</span>
+      <span class="vnum is-neg">22,2 %</span>
+      <span class="vnote">6 ganadoras, 21 perdedoras</span>
+    </div>
+    <div class="vcell">
+      <span class="vlabel">Umbral de equilibrio</span>
+      <span class="vnum is-acc">35,1 %</span>
+      <span class="vnote">con R neto 1,85 tras comisiones</span>
+    </div>
+    <div class="vcell">
+      <span class="vlabel">Winrate del backtest</span>
+      <span class="vnum is-pos">57,7 %</span>
+      <span class="vnote">78 ops · no reproducible en vivo</span>
+    </div>
+    <div class="vcell">
+      <span class="vlabel">Resultado en vivo</span>
+      <span class="vnum is-neg">−$944</span>
+      <span class="vnote">drawdown máx. −$1.106 de $2.000</span>
+    </div>
+  </div>
+
+  <!-- ============ 1 ============ -->
+  <section>
+    <div class="kicker">La secuencia</div>
+    <div class="col" style="display:flex;flex-direction:column;gap:18px">
+      <h2>Veintisiete operaciones, dos únicos desenlaces</h2>
+      <p class="lede">
+        De las 27 operaciones en vivo, <strong>20 salieron por stop exacto de −10 ticks y 6 por
+        target exacto de +20</strong>. Una sola salió de otra forma. No hubo salidas discrecionales,
+        ni parciales, ni break-even: el sistema es completamente binario, y el lado que domina
+        es el stop.
+      </p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">
+        <span class="panel-t">Operativa real, orden cronológico</span>
+        <span class="panel-s">13 feb → 12 may 2025</span>
+      </div>
+      <div class="tape-scroll">
+        <div class="tape" id="tape"></div>
+      </div>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--pos)"></i>Target +20 tk · +$194,68</span>
+        <span><i class="sw" style="background:var(--neg);opacity:.82"></i>Stop −10 tk · −$105,32</span>
+        <span><i class="sw" style="background:var(--muted)"></i>Salida en 0 · −$5,32</span>
+        <span style="color:var(--neg)">Racha máxima: 8 stops consecutivos (ops 8–15)</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">
+        <span class="panel-t">Curva de resultado acumulado</span>
+        <span class="panel-s">Backtest CL (78 ops) vs. real (27 ops)</span>
+      </div>
+      <svg class="chart" viewBox="-3 -6 112 118" role="img"
+           aria-label="El backtest sube de forma sostenida hasta +5.300 dólares; la operativa real desciende hasta −944 dólares.">
+        <line class="grid-l" x1="0" y1="0"   x2="100" y2="0"></line>
+        <line class="grid-l" x1="0" y1="42"  x2="100" y2="42"></line>
+        <line class="zero-l" x1="0" y1="84.93" x2="100" y2="84.93"></line>
+        <line class="grid-l" x1="0" y1="100" x2="100" y2="100"></line>
+        <text class="clab" x="101" y="1.4">+$5.300</text>
+        <text class="clab" x="101" y="43.4">+$2.600</text>
+        <text class="clab" x="101" y="86.3">0</text>
+        <text class="clab" x="101" y="101.4">−$944</text>
+        <polyline class="ln ln-bt" points="0.00,84.93 1.28,86.61 2.56,87.98 3.85,84.87 5.13,86.55 6.41,88.23 7.69,85.12 8.97,82.01 10.26,83.69 11.54,80.59 12.82,77.48 14.10,74.37 15.38,76.05 16.67,72.94 17.95,69.83 19.23,66.72 20.51,63.62 21.79,65.30 23.08,62.19 24.36,63.87 25.64,60.76 26.92,57.65 28.21,54.54 29.49,51.44 30.77,48.33 32.05,45.22 33.33,42.11 34.62,43.79 35.90,40.68 37.18,42.36 38.46,44.05 39.74,45.73 41.03,42.62 42.31,39.51 43.59,41.19 44.87,42.87 46.15,39.77 47.44,36.66 48.72,33.55 50.00,35.23 51.28,32.12 52.56,29.01 53.85,25.90 55.13,27.59 56.41,24.48 57.69,21.37 58.97,18.26 60.26,15.15 61.54,12.04 62.82,13.72 64.10,15.47 65.38,17.15 66.67,18.83 67.95,20.51 69.23,17.47 70.51,19.21 71.79,16.10 73.08,17.78 74.36,19.46 75.64,16.36 76.92,18.04 78.21,14.93 79.49,16.61 80.77,13.50 82.05,10.39 83.33,12.07 84.62,13.76 85.90,10.65 87.18,7.54 88.46,9.22 89.74,10.90 91.03,7.79 92.31,9.48 93.59,6.37 94.87,3.26 96.15,0.15 97.44,1.83 98.72,0.00 100.00,1.68"></polyline>
+        <polyline class="ln ln-r" points="0.00,84.93 3.70,86.61 7.41,83.50 11.11,85.19 14.81,86.87 18.52,83.76 22.22,85.44 25.93,82.33 29.63,84.01 33.33,85.70 37.04,87.38 40.74,89.06 44.44,90.74 48.15,92.42 51.85,94.11 55.56,95.79 59.26,92.68 62.96,94.36 66.67,91.25 70.37,92.93 74.07,94.61 77.78,96.30 81.48,97.98 85.19,94.87 88.89,96.55 92.59,98.23 96.30,99.92 100.00,100.00"></polyline>
+      </svg>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--pos)"></i>Backtest CL — +$5.213 · PF 2,51</span>
+        <span><i class="sw" style="background:var(--neg)"></i>Real — −$944 · PF 0,55</span>
+        <span>Eje horizontal normalizado: ambas series ocupan el ancho completo</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2 ============ -->
+  <section>
+    <div class="kicker">Significancia</div>
+    <div class="col" style="display:flex;flex-direction:column;gap:18px">
+      <h2>No fue mala suerte</h2>
+      <p>
+        Si el sistema fuese realmente del 57,7 % que dio el backtest, la probabilidad de sacar
+        6 ganadoras o menos en 27 operaciones sería del <strong>0,019 %</strong>: una entre 5.200.
+        Los intervalos de confianza al 95 % apenas se tocan, y el del real cae casi entero por
+        debajo del umbral de equilibrio.
+      </p>
+    </div>
+
+    <div class="tscroll" style="max-width:760px">
+      <table>
+        <caption>Muestras registradas</caption>
+        <thead>
+          <tr>
+            <th>Muestra</th><th>Período</th><th class="num">Ops</th>
+            <th class="num">Winrate</th><th class="num">P&amp;L</th><th class="num">PF</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="ok"><td>Backtest CL</td><td>feb 24 – ene 25</td><td class="num">78</td><td class="num">57,7 %</td><td class="num">+$5.213</td><td class="num">2,51</td></tr>
+          <tr class="hi"><td>Backtest MES</td><td>feb – mar 24</td><td class="num">24</td><td class="num">29,2 %</td><td class="num">−$212</td><td class="num">0,71</td></tr>
+          <tr class="hi"><td>Real · TPP EA n01</td><td>feb – mar 25</td><td class="num">19</td><td class="num">26,3 %</td><td class="num">−$501</td><td class="num">0,66</td></tr>
+          <tr class="hi"><td>Real · Earn2Trade</td><td>abr – may 25</td><td class="num">8</td><td class="num">12,5 %</td><td class="num">−$443</td><td class="num">0,31</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col">
+      <p class="pull">
+        Una sola muestra dice 57,7 %: el backtest manual de CL, construido mirando el gráfico
+        hacia atrás. Dos muestras independientes dicen 22–29 %.
+      </p>
+    </div>
+
+    <div class="col">
+      <p>
+        La muestra discordante es justamente la única en la que se conocía el desenlace al marcar
+        la entrada. Con la vela siguiente a la vista, «estructura + vela de confirmación» se
+        reconoce con mucha más generosidad en los sitios donde funcionó. Un dato coherente:
+        el backtest registra 78 operaciones en 61 días sobre unos 250 hábiles — se operó apenas
+        el 24 % de los días disponibles.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 3 ============ -->
+  <section>
+    <div class="kicker">Causa mecánica</div>
+    <div class="col" style="display:flex;flex-direction:column;gap:18px">
+      <h2>El stop está dentro del ruido</h2>
+      <p class="lede">
+        La preparación de sesión del 14/02/2025 registra un ATR(14) en M60 de ≈ 0,317, unos
+        32 ticks de rango medio por hora. Contra esa vara, el stop de 10 ticks pide que el precio
+        no retroceda <strong>ni un tercio de lo que se mueve en una hora normal</strong>.
+      </p>
+    </div>
+
+    <div class="panel" style="max-width:760px">
+      <div class="panel-hd">
+        <span class="panel-t">Distancias en ticks contra el rango horario</span>
+        <span class="panel-s">ATR(14) M60 ≈ 32 tk</span>
+      </div>
+      <div class="atr">
+        <div class="atr-row">
+          <span class="atr-key">ATR M60</span>
+          <span class="atr-track"><span class="atr-fill" style="width:100%;background:var(--surface-2);border:1px solid var(--line-2)"></span></span>
+          <span class="atr-val">32 tk</span>
+        </div>
+        <div class="atr-row">
+          <span class="atr-key">Target actual</span>
+          <span class="atr-track"><span class="atr-fill" style="width:62.5%;background:var(--pos)"></span></span>
+          <span class="atr-val">20 tk · 0,63×</span>
+        </div>
+        <div class="atr-row">
+          <span class="atr-key">Stop actual</span>
+          <span class="atr-track"><span class="atr-fill" style="width:31.25%;background:var(--neg)"></span></span>
+          <span class="atr-val">10 tk · 0,31×</span>
+        </div>
+        <div class="atr-row">
+          <span class="atr-key">Stop propuesto</span>
+          <span class="atr-track"><span class="atr-fill" style="width:50%;background:var(--accent)"></span></span>
+          <span class="atr-val">16 tk · 0,50×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col" style="display:flex;flex-direction:column;gap:18px">
+      <p>
+        A esa distancia el stop no mide que la hipótesis se invalidó: mide ruido. Y el diagnóstico
+        ya estaba escrito en el propio diario de operaciones, repetido durante meses — nunca llegó
+        a trasladarse al plan.
+      </p>
+      <div class="quotes">
+        <div class="q">«ME SACA EN EL EXACTO TICK DE MI STOP, Y VA AL TARGET»</div>
+        <div class="q">«LA LECTURA ESTABA BIEN, LA MECHA ERA MUY GRANDE, ME SACO RAPIDAMENTE Y CONTINUA AL TARGET»</div>
+        <div class="q">«llego exactamente a nuestro stop y de ahi directo al BE»</div>
+      </div>
+      <p>
+        Hay además un factor de régimen: el backtest cubre feb 24 – ene 25, mientras que la última
+        cuenta operó en <strong>abril y mayo de 2025</strong>, uno de los períodos de mayor volatilidad
+        del crudo en años. Un stop de 10 ticks fijos vale cosas muy distintas en un régimen y en otro,
+        y el plan lo dejó clavado.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 4 ============ -->
+  <section>
+    <div class="kicker">El dato que falta</div>
+    <div class="col" style="display:flex;flex-direction:column;gap:18px">
+      <h2>Sin MFE y MAE no se puede elegir qué corregir</h2>
+      <p>
+        Las columnas existen en la planilla B20x50 y están <strong>vacías en las cuatro planillas</strong>,
+        backtest y real. Son el único dato que separa dos diagnósticos que piden correcciones opuestas.
+      </p>
+    </div>
+
+    <div class="tscroll" style="max-width:760px">
+      <table>
+        <caption>Qué respondería el MFE de las perdedoras</caption>
+        <thead><tr><th>Si el MFE típico es…</th><th>Significa</th><th>Corrección</th></tr></thead>
+        <tbody>
+          <tr><td class="num">12–19 tk</td><td>la entrada es buena, el target de 2R está fuera de alcance</td><td>parcializar o acortar el target</td></tr>
+          <tr><td class="num">0–5 tk</td><td>la entrada llega tarde o el sesgo está mal</td><td>corregir el disparador, no la salida</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col">
+      <p>
+        Y el MAE de las <em>ganadoras</em> dice cuánto respiro necesitaba realmente el stop.
+        Todo lo demás de este informe es sólido; esta pieza es la única que falta, cuesta treinta
+        segundos por operación y desbloquea todas las decisiones siguientes.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 5 ============ -->
+  <section>
+    <div class="kicker">Dónde se pierde</div>
+    <h2 class="col">Los cortes</h2>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px">
+      <div class="tscroll">
+        <table>
+          <caption>Por momento de la sesión</caption>
+          <thead><tr><th>Ventana</th><th class="num">Backtest</th><th class="num">Real</th></tr></thead>
+          <tbody>
+            <tr><td>1.ª hora</td><td class="num">53,3 % · n30</td><td class="num" style="color:var(--pos)">42,9 % · +$163</td></tr>
+            <tr class="hi"><td>2.ª hora</td><td class="num">59,6 % · n47</td><td class="num" style="color:var(--neg)">17,6 % · −$890</td></tr>
+            <tr class="hi"><td>Pasadas 2 h</td><td class="num">n1</td><td class="num" style="color:var(--neg)">0 % · −$216</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tscroll">
+        <table>
+          <caption>Por patrón</caption>
+          <thead><tr><th>Patrón</th><th class="num">Backtest</th><th class="num">Real</th></tr></thead>
+          <tbody>
+            <tr><td>ESTRUC+VC</td><td class="num">59,0 % · n39</td><td class="num" style="color:var(--neg)">28,6 % · −$274</td></tr>
+            <tr class="hi"><td>ESTRUC+FV</td><td class="num">52,9 % · n34</td><td class="num" style="color:var(--neg)">16,7 % · −$664</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="note">
+      <span class="note-t">Lo que los datos descartan</span>
+      <p>
+        <strong>26 de las 27 operaciones fueron marcadas como disciplinadas</strong>, y la única
+        indisciplinada perdió $5,32. La conclusión natural después de ocho stops seguidos es
+        «me falta disciplina». Los datos dicen lo contrario: se está ejecutando con rigor un plan
+        que todavía no tiene ventaja. Conviene decirlo explícitamente, porque apretar la disciplina
+        no va a mover este número.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 6 ============ -->
+  <section>
+    <div class="kicker">Prueba de fondeo</div>
+    <div class="col" style="display:flex;flex-direction:column;gap:18px">
+      <h2>Todo se juega entre el 30 % y el 40 %</h2>
+      <p>
+        Simulación Monte Carlo de 40.000 corridas sobre la prueba Earn2Trade 50k: objetivo +$3.000,
+        drawdown máximo $2.000, tope de dos stops por día, CL 1 contrato, R = 1,85.
+      </p>
+    </div>
+
+    <div class="tscroll" style="max-width:760px">
+      <table>
+        <caption>Probabilidad de superar la prueba según winrate</caption>
+        <thead>
+          <tr><th>Winrate</th><th class="num">P(aprobar)</th><th class="num">Esperanza / op</th><th class="num">Aprox. mensual</th></tr>
+        </thead>
+        <tbody>
+          <tr class="hi"><td>22,2 % <span class="tag crit">el real</span></td><td class="num">0,0 %</td><td class="num">−$38,72</td><td class="num">−$1.057</td></tr>
+          <tr class="hi"><td>30 %</td><td class="num">0,7 %</td><td class="num">−$15,32</td><td class="num">−$418</td></tr>
+          <tr><td>35 % <span class="tag warn">equilibrio</span></td><td class="num">22,1 %</td><td class="num">−$0,32</td><td class="num">−$9</td></tr>
+          <tr class="ok"><td>40 %</td><td class="num">79,1 %</td><td class="num">+$14,68</td><td class="num">+$401</td></tr>
+          <tr class="ok"><td>45 %</td><td class="num">97,8 %</td><td class="num">+$29,68</td><td class="num">+$810</td></tr>
+          <tr class="ok"><td>50 %</td><td class="num">99,8 %</td><td class="num">+$44,68</td><td class="num">+$1.220</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col" style="display:flex;flex-direction:column;gap:18px">
+      <p>
+        Diez puntos de winrate separan la ruina segura del aprobado casi seguro. Por eso la
+        prioridad no es operar más: es <strong>medir bien dónde está ese número</strong>.
+      </p>
+      <p>
+        Y medirlo cuesta operaciones. Contra un umbral del 35 %, hacen falta unas <strong>65</strong>
+        si la ventaja verdadera fuese del 50 %, <strong>145</strong> si fuese del 45 % y cerca de
+        <strong>294</strong> si fuese del 42 %. A $105 de riesgo por operación, eso son entre $7.000
+        y $30.000 de exposición — algo que no cabe dentro de un drawdown de $2.000. La cuenta de
+        fondeo no es el lugar donde se investiga.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 7 ============ -->
+  <section>
+    <div class="kicker">Correcciones</div>
+    <div class="col" style="display:flex;flex-direction:column;gap:18px">
+      <h2>Siete cambios, sin tocar la lógica de entrada</h2>
+      <p class="lede">
+        Contexto M60, algoritmo Ankora en M5, elementos primarios y disparadores quedan exactamente
+        como están. Lo que cambia es dónde se pone el stop, cuánto se arriesga, qué se mide y en
+        qué cuenta se opera.
+      </p>
+    </div>
+
+    <div class="fixes">
+      <div class="fix">
+        <span class="fix-id">C1</span>
+        <div class="fix-b">
+          <span class="fix-t">Registrar MFE y MAE en cada operación</span>
+          <span class="fix-d">Ninguna operación se cierra en el registro sin máximo recorrido a favor y en contra. Es lo que desbloquea todo lo demás.</span>
+        </div>
+        <span class="fix-tag"><span class="tag good">alta</span></span>
+      </div>
+      <div class="fix">
+        <span class="fix-id">C2</span>
+        <div class="fix-b">
+          <span class="fix-t">Anclar el stop al ATR, no a un número fijo de ticks</span>
+          <span class="fix-d">Stop = máx(pivote, 0,5 × ATR M60). Target 2R. Riesgo fijo de $100 y tamaño en MCL para poder ensanchar el stop sin mover el riesgo en dólares. Cuesta 1,3 puntos de winrate en comisiones a cambio de un stop 1,5–3× más ancho.</span>
+        </div>
+        <span class="fix-tag"><span class="tag good">alta</span></span>
+      </div>
+      <div class="fix">
+        <span class="fix-id">C3</span>
+        <div class="fix-b">
+          <span class="fix-t">Recalibrar fuera de la cuenta de fondeo</span>
+          <span class="fix-d">Simulado o cuenta propia con 1–2 MCL, $20–$40 de riesgo por operación. Se vuelve al fondeo con 60 operaciones registradas, winrate ≥ 42 % y profit factor ≥ 1,3.</span>
+        </div>
+        <span class="fix-tag"><span class="tag good">alta</span></span>
+      </div>
+      <div class="fix">
+        <span class="fix-id">C4</span>
+        <div class="fix-b">
+          <span class="fix-t">Sólo ESTRUC+VC durante la fase de medición</span>
+          <span class="fix-d">La falta de volumen es el disparador más subjetivo y el que más se degradó al pasar a vivo. Se sigue anotando como señal observada, sin operarla.</span>
+        </div>
+        <span class="fix-tag"><span class="tag">media</span></span>
+      </div>
+      <div class="fix">
+        <span class="fix-id">C5</span>
+        <div class="fix-b">
+          <span class="fix-t">Corte duro a los 120 minutos de la apertura cash</span>
+          <span class="fix-d">Las tres operaciones de mayo que rompieron el horario del plan perdieron las tres. La restricción de la segunda hora queda como tentativa: sólo 7 operaciones en la primera no alcanzan para cerrarla.</span>
+        </div>
+        <span class="fix-tag"><span class="tag">media</span></span>
+      </div>
+      <div class="fix">
+        <span class="fix-id">C6</span>
+        <div class="fix-b">
+          <span class="fix-t">Máximo 3 operaciones y 2 stops por sesión</span>
+          <span class="fix-d">El plan decía «sin límite de operaciones» y a la vez fijaba $200 de pérdida diaria, que son exactamente dos stops. Se resuelve la contradicción a favor del límite.</span>
+        </div>
+        <span class="fix-tag"><span class="tag">media</span></span>
+      </div>
+      <div class="fix">
+        <span class="fix-id">C7</span>
+        <div class="fix-b">
+          <span class="fix-t">No mover a break-even mientras se mide</span>
+          <span class="fix-d">Ya está en el plan y hay que mantenerlo: mover a BE destruye el dato de MFE. La decisión sobre parciales se toma al cerrar la fase, con los datos en la mano.</span>
+        </div>
+        <span class="fix-tag"><span class="tag good">alta</span></span>
+      </div>
+    </div>
+
+    <div class="note">
+      <span class="note-t">Antes de empezar</span>
+      <p>
+        Estas correcciones salen de los datos, pero <strong>ninguna está probada todavía</strong>.
+        C2 es una hipótesis fuerte y bien fundada sobre la causa, no un hecho verificado. Puede
+        pasar que con el stop ancho el winrate suba y aun así no llegue al umbral: en ese caso la
+        conclusión sería que el disparador no tiene ventaja predictiva y el trabajo siguiente está
+        en la lógica de entrada, no en la gestión.
+      </p>
+      <p>
+        El objetivo de la fase que viene no es ganar dinero. Es conseguir 60 operaciones con MFE y
+        MAE completos para poder responder esa pregunta con datos en vez de con intuición.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    Fuentes · B20x50 CL Backtest 01-02-2024 · B20x50 MES backtest 01-02-2024 · B20x50 TPP EA n01 · B20x50 Earn2Trade 22-04 EA01 A · TPP EA n1.docx<br>
+    129 operaciones analizadas · Monte Carlo 40.000 corridas · Intervalos de Wilson al 95 %
+  </footer>
+</div>
+
+<script>
+  // Tape: 27 operaciones reales en orden cronológico.
+  var seq = "LWLLWLWLLLLLLLLWLWLLLLWLLLs";
+  var host = document.getElementById("tape");
+  var titles = { W: "Target +20 tk · +$194,68", L: "Stop −10 tk · −$105,32", s: "Salida en 0 · −$5,32" };
+  for (var i = 0; i < seq.length; i++) {
+    var k = seq[i];
+    var cell = document.createElement("div");
+    cell.className = "tk " + k.toLowerCase();
+    cell.title = "Op " + (i + 1) + " — " + titles[k];
+    var bar = document.createElement("div");
+    bar.className = "bar";
+    var n = document.createElement("div");
+    n.className = "n";
+    n.textContent = i + 1;
+    cell.appendChild(bar);
+    cell.appendChild(n);
+    host.appendChild(cell);
+  }
+</script>
