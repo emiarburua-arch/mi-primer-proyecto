@@ -1,213 +1,218 @@
-# Diagnóstico del TPP EA n01 — por qué el sistema pierde
+# CL Beta plan 30d — diagnóstico sobre 97 operaciones reales
 
-Análisis sobre los registros B20x50 de backtesting y operativa real.
-Fuentes: `B20x50 - CL Backtest desde 01-02-2024.xlsx`, `B20x50 - MES backtest desde
-1-02-2024.xlsx`, `B20x50 - TPP EA n01.xlsx`, `B20x50 - Earn2 trade 22-04 EA01 A.xlsx`.
+Fuente única: `B20x50 - CL Beta plan 30d 22-10.xlsx` (97 operaciones, cuenta real,
+22/10/2025 → 26/06/2026) y `Trading Plan Personal.docx` (reglas vigentes).
 
----
-
-## 1. Los números
-
-| Muestra | Período | Ops | Winrate | P&L | Profit Factor |
-|---|---|---:|---:|---:|---:|
-| Backtest CL | feb-24 → ene-25 | 78 | **57,7 %** | +$5.213 | 2,51 |
-| Backtest MES | feb-24 → mar-24 | 24 | **29,2 %** | −$212 | 0,71 |
-| Real — TPP EA n01 | feb-25 → mar-25 | 19 | **26,3 %** | −$501 | 0,66 |
-| Real — Earn2Trade 22-04 | abr-25 → may-25 | 8 | **12,5 %** | −$443 | 0,31 |
-| **Real combinado** | feb-25 → may-25 | **27** | **22,2 %** | **−$944** | **0,55** |
-
-El ratio ganancia/pérdida se mantuvo estable en todas las muestras (1,85–2,14).
-El sistema no falló por el lado del ratio: **falló por winrate**.
-
-### El umbral que importa
-
-Con stop de 10 ticks y target de 20 ticks en CL con 1 contrato, neto de comisiones
-($5,32 round-turn):
-
-- ganadora = **+$194,68**
-- perdedora = **−$105,32**
-- R neto = **1,85**
-- **winrate de breakeven = 35,1 %**
-
-El real dio 22,2 %. Está 13 puntos por debajo del punto de equilibrio. Esa es toda
-la explicación de la pérdida: no es gestión, no es tamaño, no es disciplina.
+Una operación (la n.º 96) tiene la fecha corrupta —figura como `1900-01-25` y lleva la
+nota «cant de cont mal»— y queda fuera de los cortes temporales. Los totales globales
+la incluyen; su efecto es +$134.
 
 ---
 
-## 2. No fue mala suerte
+## 1. El resultado
 
-Si el sistema fuese realmente del 57,7 % que dio el backtest, la probabilidad de
-sacar 6 ganadoras o menos en 27 operaciones es del **0,019 %** (1 en 5.200).
+| | |
+|---|---:|
+| Capital inicial | $10.000 |
+| Capital final | **$8.584,52** |
+| P&L neto | **−$1.415,48 (−14,15 %)** |
+| Operaciones | 97 en 79 días operados |
+| Winrate | **36,1 %** (35 ganadoras / 62 perdedoras) |
+| Ganancia media | $235,52 |
+| Pérdida media | −$155,79 |
+| **R real** (gan. media / pérd. media) | **1,51** |
+| **Winrate de equilibrio** que exige ese R | **39,8 %** |
+| Profit factor | **0,853** |
+| Esperanza por operación | −$14,59 |
+| Máximo drawdown | −$2.321 (23 % de la cuenta) |
+| Racha máxima de perdedoras | 10 |
 
-Intervalos de confianza al 95 %:
-
-- backtest CL (n=78): **46,6 % – 68,0 %**
-- real (n=27): **10,6 % – 40,8 %**
-
-Apenas se tocan, y el real cae casi entero por debajo del breakeven del 35 %.
-La conclusión estadística es que **el 57,7 % del backtest no describe al sistema
-tal como se puede operar en vivo**.
-
-### La señal de alarma ya existía antes de operar en real
-
-El backtest de MES, con el mismo método, dio **29,2 % de winrate y profit factor
-0,71** sobre 24 operaciones, y se abandonó a las 5 semanas. Es decir:
-
-- una sola muestra dice 57,7 %: el backtest manual de CL, construido mirando el
-  gráfico hacia atrás;
-- dos muestras independientes dicen 22–29 %: el backtest de MES y toda la
-  operativa en vivo.
-
-La muestra discordante es justamente la única en la que se conocía el desenlace al
-momento de marcar la entrada. Eso es sesgo de backtest manual (*hindsight*): con la
-vela siguiente a la vista, "estructura + vela de confirmación" se reconoce con
-mucha más generosidad en los sitios donde funcionó.
-
-Un dato coherente con esto: el backtest registra 78 operaciones en 61 días sobre
-~250 hábiles. Se operó apenas el 24 % de los días disponibles. Un intradía de dos
-horas en M5 sobre CL genera muchas más ventanas que ésas.
+**Faltan 3,7 puntos de winrate.** O, dicho al revés, con el winrate que ya tenés hace
+falta un R de 1,78 en lugar de 1,51. El sistema no está lejos: está justo del lado
+equivocado de la línea.
 
 ---
 
-## 3. La causa mecánica: el stop está dentro del ruido
+## 2. El hallazgo central: el winrate no se movió, el R se derrumbó
 
-De las 27 operaciones reales, **20 salieron por stop exacto de −10 ticks y 6 por
-target exacto de +20**. Una sola salió distinto. El sistema es completamente
-binario, y el lado que domina es el stop.
+Partiendo la muestra en dos mitades iguales de 48 operaciones:
 
-La preparación de sesión del 14/02/2025 registra **ATR ≈ 0,317 en M60**, es decir
-unos 32 ticks de rango medio por hora. Con eso:
-
-- stop de 10 ticks = **0,31 × ATR horario**
-- target de 20 ticks = **0,63 × ATR horario**
-
-Se le está pidiendo al precio que no retroceda ni un tercio de lo que se mueve en
-una hora normal. A esa distancia el stop no mide que la hipótesis se invalidó:
-mide ruido.
-
-Los propios comentarios del registro histórico dicen exactamente eso, una y otra vez:
-
-> "ME SACA EN EL EXACTO TICK DE MI STOP, Y VA AL TARGET"
-> "LA LECTURA ESTABA BIEN, LA MECHA ERA MUY GRANDE, ME SACO RAPIDAMENTE Y CONTINUA AL TARGET"
-> "llego exactamente a nuestro stop y de ahi directo al BE"
-> "me saca con una mecha por debajo del minimo, ingresamos, sale target"
-
-El diagnóstico ya estaba escrito en el diario. Nunca se trasladó al plan.
-
-Hay además un factor de régimen: el backtest cubre feb-24 → ene-25, y la operativa
-real de la última cuenta cae en **abril-mayo 2025**, uno de los períodos de mayor
-volatilidad del crudo en años. El mismo stop de 10 ticks fijos vale cosas muy
-distintas en un régimen y en otro, y el plan lo dejó fijo.
-
----
-
-## 4. El agujero de datos que impide corregir con precisión
-
-**Las columnas MFE y MAE están vacías en las cuatro planillas.** Sin ellas no se
-puede distinguir entre los dos diagnósticos posibles, que exigen correcciones
-opuestas:
-
-| Si el MFE típico de las perdedoras es… | Significa | Corrección |
-|---|---|---|
-| alto (12–19 ticks) | la entrada es buena, el target de 20 está fuera de alcance | bajar/parcializar el target, mover a BE tarde |
-| bajo (0–5 ticks) | la entrada llega tarde o el sesgo está mal | corregir el disparador, no la salida |
-
-Y el MAE de las **ganadoras** dice cuánto respiro necesitaba realmente el stop.
-
-Todo lo demás de este informe es sólido; esta pieza es la que falta y es gratis
-conseguirla. Es la corrección de mayor valor del documento.
-
----
-
-## 5. Dónde se pierde el dinero (cortes)
-
-### Por momento de la sesión (ajustado por el cambio de horario USA)
-
-| Ventana | Backtest | Real |
-|---|---|---|
-| 1.ª hora (0–59 min) | n=30 · 53,3 % · +$1.577 | n=7 · **42,9 % · +$163** |
-| 2.ª hora (60–119 min) | n=47 · 59,6 % · +$3.442 | n=17 · **17,6 % · −$890** |
-| Fuera de ventana (>2 h) | n=1 | n=3 · **0 % · −$216** |
-
-La primera hora es lo único que quedó en positivo en vivo. La segunda hora
-concentra prácticamente toda la pérdida. Ojo: n=7 en la primera hora es muy poco
-para tratarlo como conclusión firme, pero la dirección es consistente.
-
-Las 3 operaciones de mayo entradas pasadas los 120 minutos **estaban fuera del
-horario que fija el plan** y las tres perdieron.
-
-### Por patrón
-
-| Patrón | Backtest | Real |
-|---|---|---|
-| ESTRUC+VC | n=39 · 59,0 % | n=14 · **28,6 % · −$274** |
-| ESTRUC+FV | n=34 · 52,9 % | n=12 · **16,7 % · −$664** |
-
-El disparador de falta de volumen se degradó más que la vela de confirmación. Es
-también el más subjetivo de los dos: qué vela cuenta como "la corrección" es una
-decisión del operador, y en backtest se elige distinto que en vivo.
-
-### Disciplina
-
-26 de 27 operaciones marcadas como disciplinadas. **La única indisciplinada perdió
-$5,32.** El problema no es la ejecución: el trader está siguiendo un plan que no
-tiene ventaja. Vale la pena decirlo explícitamente porque la conclusión natural
-después de 8 stops seguidos es "me falta disciplina", y los datos dicen lo contrario.
-
-### Otros
-
-- Racha máxima de perdedoras: **8 en real** (5 en backtest).
-- Drawdown real: **−$1.106** de los $2.000 permitidos por la prueba: 55 % consumido.
-- Comisiones: $143,64 sobre −$944, el **15 % de la pérdida**.
-
----
-
-## 6. Qué probabilidad real hay de superar la prueba
-
-Simulación Monte Carlo (40.000 corridas) de la prueba Earn2Trade 50k: objetivo
-+$3.000, drawdown máximo $2.000, tope de 2 stops por día, CL 1 contrato, R=1,85.
-
-| Winrate | P(superar la prueba) | Esperanza por op | Aprox. mensual (1,3 ops/día) |
-|---:|---:|---:|---:|
-| 22,2 % (el real) | **0,0 %** | −$38,72 | −$1.057 |
-| 30 % | 0,7 % | −$15,32 | −$418 |
-| 35 % (breakeven) | 22,1 % | −$0,32 | −$9 |
-| 40 % | 79,1 % | +$14,68 | +$401 |
-| 45 % | 97,8 % | +$29,68 | +$810 |
-| 50 % | 99,8 % | +$44,68 | +$1.220 |
-
-La lectura importante: **entre el 30 % y el 40 % de winrate se juega todo**. Es un
-margen de 10 puntos que separa la ruina segura del aprobado casi seguro. Por eso
-la prioridad no es "operar más", es medir bien dónde está ese número.
-
-### Cuántas operaciones hacen falta para saberlo
-
-Test de una cola contra el breakeven del 35 %, α=5 %, potencia 80 %:
-
-| Si el winrate verdadero fuese… | Operaciones necesarias | Tiempo a 1,3 ops/día |
+| | 1.ª mitad (22 oct – 15 ene) | 2.ª mitad (16 ene – 26 jun) |
 |---|---:|---:|
-| 42 % | ~294 | ~11 meses |
-| 45 % | ~145 | ~5 meses |
-| 50 % | ~65 | ~2,5 meses |
-| 55 % | ~37 | ~1,5 meses |
+| Operaciones | 48 | 48 |
+| **Winrate** | **35,4 %** | **35,4 %** |
+| Ganancia media | $292,33 | $184,68 |
+| Pérdida media | −$143,38 | −$168,19 |
+| **R** | **2,04** | **1,10** |
+| Winrate de equilibrio | 32,9 % | 47,7 % |
+| **P&L** | **+$524,64** | **−$2.074,16** |
+| Instrumento | 48 CL / 0 MCL | 9 CL / **39 MCL** |
+| Contratos medios | 1,00 | 2,10 |
 
-Con 27 operaciones no se puede concluir nada sobre una corrección. Es el motivo
-por el que la fase siguiente tiene que ser barata: a $105 de riesgo por operación,
-juntar 100 operaciones cuesta $10.500 de exposición y no cabe en una cuenta con
-$2.000 de drawdown.
+El winrate es **idéntico al decimal** en las dos mitades. La lectura del mercado, la
+selección de setups y la ejecución producen exactamente la misma tasa de acierto de
+principio a fin. Lo único que cambió es la geometría de las operaciones: el R pasó de
+2,04 a 1,10, y con eso el umbral de equilibrio saltó del 32,9 % al 47,7 %.
+
+Con un 35,4 % de acierto, un R de 2,04 da beneficio y un R de 1,10 es ruinoso. Es el
+mismo trader, el mismo método y el mismo acierto a los dos lados de la tabla.
 
 ---
 
-## 7. Resumen
+## 3. Por qué se derrumbó el R
 
-1. El sistema pierde porque su winrate real (22 %) está muy por debajo del
-   breakeven (35 %), no por gestión ni por psicología.
-2. El 57,7 % del backtest no es reproducible en vivo; hay sesgo de hindsight, y el
-   backtest de MES ya lo anticipaba.
-3. La causa mecánica más probable es un stop de 10 ticks que equivale a 0,3 × ATR
-   horario: el precio lo toca por ruido antes de resolver la hipótesis.
-4. No se registró MFE/MAE, y sin esos dos números no se puede elegir entre corregir
-   la entrada o corregir la salida.
-5. La disciplina no es el problema. 26 de 27 operaciones fueron ejecutadas según plan.
+Midiendo el stop y el target **en ticks por contrato** (es decir, en centavos de
+movimiento del crudo, comparables entre CL y MCL):
 
-Las correcciones concretas están en `02-PLAN-CORREGIDO.md`.
+| Instrumento | Ops | Stop mediano | Target mediano | Ratio |
+|---|---:|---:|---:|---:|
+| CL | 57 | 15,0 tk | 30,0 tk | **2,00** |
+| MCL | 39 | 70,1 tk | 82,5 tk | **1,18** |
+
+Al pasar a MCL **el stop se ensanchó 4,7 veces (15 → 70 ticks) pero el target sólo 2,75
+veces (30 → 82,5)**. Ahí se fue el R.
+
+La causa es una asimetría que está en el plan sin que se note. El plan manda ensanchar
+el stop cuando sube la volatilidad —«por encima de 0,6 opera MCL»— porque con micros
+podés ensanchar sin subir el riesgo en dólares. Pero el target está anclado a otra cosa:
+«*los pivotes dinámicos son utilizados como objetivos*». Y los pivotes son estructuras
+del gráfico: están donde están y **no se alejan porque haya subido el ATR**.
+
+Resultado: el stop escala con la volatilidad y el target no. Cuanto más volátil el
+mercado, peor el R. Mes a mes:
+
+| Mes | Stop | Target | Ratio | Instrumento |
+|---|---:|---:|---:|---|
+| 2025-10 | 11,0 tk | 30,0 tk | 2,73 | CL |
+| 2025-11 | 15,0 tk | 30,0 tk | 2,00 | CL |
+| 2025-12 | 15,0 tk | 35,0 tk | 2,33 | CL |
+| 2026-01 | 15,0 tk | 28,0 tk | 1,87 | CL |
+| 2026-02 | 12,0 tk | 36,0 tk | 3,00 | CL |
+| 2026-03 | 67,6 tk | 106,0 tk | 1,57 | MCL |
+| 2026-04 | 85,0 tk | 151,5 tk | 1,78 | MCL |
+| **2026-05** | 77,5 tk | 40,0 tk | **0,52** | MCL |
+| **2026-06** | 50,0 tk | 41,0 tk | **0,82** | CL/MCL |
+
+En mayo y junio se tomaron operaciones **con el target más cerca que el stop**. Un ratio
+de 0,52 exige acertar el 66 % de las veces para no perder. Con un 36 % de acierto, esas
+operaciones eran matemáticamente perdedoras en el momento de pulsar el botón,
+independientemente de lo bien leído que estuviera el mercado.
+
+### La misma firma aparece en los set ups
+
+| Set up | Ops | Winrate | R | Equilibrio | PF | P&L |
+|---|---:|---:|---:|---:|---:|---:|
+| ESTRUC+FV | 8 | 50,0 % | 2,24 | 30,9 % | 2,24 | +$678,00 |
+| ESTRUC+VC | 52 | 36,5 % | 1,57 | 38,9 % | 0,90 | −$488,80 |
+| Giro+VC | 30 | 36,7 % | 1,29 | 43,7 % | 0,75 | −$793,08 |
+| Giro+FV | 6 | 0,0 % | — | — | 0,00 | −$945,64 |
+
+Mirá ESTRUC+VC y Giro+VC: **36,5 % y 36,7 % de acierto, prácticamente el mismo número**.
+Lo que los separa es el R (1,57 contra 1,29), y con eso el profit factor cae de 0,90 a
+0,75. Otra vez: no es que el Giro se lea peor, es que deja menos recorrido hasta el
+objetivo porque entra contra el movimiento previo.
+
+---
+
+## 4. El otro hallazgo con respaldo estadístico: los primeros 30 minutos
+
+Midiendo los minutos desde la apertura cash (ajustado por los cambios de horario de
+EE.UU. de noviembre y marzo, que mueven la apertura entre las 10:00 y las 11:00 de
+Buenos Aires):
+
+| Ventana | Ops | Winrate | P&L |
+|---|---:|---:|---:|
+| Antes de la apertura | 5 | 40,0 % | +$63,40 |
+| **0–29 min** | **13** | **7,7 %** | **−$1.447,52** |
+| 30–59 min | 33 | 33,3 % | −$579,00 |
+| 60–89 min | 24 | 37,5 % | −$228,24 |
+| 90–119 min | 14 | 35,7 % | −$122,40 |
+| Más de 2 h | 7 | 85,7 % | +$764,24 |
+
+Trece operaciones en la primera media hora, **una sola ganadora**, y una pérdida de
+$1.447 que es mayor que la pérdida total del sistema. Test exacto de Fisher: **p =
+0,029**, significativo. Tiene además una explicación mecánica evidente: en los primeros
+minutos no hay estructura formada sobre la que aplicar el algoritmo, y el ruido de la
+apertura toca cualquier stop.
+
+El extremo opuesto (más de 2 h, 85,7 % de acierto, p = 0,007) también sale significativo,
+pero son 7 operaciones y conviene tratarlo como una pista, no como una regla.
+
+---
+
+## 5. Qué NO resistió el análisis
+
+Esto importa tanto como lo anterior, porque son los cortes que a simple vista parecen
+culpables y no lo son. Test exacto de Fisher sobre el winrate:
+
+| Corte | Ops | Winrate | P&L | p | ¿Significativo? |
+|---|---:|---:|---:|---:|---|
+| Primeros 30 min | 13 | 7,7 % | −$1.447,52 | 0,029 | **sí** |
+| Más de 2 h | 7 | 85,7 % | +$764,24 | 0,007 | **sí** |
+| Giro+FV | 6 | 0,0 % | −$945,64 | 0,086 | no (marginal) |
+| Familia Giro | 36 | 30,6 % | −$1.738,72 | 0,512 | no |
+| Operaciones en corto | 32 | 28,1 % | −$1.432,60 | 0,367 | no |
+| Instrumento MCL | 39 | 38,5 % | −$1.296,28 | 0,667 | no |
+| Lunes | 11 | 18,2 % | −$1.098,52 | 0,318 | no |
+| Con salidas parciales | 35 | 40,0 % | −$937,40 | 0,512 | no |
+
+Tres conclusiones que van contra la intuición:
+
+**Los cortos no son el problema.** Pierden $1.432, pero su winrate (28,1 %) no se separa
+del resto de forma significativa. La diferencia es ruido más un régimen de mercado
+concreto; prohibirlos sería ajustar la regla a lo que ya pasó.
+
+**MCL tampoco es el problema en sí.** Su winrate es del 38,5 %, **mejor** que el 33,3 % de
+CL. Las entradas en días volátiles se leen igual de bien o mejor. Lo que falla es el R
+con el que se toman. Prohibir MCL sería tratar el síntoma: en marzo, abril y mayo de 2026
+te habría dejado sin operar un solo día.
+
+**Los lunes tampoco.** Once operaciones no dicen nada, por mal que se vean.
+
+---
+
+## 6. Cumplimiento de las reglas del plan
+
+| Regla del plan | Cumplimiento |
+|---|---|
+| Máximo 2 operaciones por día | 2 días con 3 operaciones (31/10 y 14/11) |
+| Máxima pérdida semanal $500 | Superada en 2 de 32 semanas (W49-2025: −$506; W15-2026: −$958) |
+| Riesgo 1 %–2 % | **10 de 62 perdedoras superaron el 2 %**; la peor, 3,52 % |
+| Operación disciplinada | 92 de 96; las 4 indisciplinadas suman −$776 (media −$194) |
+
+La disciplina general es buena y las desviaciones son puntuales, pero las que hay son
+caras: cuatro operaciones fuera de plan se llevaron la mitad de la pérdida neta del año.
+La peor operación de toda la muestra (−$360,20, MCL 5 contratos, 3,52 % de la cuenta)
+está marcada como indisciplinada.
+
+---
+
+## 7. Lo que sigue sin registrarse
+
+**MFE y MAE están vacíos en 96 de las 97 operaciones.** Son las columnas que dirían
+cuánto recorrido a favor tuvo cada perdedora antes de girarse y cuánto respiro necesitó
+cada ganadora.
+
+En este análisis se pudo reconstruir el R *realizado* a partir de los ticks de salida,
+que es lo que permitió llegar al diagnóstico. Pero para calibrar el target hace falta el
+R *disponible*: saber si el precio llegó a rozar el objetivo y volvió, o si nunca se
+acercó. Sin eso, la elección del target sigue siendo a ojo.
+
+---
+
+## 8. Resumen
+
+1. El sistema pierde por **3,7 puntos de winrate**, o equivalentemente por 0,27 puntos
+   de R. Está cerca del equilibrio, no lejos.
+2. **El winrate es estable en el 35–36 % durante los ocho meses.** La lectura de mercado
+   no se degradó.
+3. Lo que se rompió es el **R: de 2,04 a 1,10**, cuando la operativa pasó a MCL.
+4. La causa está medida: **el stop escala con la volatilidad y el target no**, porque el
+   target está anclado a pivotes que no se mueven con el ATR.
+5. En mayo y junio se operó con ratios de 0,52 y 0,82 — perdedoras por aritmética antes
+   de entrar.
+6. Los **primeros 30 minutos** son el único corte horario con respaldo estadístico:
+   13 operaciones, 1 ganadora, −$1.447.
+7. Los cortos, MCL y los lunes **no** resisten el test: son ruido, no causas.
+
+Las correcciones están en `02-PLAN-CORREGIDO.md`.

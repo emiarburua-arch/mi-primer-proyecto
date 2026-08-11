@@ -1,44 +1,64 @@
-# TPP EA n01 — revisión del trading plan
+# CL Beta plan 30d — revisión del trading plan
 
-Análisis de las planillas B20x50 (backtest y operativa real) y correcciones propuestas
-al Trading Plan Personal.
+Análisis de las **97 operaciones reales** registradas en
+`B20x50 - CL Beta plan 30d 22-10.xlsx` (cuenta real, 22/10/2025 → 26/06/2026),
+contrastadas con las reglas de `Trading Plan Personal.docx`.
 
 ## Resultado en una línea
 
-El sistema pierde porque su winrate real (**22,2 %** sobre 27 operaciones) quedó muy
-por debajo del umbral de equilibrio (**35,1 %**), no por gestión ni por disciplina —
-26 de las 27 operaciones se ejecutaron según plan.
+El winrate fue **idéntico (35,4 %) en las dos mitades del período**, pero la primera
+ganó $525 y la segunda perdió $2.074. Lo que se rompió no fue la lectura del mercado
+sino el ratio riesgo/beneficio: **el R cayó de 2,04 a 1,10** cuando el stop empezó a
+ensancharse con la volatilidad mientras el objetivo seguía anclado a pivotes que no se
+mueven con el ATR.
+
+| | |
+|---|---:|
+| Capital | $10.000 → $8.584,52 (−14,15 %) |
+| Winrate | 36,1 % |
+| R real | 1,51 · **equilibrio 39,8 %** |
+| Profit factor | 0,853 |
+| Máximo drawdown | −$2.321 (23 %) |
+
+Faltan 3,7 puntos de winrate, o 0,27 puntos de R.
 
 ## Documentos
 
 | Archivo | Contenido |
 |---|---|
-| [`01-DIAGNOSTICO.md`](01-DIAGNOSTICO.md) | Por qué pierde: los números, el test de significancia, la causa mecánica |
-| [`02-PLAN-CORREGIDO.md`](02-PLAN-CORREGIDO.md) | Las siete correcciones (C1–C7), sin tocar la lógica de entrada |
-| [`03-CHECKLIST-FASE-1.md`](03-CHECKLIST-FASE-1.md) | Checklist diario y criterios de revisión a las 30 y 60 operaciones |
-| `informe.html` | Resumen visual del diagnóstico |
+| [`01-DIAGNOSTICO.md`](01-DIAGNOSTICO.md) | Por qué pierde: el corte por mitades, la causa medida, qué resiste el test estadístico y qué no |
+| [`02-PLAN-CORREGIDO.md`](02-PLAN-CORREGIDO.md) | Las siete correcciones (C1–C7), ninguna toca la lógica de entrada |
+| `informe.html` | Resumen visual |
 
-## Datos analizados
+## Las dos correcciones principales
 
-129 operaciones en total, desde las planillas en Drive:
+- **C1 — ratio mínimo 2:1 verificado antes de entrar.** El plan ya pide que «el pivote
+  permita el recorrido hasta el target», pero sin número, y por eso no filtra nada.
+- **C2 — si el stop se ensancha por volatilidad, el objetivo también.** No es «no operar
+  MCL»: el winrate en MCL fue del 38,5 %, mejor que el 33,3 % de CL. Lo que hay que
+  descartar no son los días volátiles, son las operaciones mal proporcionadas.
 
-- `B20x50 - CL Backtest desde 01-02-2024.xlsx` — 78 ops, +$5.213, WR 57,7 %
-- `B20x50 - MES backtest desde 1-02-2024.xlsx` — 24 ops, −$212, WR 29,2 %
-- `B20x50 - TPP EA n01.xlsx` — 19 ops reales, −$501, WR 26,3 %
-- `B20x50 - Earn2 trade 22-04 EA01 A.xlsx` — 8 ops reales, −$443, WR 12,5 %
+## Pendiente
+
+**MFE y MAE están vacíos en 96 de las 97 operaciones.** El R *realizado* se reconstruyó
+a partir de los ticks de salida, y con eso alcanzó para el diagnóstico. Para calibrar el
+target hace falta el R *disponible*: saber si el precio llegó a rozar el objetivo y
+volvió, o si nunca se acercó. Las capturas de pantalla de las sesiones permitirían
+reconstruirlo hacia atrás.
 
 ## Reproducir el análisis
 
-Los scripts de `analisis/` leen el volcado de texto de cada planilla y recalculan todo:
+Los scripts de `analisis/` leen el `.xlsx` directamente (requieren `openpyxl`).
+Hay que apuntar la ruta del archivo al principio de `beta_load.py`, que genera el
+`beta.json` que consumen los demás.
 
 | Script | Qué hace |
 |---|---|
-| `parse.py` | Extrae las operaciones de la pestaña «Entrada de Datos» |
-| `analyze.py` | Winrate, profit factor, cortes por patrón / hora / día / mes, rachas, drawdown |
-| `deep.py` | Test binomial, intervalos de Wilson, ventana horaria ajustada por horario de EE.UU. |
-| `sim.py` | Monte Carlo de la prueba de fondeo y cálculo de tamaño de muestra |
-| `mes.py` | Backtest de MES por separado |
-| `curve.py` | Curvas de resultado acumulado para el informe |
-
-Las rutas a los volcados están al principio de cada script y hay que apuntarlas a los
-archivos exportados desde Drive.
+| `beta_load.py` | Extrae las 97 operaciones de la pestaña «Entrada de Datos» |
+| `beta_an.py` | Winrate, profit factor, R, cortes por set up / instrumento / hora / día / mes |
+| `beta_deep.py` | Hora relativa a la apertura cash, set up × dirección, pérdidas grandes |
+| `beta_valid.py` | Test exacto de Fisher, estabilidad temporal, validación fuera de muestra |
+| `beta_size.py` | Qué cambió entre las dos mitades: tamaño, instrumento, contratos |
+| `beta_r.py` | Stop y target en ticks por contrato — el cálculo que aísla la causa |
+| `beta_reglas.py` | Cumplimiento de las reglas del plan y atribución de la pérdida |
+| `beta_oos.py` | Efecto de cada corrección y tabla de esperanza |

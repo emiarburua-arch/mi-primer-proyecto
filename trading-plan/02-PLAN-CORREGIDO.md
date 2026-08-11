@@ -1,203 +1,197 @@
-# TPP EA n02 — correcciones al Trading Plan Personal
+# Correcciones al CL Beta plan 30d
 
-Versión corregida del `TPP EA n1`. **La lógica de entrada no cambia**: contexto M60,
-algoritmo Ankora en M5, elementos primarios (estructura / facilidad) y disparadores
-(vela de confirmación / falta de volumen) quedan exactamente como están.
+**La lógica de entrada no se toca.** El contexto M60, el trazado de niveles, las
+hipótesis A y B, los set ups y el disparador quedan exactamente como están: los datos
+dicen que funcionan, porque el winrate se mantuvo estable en el 35–36 % durante los ocho
+meses completos.
 
-Lo que cambia es dónde se pone el stop, cuánto se arriesga, qué se mide y en qué
-cuenta se opera. Son siete correcciones, ordenadas por impacto.
-
----
-
-## C1 · Registrar MFE y MAE en cada operación — *obligatorio*
-
-**Estado actual:** las columnas existen en la planilla B20x50 y están vacías en las
-cuatro planillas, backtest y real.
-
-**Corrección:** ninguna operación se da por cerrada en el registro sin MFE (máximo
-recorrido a favor, en ticks) y MAE (máximo recorrido en contra, en ticks).
-
-**Por qué es la primera de la lista:** es el único dato que separa "la entrada es
-buena pero el target es inalcanzable" de "la entrada está mal". Esas dos hipótesis
-piden correcciones opuestas y hoy no hay forma de elegir entre ellas. Cuesta 30
-segundos por operación y desbloquea todas las decisiones siguientes.
-
-Con 30–40 operaciones registradas se responde:
-
-- **MAE mediano de las ganadoras** → cuánto respiro necesitaba realmente el stop.
-- **MFE mediano de las perdedoras** → si el target de 2R estaba al alcance.
-- **% de perdedoras con MFE ≥ 1R** → si conviene parcializar o mover a BE.
+Lo que se corrige es **la geometría de la operación**: qué relación mínima tiene que
+haber entre el stop y el target para que valga la pena entrar.
 
 ---
 
-## C2 · El stop se ancla al ATR, no a un número fijo de ticks
+## C1 · Ratio mínimo 2:1 verificado antes de entrar — *la corrección principal*
 
-**Estado actual:** stop de 10 ticks fijos. Con ATR(14) M60 ≈ 0,32 (≈32 ticks), eso
-es **0,31 × el rango medio de una hora**. El precio lo toca por ruido antes de que
-la hipótesis se resuelva. 20 de 27 salidas reales fueron stop exacto.
+**Qué dice hoy el plan:** «*los pivotes dinámicos son utilizados como objetivos, por lo
+tanto, para tomar una operación el pivote tiene que permitir el recorrido hasta el
+target*». La idea correcta ya está escrita, pero **sin número**, y por eso no filtra nada.
 
-**Corrección:**
+**Qué pasa a decir:**
 
 ```
-stop (ticks) = máx( pivote a proteger , 0,5 × ATR(14) M60 en ticks )
-target       = 2 × stop
-riesgo $     = $100 fijo  (1 % de la cuenta de 10k)
-tamaño       = $100 / (stop_ticks × valor_tick)
+Antes de mandar la orden limitada, con el stop ya definido:
+
+    distancia al pivote objetivo  ÷  distancia al stop  ≥  2,0
+
+Si el cociente da menos de 2,0 → la operación NO se toma.
+No se acerca el stop para que el número dé. No se estira el target
+hasta un pivote que no corresponde. Se descarta y se espera la siguiente.
 ```
 
-Se opera en **MCL** ($1/tick) para poder ajustar el tamaño con el stop ancho y
-mantener el riesgo en dólares constante:
+**Por qué éste es el número.** Con el winrate real medido (36 %), la esperanza por
+operación a $155 de riesgo es:
 
-| ATR M60 | Stop mínimo | Target | Contratos MCL | Riesgo |
+| R | 33 % | **36 %** | 40 % | 45 % |
 |---:|---:|---:|---:|---:|
-| 0,30 | 15 tk | 30 tk | 6 | ~$100 |
-| 0,40 | 20 tk | 40 tk | 5 | ~$100 |
-| 0,50 | 25 tk | 50 tk | 4 | ~$100 |
-| 0,60 | 30 tk | 60 tk | 3 | ~$100 |
-| > 0,80 | — | — | **no se opera** | — |
+| 1,10 | −$48 | **−$38** | −$25 | −$9 |
+| 1,51 *(tu R actual)* | −$27 | **−$15** | +$1 | +$20 |
+| 1,75 | −$14 | **−$2** | +$16 | +$37 |
+| **2,00** | −$2 | **+$12** | +$31 | +$54 |
+| 2,25 | +$11 | **+$26** | +$46 | +$72 |
 
-**El coste honesto de este cambio:** la comisión de MCL es proporcionalmente más
-cara ($1,84/contrato contra $5,32 por un CL que vale 10 veces más). Con 5 MCL la
-comisión sube a $9,20 round-turn y el R neto baja de 1,85 a **1,75**, con lo que el
-winrate de breakeven sube de 35,1 % a **36,4 %**. Se paga 1,3 puntos de winrate a
-cambio de un stop entre 1,5 y 3 veces más ancho. Si el diagnóstico del ruido es
-correcto, la compensación es muy favorable; el MFE/MAE de C1 lo confirmará o lo
-desmentirá.
+Con tu winrate, el equilibrio está en R = 1,78. Un mínimo de 2,00 deja margen para que
+el winrate baje unos puntos sin que el sistema se dé vuelta. Un mínimo de 1,75 sería
+operar sobre la línea, y ya sabés lo que pasa cuando el R se desliza por debajo.
 
-**Además:** la tabla de ATR del plan actual está escrita con los operadores
-invertidos (`0<= ATR =>0.6`) y, con un ATR típico de 0,30–0,40, **siempre cae en el
-primer tramo**. El segundo tramo (MCL, 20 ticks, 5 contratos) nunca se activó: todas
-las operaciones registradas son CL 1 contrato con stop de 10. La regla de adaptación
-a la volatilidad existía en el papel pero estaba muerta en la práctica. La tabla de
-arriba la reemplaza.
+Esta regla sola habría eliminado las operaciones de mayo y junio con ratio 0,52 y 0,82,
+que son perdedoras por aritmética antes de entrar.
 
 ---
 
-## C3 · Fase de recalibración fuera de la cuenta de fondeo
+## C2 · Cuando sube la volatilidad, el target escala igual que el stop
 
-**Estado actual:** el drawdown real acumulado fue de −$1.106 sobre los $2.000 que
-permite la prueba. Con un winrate del 22 %, la probabilidad simulada de superarla es
-**0,0 %**; incluso al 30 % es del 0,7 %.
+**El problema medido:** al pasar a MCL el stop se ensanchó 4,7× (15 → 70 ticks por
+contrato) y el target sólo 2,75× (30 → 82,5). El plan manda ensanchar el stop con el
+ATR pero deja el target anclado a pivotes, que no se mueven con la volatilidad.
 
-**Corrección:** suspender la prueba de fondeo hasta cerrar la Fase 1. Operar en
-**simulado o en cuenta propia con 1–2 MCL** (riesgo real $20–$40 por operación).
+**Qué pasa a decir:**
 
-**Por qué:** validar una corrección exige entre 65 y 300 operaciones según de qué
-tamaño sea la mejora. A $105 de riesgo por operación eso son entre $7.000 y $30.000
-de exposición, imposible dentro de un drawdown de $2.000. La cuenta de fondeo no es
-un lugar donde se investiga; es donde se cobra una ventaja ya demostrada. Pagar
-suscripción mientras se investiga es pagar dos veces.
+```
+Al operar MCL por ATR > 0,6, el objetivo tiene que ser un pivote
+que esté como mínimo al doble de la distancia del stop ensanchado.
 
-**Criterio de regreso al fondeo** (los tres a la vez):
+Si el único pivote disponible es el mismo que usarías en régimen normal
+—es decir, si el mercado se volvió más volátil pero el objetivo no se alejó—
+ese día no hay operación. No se opera "igual pero con micros".
+```
 
-1. ≥ 60 operaciones registradas con MFE/MAE completos bajo el plan corregido;
-2. winrate ≥ 42 % (margen sobre el breakeven de 36,4 %, no empate);
-3. profit factor ≥ 1,3 y drawdown máximo < 12R.
+**Lo que esto NO significa:** no es «no operar MCL». El winrate en MCL fue del 38,5 %,
+**mejor** que el 33,3 % de CL: en días volátiles leés el mercado igual de bien o mejor.
+Prohibir MCL sería tratar el síntoma y te dejaría sin operar meses enteros. Lo que hay
+que descartar no son los días volátiles, son las operaciones mal proporcionadas.
 
----
-
-## C4 · Sólo ESTRUC+VC durante la Fase 1
-
-**Estado actual:** ESTRUC+FV dio en vivo 12 operaciones, 16,7 % de winrate y −$664.
-ESTRUC+VC dio 14 operaciones, 28,6 % y −$274. En backtest eran casi iguales
-(52,9 % contra 59,0 %).
-
-**Corrección:** operar únicamente **estructura + vela de confirmación**. La falta de
-volumen queda suspendida y se sigue registrando en el diario como "señal observada
-pero no operada", para poder evaluarla después sin arriesgar dinero.
-
-**Por qué:** el disparador de falta de volumen es el más subjetivo de los dos —
-cuál es "la vela de la corrección" es una decisión del operador—, y es justamente
-el que más se degradó al pasar de backtest a vivo. Es el candidato natural a estar
-inflado por el sesgo de hindsight.
+En la práctica, en un régimen de ATR alto vas a operar **bastante menos días**, y eso es
+correcto: son días en los que el recorrido disponible no paga el riesgo que hay que
+asumir.
 
 ---
 
-## C5 · Ventana horaria
+## C3 · Nada de entradas en los primeros 30 minutos
 
-**Estado actual:** el plan fija dos horas desde la apertura cash. En vivo:
+**El dato:** 13 operaciones en la primera media hora tras la apertura cash, **1 sola
+ganadora** (7,7 %), −$1.447,52 — más que la pérdida total del sistema. Fisher p = 0,029.
 
-| Ventana | Real |
-|---|---|
-| 1.ª hora | n=7 · 42,9 % · **+$163** |
-| 2.ª hora | n=17 · 17,6 % · **−$890** |
-| pasadas las 2 h | n=3 · 0 % · −$216 |
+**Qué pasa a decir:**
 
-**Corrección firme:** ninguna entrada pasados los 120 minutos desde la apertura
-cash. Las 3 operaciones de mayo que rompieron esta regla perdieron las 3. Poner una
-alarma al minuto 120 y cerrar plataforma.
+```
+La ventana operativa abre a los 30 minutos de la apertura cash.
+Los primeros 30 minutos son de observación: se marcan niveles,
+se confirma o descarta la hipótesis, no se opera.
+```
 
-**Corrección tentativa:** en la segunda hora, sólo setups ESTRUC+VC de calidad A.
-Marcar la hora relativa a la apertura (no la hora de reloj) en cada registro y
-revisar este corte a las 50 operaciones.
-
-Advertencia deliberada: la primera hora tiene sólo 7 operaciones. **No es evidencia
-suficiente para cerrar la segunda hora del todo**, y hacerlo cortaría a la mitad las
-oportunidades justo cuando hacen falta operaciones para validar. Por eso el corte
-firme es el de las 2 horas y el resto se mide.
-
-Recordatorio operativo: la apertura cash se mueve con el horario de verano de EE.UU.
-(10:00 BA en horario de verano, 11:00 BA fuera de él). Verificarlo cada marzo y cada
-noviembre.
+Tiene sentido mecánico además del estadístico: el algoritmo necesita estructura formada
+para aplicarse, y en los primeros minutos todavía no la hay. Recordá que la apertura se
+mueve entre las 10:00 y las 11:00 de Buenos Aires según el horario de EE.UU. — hay que
+recalcularla en noviembre y en marzo.
 
 ---
 
-## C6 · Límite explícito de operaciones por sesión
+## C4 · Giro+FV suspendido; Giro+VC con exigencia mayor
 
-**Estado actual:** el plan dice "Máximo de operaciones: sin límite" y a la vez fija
-una pérdida máxima diaria de $200, que son exactamente 2 stops. La primera regla
-contradice a la segunda.
+**Los datos:** Giro+FV son 6 operaciones, **0 ganadoras**, −$945,64. Giro+VC son 30
+operaciones con 36,7 % de acierto —igual que ESTRUC+VC— pero con R de 1,29 contra 1,57,
+y por eso profit factor de 0,75 contra 0,90.
 
-**Corrección:**
+**Qué pasa a decir:**
 
-- máximo **3 operaciones por sesión**;
-- **2 stops completos cierran el día**, sin excepción;
-- tras el segundo stop no se vuelve a mirar el gráfico hasta el día siguiente.
+```
+Giro+FV: suspendido. Se sigue anotando como señal observada, sin operar.
+Giro+VC: se toma sólo con ratio ≥ 2,5 (no 2,0).
+```
 
----
-
-## C7 · No mover a break-even durante la Fase 1
-
-**Estado actual:** el plan ya lo dice ("NO protegemos a BE en ningún momento"), y
-en la Fase 1 hay que **mantenerlo**, aunque duela.
-
-**Por qué:** mover a BE destruye el dato de MFE que hace falta para decidir. Si la
-operación se cierra en BE nunca se sabe si habría llegado al target, y la corrección
-C1 pierde todo su sentido. Primero se mide, después se optimiza la salida.
-
-La decisión sobre parciales y BE se toma **al cerrar la Fase 1, con los datos de MFE
-en la mano** — no antes. Si resulta que la mayoría de las perdedoras llegan a 1R
-antes de girarse, el parcial se justifica solo; si no llegan, el parcial sólo
-recortaría las ganadoras.
+**Cuidado con esto:** Giro+FV con 6 operaciones no es estadísticamente concluyente
+(p = 0,086), y la familia Giro completa tampoco (p = 0,512). No estoy diciendo que el
+Giro no sirva. Lo que sí está medido es que **deja menos recorrido hasta el objetivo**,
+porque entra contra el movimiento previo, y eso es exactamente el problema que ataca C1.
+La exigencia extra de ratio es la forma de mantenerlo vivo sin que siga drenando.
 
 ---
 
-## Resumen de cambios
+## C5 · Tope de riesgo del 2 % que no se negocia
 
-| # | Cambio | Impacto esperado | Confianza |
+**El dato:** 10 de 62 perdedoras superaron el 2 % del capital. La peor llegó al 3,52 %
+(−$360,20, MCL 5 contratos) y está marcada como indisciplinada. Las 4 operaciones fuera
+de plan del año suman −$776, la mitad de la pérdida neta.
+
+**Qué pasa a decir:**
+
+```
+El número de contratos se calcula ANTES de entrar, dividiendo
+el 2 % del capital por la distancia al stop. Si el resultado no
+es un número entero de contratos, se redondea hacia abajo.
+Nunca hacia arriba.
+```
+
+---
+
+## C6 · Registrar MFE y MAE
+
+Siguen vacíos en 96 de 97 operaciones. En este análisis se pudo reconstruir el R
+*realizado* a partir de los ticks de salida, y con eso alcanzó para el diagnóstico. Pero
+para elegir bien el target hace falta el R *disponible*: si el precio llegó a rozar el
+objetivo y volvió, o si nunca se acercó.
+
+Concretamente, en 30 operaciones más te va a decir si el mínimo de 2,0 de C1 es el
+número correcto o si el mercado te da margen para exigir 2,5.
+
+---
+
+## C7 · Respetar el tope semanal de $500
+
+Se superó en 2 de 32 semanas (−$506 y −$958). No es sistemático, pero la semana de
+−$958 es casi el doble del límite y por sí sola vale dos tercios de la pérdida anual.
+Con el tope respetado, esa semana habría cerrado en −$500.
+
+---
+
+## Resumen
+
+| # | Corrección | Base | Confianza |
 |---|---|---|---|
-| C1 | Registrar MFE/MAE | Desbloquea el resto | **Alta** |
-| C2 | Stop = 0,5 × ATR, tamaño en MCL | Ataca la causa principal | **Alta** |
-| C3 | Salir del fondeo hasta validar | Evita la ruina | **Alta** |
-| C4 | Sólo ESTRUC+VC | Quita el patrón más degradado | Media |
-| C5 | Corte duro a los 120 min | Elimina 3 pérdidas evitables | Media |
-| C6 | Máx. 3 ops / 2 stops por día | Resuelve una contradicción | Media |
-| C7 | Sin BE durante la medición | Preserva la calidad del dato | **Alta** |
+| C1 | Ratio mínimo 2:1 antes de entrar | Aritmética de la esperanza + R medido | **Alta** |
+| C2 | El target escala con el stop | Stop 4,7× vs target 2,75× al pasar a MCL | **Alta** |
+| C3 | Ventana abre a los 30 min | 13 ops, 1 ganadora, p=0,029 | **Alta** |
+| C4 | Giro+FV fuera, Giro+VC con ratio 2,5 | R 1,29 vs 1,57 con igual winrate | Media |
+| C5 | Tope 2 % calculado antes de entrar | 10 ops lo superaron | **Alta** |
+| C6 | Registrar MFE/MAE | 96 de 97 vacías | **Alta** |
+| C7 | Tope semanal $500 | 2 semanas lo superaron | Media |
 
-## Lo que hay que tener claro antes de empezar
+---
 
-Estas correcciones son razonables y salen de los datos, pero **ninguna está probada
-todavía**. La corrección C2 es una hipótesis fuerte y bien fundada sobre la causa
-—el stop está dentro del ruido—, no un hecho verificado. Puede pasar que con el stop
-ancho el winrate suba y aun así no alcance el 36,4 % de breakeven, y en ese caso la
-conclusión sería que el disparador no tiene ventaja predictiva y hay que rehacer la
-entrada, no la gestión.
+## Honestidad sobre lo que estas correcciones prueban y lo que no
 
-El objetivo de la Fase 1 no es ganar dinero: es **conseguir 60 operaciones con
-MFE/MAE completos** para poder responder esa pregunta con datos en vez de con
-intuición. Si al cabo de esas 60 operaciones el winrate sigue debajo de 36 %, la
-respuesta honesta es que el sistema no es rentable tal como está y que el trabajo
-siguiente está en la lógica de entrada.
+Aplicadas hacia atrás sobre las mismas 97 operaciones, C1+C3+C4 dan 39 operaciones,
+41 % de winrate, R 1,90 y **+$1.122** en lugar de −$1.549. Ese número **no es una
+predicción y no hay que creérselo**: filtrar hacia atrás los grupos que perdieron
+siempre mejora el resultado. Es la trampa clásica de este tipo de análisis.
 
-Un último punto que conviene no perder de vista: 26 de las 27 operaciones reales
-fueron ejecutadas según plan. La disciplina no es el problema acá.
+La validación limpia —fijar las reglas con la primera mitad y medirlas en la segunda—
+deja sólo 8 operaciones en la segunda mitad, con profit factor 0,36. **Ocho operaciones
+no prueban nada, ni a favor ni en contra.**
+
+Por eso el argumento que sostiene C1 y C2 no es el filtrado histórico, sino la
+aritmética: con un 36 % de acierto necesitás R ≥ 1,78, y eso es cierto
+independientemente de qué operaciones hayas tomado. Lo que el histórico aporta es la
+medición de que tu R real fue 1,51 y de dónde se perdió: del stop que escala con la
+volatilidad mientras el target se queda quieto.
+
+**La predicción concreta y falsable** es ésta: si el winrate se mantiene en el 35–36 %
+—como se mantuvo durante ocho meses— y el R sube de 1,51 a 2,0 o más, la esperanza pasa
+de −$15 a +$12 por operación. Si tras 40 operaciones bajo las reglas nuevas el R medido
+no llega a 1,9, o el winrate cae por debajo del 33 %, la hipótesis está mal y hay que
+volver sobre la entrada, no sobre la gestión.
+
+Un punto que conviene tener presente: exigir 2:1 va a hacer que **descartes bastantes
+más operaciones de las que venías tomando**, sobre todo en días volátiles. Menos
+operaciones se siente como estar perdiendo oportunidades, y la tentación va a ser
+aflojar el ratio. Ese aflojamiento es exactamente lo que produjo la segunda mitad del año.
