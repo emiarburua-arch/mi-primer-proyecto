@@ -34,7 +34,7 @@ Faltan 3,7 puntos de winrate, o 0,27 puntos de R.
 | [`02-PLAN-CORREGIDO.md`](02-PLAN-CORREGIDO.md) | Las siete correcciones (C1–C7), ninguna toca la lógica de entrada |
 | `informe.html` | Resumen visual |
 
-## Las dos correcciones principales
+## Las correcciones principales
 
 - **C1 — tres escenarios de stop fijo según el ATR, todos con el mismo riesgo en
   dólares** ($150). Los números salen redondos: 15 tk × CL 1c = 30 tk × MCL 5c =
@@ -44,11 +44,11 @@ Faltan 3,7 puntos de winrate, o 0,27 puntos de R.
   de 2026 lo desmienten. De cuatro ganadoras medidas el precio llegó a 2,11R, 2,28R, 2,42R
   y 3,05R: sólo una habría alcanzado un objetivo a 2,5R, y las otras tres habrían vuelto
   hasta el stop. Haría falta que el 81 % llegara; la muestra dice 25 %.
+- **C3 — ninguna operación se cierra por debajo de 1R.** Cuatro ganadoras del año
+  cobraron entre 0,03R y 0,21R: el 12 % de las ganadoras aportando $69.
 - **C4 — la ventana operativa abre a los 30 minutos.** 13 operaciones en la primera media
   hora, 1 ganadora, −$1.448, p=0,029. Es la corrección de mayor impacto: vale +10R contra
   los +6R del riesgo fijo.
-- **C3 — ninguna operación se cierra por debajo de 1R.** Cuatro ganadoras del año
-  cobraron entre 0,03R y 0,21R: el 12 % de las ganadoras aportando $69.
 
 ## Pendiente
 
