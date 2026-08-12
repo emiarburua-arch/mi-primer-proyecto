@@ -59,44 +59,76 @@ mismo trader, el mismo método y el mismo acierto a los dos lados de la tabla.
 
 ---
 
-## 3. Por qué se derrumbó el R
+## 3. Por qué se derrumbó el R: se arriesgó más en las operaciones que salieron mal
 
-Midiendo el stop y el target **en ticks por contrato** (es decir, en centavos de
-movimiento del crudo, comparables entre CL y MCL):
+**El ratio 2:1 se respetó.** Las ganadoras en CL se agrupan exactamente en el doble de su
+stop: con stop de 15 ticks salen a 30, con stop de 10 salen a 20, con stop de 12 salen a
+24. El plan se ejecutó como estaba escrito, operación por operación.
 
-| Instrumento | Ops | Stop mediano | Target mediano | Ratio |
-|---|---:|---:|---:|---:|
-| CL | 57 | 15,0 tk | 30,0 tk | **2,00** |
-| MCL | 39 | 70,1 tk | 82,5 tk | **1,18** |
+Lo que no se mantuvo constante fue **cuántos dólares había detrás de cada operación**:
 
-Al pasar a MCL **el stop se ensanchó 4,7 veces (15 → 70 ticks) pero el target sólo 2,75
-veces (30 → 82,5)**. Ahí se fue el R.
+| | Riesgo medio cuando **ganaste** | Riesgo medio cuando **perdiste** | Diferencia |
+|---|---:|---:|---:|
+| CL | $142,89 | $146,90 | 1,03× |
+| **MCL** | **$94,70** | **$169,86** | **1,79×** |
+| **Todas** | **$121,63** | **$155,79** | **1,28×** |
 
-La causa es una asimetría que está en el plan sin que se note. El plan manda ensanchar
-el stop cuando sube la volatilidad —«por encima de 0,6 opera MCL»— porque con micros
-podés ensanchar sin subir el riesgo en dólares. Pero el target está anclado a otra cosa:
-«*los pivotes dinámicos son utilizados como objetivos*». Y los pivotes son estructuras
-del gráfico: están donde están y **no se alejan porque haya subido el ATR**.
+Ahí está todo el problema, y es puramente aritmético:
 
-Resultado: el stop escala con la volatilidad y el target no. Cuanto más volátil el
-mercado, peor el R. Mes a mes:
+```
+ganancia media = 2 × $121,63 = $243,26
+pérdida media  =              $155,79
+R realizado    = 243,26 / 155,79 = 1,56
+```
 
-| Mes | Stop | Target | Ratio | Instrumento |
-|---|---:|---:|---:|---|
-| 2025-10 | 11,0 tk | 30,0 tk | 2,73 | CL |
-| 2025-11 | 15,0 tk | 30,0 tk | 2,00 | CL |
-| 2025-12 | 15,0 tk | 35,0 tk | 2,33 | CL |
-| 2026-01 | 15,0 tk | 28,0 tk | 1,87 | CL |
-| 2026-02 | 12,0 tk | 36,0 tk | 3,00 | CL |
-| 2026-03 | 67,6 tk | 106,0 tk | 1,57 | MCL |
-| 2026-04 | 85,0 tk | 151,5 tk | 1,78 | MCL |
-| **2026-05** | 77,5 tk | 40,0 tk | **0,52** | MCL |
-| **2026-06** | 50,0 tk | 41,0 tk | **0,82** | CL/MCL |
+El R medido en la planilla es **1,53**. La cuenta da 1,56. **La diferencia entre el 2,00
+que planificabas y el 1,53 que cobraste se explica entera por haber arriesgado un 28 %
+más de dólares en las operaciones que salieron mal**, sin que ninguna operación
+individual haya incumplido el 2:1.
 
-En mayo y junio se tomaron operaciones **con el target más cerca que el stop**. Un ratio
-de 0,52 exige acertar el 66 % de las veces para no perder. Con un 36 % de acierto, esas
-operaciones eran matemáticamente perdedoras en el momento de pulsar el botón,
-independientemente de lo bien leído que estuviera el mercado.
+No hace falta ningún otro factor para explicar la pérdida del año.
+
+### Por qué pasó: la dispersión del stop
+
+El stop se elegía operación por operación, según lo que hiciera falta para proteger el
+pivote de ese día. En ticks por contrato:
+
+| | Mínimo | p25 | Mediana | p75 | Máximo | Dispersión |
+|---|---:|---:|---:|---:|---:|---:|
+| CL | 10 tk | 12 | 15 | 16 | 20 tk | 2,0× |
+| **MCL** | 11 tk | 60 | 70 | 95 | **200 tk** | **18,2×** |
+
+En CL la dispersión es tolerable y el efecto casi no se nota (1,03×). En MCL el stop más
+ancho es **18 veces** el más estrecho, y ahí el sesgo se dispara a 1,79×. Por eso la
+segunda mitad del año —donde 39 de 48 operaciones fueron MCL— es la que se lleva la
+pérdida.
+
+### Lo que NO explica la pérdida
+
+**Los stops anchos no aciertan menos.** Operaciones con stop mayor a 25 ticks: 32,4 % de
+acierto. Con stop menor o igual a 25: 37,1 %. Fisher **p = 0,66**, no significativo. No es
+que pedir un stop ancho señale un setup peor — es sólo que cuando lo pediste arriesgaste
+más dólares.
+
+Esto es una buena noticia: significa que la corrección es de dimensionamiento, no de
+criterio. No hay que dejar de tomar esas operaciones, hay que tomarlas con el tamaño
+correcto.
+
+### El segundo agujero: las ganadoras que no cobran
+
+Cuatro operaciones cuentan como ganadoras pero cobraron casi nada:
+
+| Fecha | Instrumento | Cobrado | En R |
+|---|---|---:|---:|
+| 2026-01-19 | CL 1c | $4,68 | 0,03R |
+| 2026-06-16 | MCL 3c | $9,48 | 0,06R |
+| 2026-05-15 | MCL 2c | $22,32 | 0,14R |
+| 2026-04-15 | MCL 2c | $32,32 | 0,21R |
+
+Con un winrate del 35 %, cada ganadora es un recurso escaso: **son 4 de 34, el 12 % de
+las ganadoras del año**, y aportan $69 donde deberían aportar unos $1.200. Corresponden
+a la excepción que el plan sí contempla —«*si la operación se demora y debemos dejar la
+sesión*»— pero el coste de esa excepción nunca se había medido.
 
 ### La misma firma aparece en los set ups
 
@@ -109,8 +141,10 @@ independientemente de lo bien leído que estuviera el mercado.
 
 Mirá ESTRUC+VC y Giro+VC: **36,5 % y 36,7 % de acierto, prácticamente el mismo número**.
 Lo que los separa es el R (1,57 contra 1,29), y con eso el profit factor cae de 0,90 a
-0,75. Otra vez: no es que el Giro se lea peor, es que deja menos recorrido hasta el
-objetivo porque entra contra el movimiento previo.
+0,75. Es la misma firma que en el resto del análisis: **el acierto no distingue a los set
+ups, el R sí**. Con el riesgo por operación igualado, esa diferencia debería reducirse
+sola; si después de 40 operaciones el Giro sigue entregando menos R que la estructura,
+entonces sí hay algo propio del set up y habrá que tratarlo aparte.
 
 ---
 
@@ -207,10 +241,11 @@ acercó. Sin eso, la elección del target sigue siendo a ojo.
 2. **El winrate es estable en el 35–36 % durante los ocho meses.** La lectura de mercado
    no se degradó.
 3. Lo que se rompió es el **R: de 2,04 a 1,10**, cuando la operativa pasó a MCL.
-4. La causa está medida: **el stop escala con la volatilidad y el target no**, porque el
-   target está anclado a pivotes que no se mueven con el ATR.
-5. En mayo y junio se operó con ratios de 0,52 y 0,82 — perdedoras por aritmética antes
-   de entrar.
+4. La causa está medida y es aritmética: **el ratio 2:1 se respetó siempre, pero se
+   arriesgaron un 28 % más de dólares en las operaciones que salieron mal** ($155,79
+   contra $121,63). Eso solo lleva el R de 2,00 a 1,56, y el medido es 1,53.
+5. El origen es la **dispersión del stop**: en MCL el más ancho es 18 veces el más
+   estrecho, y el tamaño de la posición no compensó esa variación.
 6. Los **primeros 30 minutos** son el único corte horario con respaldo estadístico:
    13 operaciones, 1 ganadora, −$1.447.
 7. Los cortos, MCL y los lunes **no** resisten el test: son ruido, no causas.
