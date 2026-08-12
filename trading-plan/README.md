@@ -40,18 +40,25 @@ Faltan 3,7 puntos de winrate, o 0,27 puntos de R.
   dólares** ($150). Los números salen redondos: 15 tk × CL 1c = 30 tk × MCL 5c =
   50 tk × MCL 3c = 75 tk × MCL 2c = $150 exactos. Es aritmética pura y no tiene
   contrapartida: no reduce operaciones ni exige acertar más.
-- **C2 — el ratio pasa de 2:1 a 2,5:1.** Después de comisiones, el 2:1 deja apenas medio
-  punto de margen sobre el winrate de equilibrio. El 2,5:1 deja 5,5 puntos.
+- **C2 — el ratio se queda en 2:1.** Una versión anterior recomendaba 2,5:1; las capturas
+  de 2026 lo desmienten. De cuatro ganadoras medidas el precio llegó a 2,11R, 2,28R, 2,42R
+  y 3,05R: sólo una habría alcanzado un objetivo a 2,5R, y las otras tres habrían vuelto
+  hasta el stop. Haría falta que el 81 % llegara; la muestra dice 25 %.
+- **C4 — la ventana operativa abre a los 30 minutos.** 13 operaciones en la primera media
+  hora, 1 ganadora, −$1.448, p=0,029. Es la corrección de mayor impacto: vale +10R contra
+  los +6R del riesgo fijo.
 - **C3 — ninguna operación se cierra por debajo de 1R.** Cuatro ganadoras del año
   cobraron entre 0,03R y 0,21R: el 12 % de las ganadoras aportando $69.
 
 ## Pendiente
 
-**MFE y MAE están vacíos en 96 de las 97 operaciones.** El R *realizado* se reconstruyó
-a partir de los ticks de salida, y con eso alcanzó para el diagnóstico. Falta el R
-*disponible*, que es lo que decide entre 2:1 y 2,5:1: cuántas de las perdedoras llegaron
-a tocar 2R antes de girarse. Las capturas de pantalla de las sesiones permitirían
-reconstruirlo hacia atrás.
+**MFE y MAE están vacíos en 96 de las 97 operaciones.** Las capturas de 2026 permitieron
+reconstruirlo para cuatro ganadoras, y con eso alcanzó para descartar el 2,5:1. Quedan
+dos preguntas abiertas que el resto de las capturas puede responder: hasta dónde llega el
+precio en las ganadoras (para confirmar que 2R es el objetivo correcto) y en cuántas
+perdedoras el stop se toca por una perforación antes de que el precio se vaya en la
+dirección leída — que sería una mejora de winrate, lo único que el ajuste de geometría no
+puede dar.
 
 ## Reproducir el análisis
 

@@ -21,12 +21,16 @@ stop más ancho que usaste fue **18 veces** el más estrecho.
 tres (o cuatro) valores fijos según el ATR, cada uno con su número de contratos ya
 calculado para que **el riesgo en dólares sea siempre el mismo**.
 
-| Escenario | ATR M60 | Instrumento | Stop | Contratos | Riesgo | Target 2,5:1 | Gana | Pierde | R neto |
+| Escenario | ATR M60 | Instrumento | Stop | Contratos | Riesgo | Target 2:1 | Gana | Pierde | R neto |
 |---|---|---|---:|---:|---:|---:|---:|---:|---:|
-| **A** | bajo | CL | 15 tk | 1 | $150 | 38 tk | +$374,68 | −$155,32 | **2,41** |
-| **B** | medio | MCL | 30 tk | 5 | $150 | 75 tk | +$365,80 | −$159,20 | **2,30** |
-| **C** | alto | MCL | 50 tk | 3 | $150 | 125 tk | +$369,48 | −$155,52 | **2,38** |
-| **D** | muy alto | MCL | 75 tk | 2 | $150 | 188 tk | +$372,32 | −$153,68 | **2,42** |
+| **A** | bajo | CL | 15 tk | 1 | $150 | 30 tk | +$294,68 | −$155,32 | **1,90** |
+| **B** | medio | MCL | 30 tk | 5 | $150 | 60 tk | +$290,80 | −$159,20 | **1,83** |
+| **C** | alto | MCL | 50 tk | 3 | $150 | 100 tk | +$294,48 | −$155,52 | **1,89** |
+| **D** | muy alto | MCL | 75 tk | 2 | $150 | 150 tk | +$296,32 | −$153,68 | **1,93** |
+
+Fijate en el escenario B: cinco micros pagan $9,20 de comisión contra los $5,52 de tres,
+para el mismo riesgo. Cuando dos escenarios sirvan para el mismo ATR, **elegí siempre el
+que use menos contratos** — el R neto sube de 1,83 a 1,89 sin cambiar nada más.
 
 Los números salen redondos por casualidad afortunada: 15 × $10 = 30 × $1 × 5 = 50 × $1 ×
 3 = 75 × $1 × 2 = $150 exactos en los cuatro casos. El escenario D es opcional; con tres
@@ -39,27 +43,55 @@ mueva al pasar de un escenario a otro.
 
 ---
 
-## C2 · El ratio pasa de 2:1 a 2,5:1
+## C2 · El ratio se queda en 2:1 — *comprobado con las capturas*
 
-**Por qué no alcanza con 2:1.** Después de comisiones, un 2:1 bruto deja un R neto de
-1,83–1,93 y un winrate de equilibrio del 34,2–35,4 %. Con tu 35,4 % medido, el margen es
-de **medio punto**. Eso es operar sobre la línea: cualquier racha mala y volvés a estar en
-rojo.
+En una versión anterior de este documento recomendé subir el objetivo a 2,5:1, razonando
+que después de comisiones el 2:1 deja apenas medio punto de margen sobre el winrate de
+equilibrio. **Las capturas de las sesiones de 2026 desmienten esa recomendación y queda
+retirada.**
 
-| Ratio bruto | R neto | Equilibrio | Tu margen | Esperanza/op | En 96 ops |
-|---|---:|---:|---:|---:|---:|
-| 2,0 : 1 | ~1,87 | 34,8 % | **+0,6 pts** | +$2,48 | +$238 |
-| **2,5 : 1** | **~2,35** | **29,9 %** | **+5,5 pts** | **+$28,81** | **+$2.766** |
+### La medición
 
-El salto de 2:1 a 2,5:1 es la diferencia entre depender de que el winrate no baje ni un
-punto y tener colchón para una mala racha. Con 2,5:1 podés caer al 30 % de acierto y
-seguir en equilibrio.
+Sobre las ganadoras con captura se puede leer hasta dónde llegó el precio después de
+tocar el objetivo, midiendo la excursión máxima en múltiplos de R:
 
-**El coste:** con un objetivo más lejos vas a convertir menos operaciones. Si al medirlo
-el winrate cae por debajo del 30 %, el 2,5:1 no compensa y hay que volver al 2:1 con
-escenarios más estrechos. Eso se decide con datos, a las 40 operaciones — no antes.
+| Fecha | Instrumento | Stop / Target | Máximo alcanzado |
+|---|---|---|---:|
+| 2026-03-20 | MCL 2c | 91 / 182 tk | **2,11 R** |
+| 2026-04-23 | MCL 2c | 105 / 210 tk | **2,28 R** |
+| 2026-04-29 | MCL 2c | 93 / 187 tk | **2,42 R** |
+| 2026-04-16 | MCL 2c | 58 / 116 tk | **3,05 R** |
 
----
+De cuatro ganadoras, **una sola habría alcanzado un objetivo puesto a 2,5R**. Las otras
+tres se habrían dado vuelta antes de llegar y, en lugar de cobrar 2R, habrían recorrido
+todo el camino de vuelta hasta el stop.
+
+### Por qué eso es demoledor
+
+Subir el objetivo no es gratis: cada ganadora que no llega al nuevo objetivo no se queda
+en cero, **se convierte en una perdedora completa**. El intercambio es +0,5R en las que
+llegan contra −3R en las que no.
+
+| % de ganadoras que alcanzan 2,5R | Resultado sobre el mismo año |
+|---:|---:|
+| 25 % *(lo medido: 1 de 4)* | **−$9.938** |
+| 50 % | −$5.475 |
+| 70 % | −$1.905 |
+| **80,7 %** | **$0 — punto de equilibrio** |
+| 100 % | +$3.450 |
+
+**Haría falta que el 81 % de tus ganadoras llegara a 2,5R.** La muestra dice 25 %. Aunque
+cuatro capturas son pocas y el intervalo es ancho, para que el 2,5:1 compensara habría que
+estar equivocado por un factor de tres.
+
+### Lo que esto confirma
+
+El objetivo a 2R no está mal puesto: **está puesto donde el precio efectivamente llega**.
+Las cuatro ganadoras medidas alcanzaron entre 2,11R y 3,05R — es decir, el 2:1 captura
+casi todo el movimiento disponible y el margen por encima es delgado y variable.
+
+El margen sobre el equilibrio, entonces, no se va a conseguir estirando el objetivo. Se
+consigue con C1 (que recupera 0,44 puntos de R) y con C4, que es donde está el dinero.
 
 ## C3 · Ninguna operación se cierra por debajo de 1R
 
@@ -120,13 +152,21 @@ medir a las 40 operaciones.
 
 ## C6 · Registrar MFE y MAE
 
-Siguen vacíos en 96 de las 97 operaciones. Con el stop ya fijo por escenario, el MFE pasa
-a responder la pregunta que importa para C2: **¿cuántas de las perdedoras llegaron a
-tocar 2R antes de girarse?** Si son muchas, el 2,5:1 es alcanzable y conviene. Si casi
-ninguna llega a 2R, hay que volver al 2:1.
+Siguen vacíos en 96 de las 97 operaciones. Las capturas permitieron reconstruirlo para
+cuatro ganadoras, y con eso alcanzó para descartar el 2,5:1 — pero cuatro son pocas.
 
-Sin ese dato, la elección entre 2:1 y 2,5:1 se decide sólo por el resultado agregado, que
-tarda meses. Con él, se decide en 30 operaciones.
+El dato que hay que acumular es **hasta dónde llegó el precio en las ganadoras después de
+tocar el objetivo**. Si con 20 o 30 medidas resultara que la mayoría supera 2,5R, la
+decisión de C2 habría que revisarla. Con cuatro, lo único que se puede decir es que la
+evidencia disponible apunta claramente en contra.
+
+En las perdedoras el MFE tiene otro uso: dice si el precio llegó a moverse a favor antes
+de girarse o si fue en contra desde el primer momento. Eso es lo que separa un problema
+de entrada de un problema de aguante.
+
+*(Nota: preguntar «cuántas perdedoras llegaron a 2R» no tiene sentido — si hubieran
+llegado a 2R habrían tocado el objetivo y serían ganadoras. Esa pregunta, que aparecía en
+una versión anterior de este documento, era circular.)*
 
 ---
 
@@ -149,9 +189,9 @@ por sí sola dos tercios de la pérdida del año.
 | # | Corrección | Base | Confianza |
 |---|---|---|---|
 | C1 | Tres escenarios de stop, riesgo fijo $150 | Explica el R medido con 0,03 de error | **Alta** |
-| C2 | Ratio 2,5:1 en vez de 2:1 | Aritmética de comisiones y margen | **Alta** |
+| C2 | El ratio se queda en 2:1 | 4 ganadoras medidas: 2,11–3,05R | **Alta** |
 | C3 | Nada se cierra por debajo de 1R | 4 de 34 ganadoras aportaron $69 | **Alta** |
-| C4 | Ventana desde el minuto 30 | 13 ops, 1 ganadora, p=0,029 | **Alta** |
+| **C4** | **Ventana desde el minuto 30** | **13 ops, 1 ganadora, p=0,029 — la de mayor impacto** | **Alta** |
 | C5 | Giro+FV suspendido y en observación | 0 de 6, p=0,086 | Media |
 | C6 | Registrar MFE/MAE | 96 de 97 vacías | **Alta** |
 | C7 | Topes de sesión y semana | 2 días y 2 semanas fuera | Media |
@@ -160,28 +200,50 @@ por sí sola dos tercios de la pérdida del año.
 
 ## Qué esperar, honestamente
 
-Aplicando sólo C1 y C2 sobre la **misma secuencia de aciertos y fallos del año pasado**
-—34 ganadoras y 62 perdedoras, sin suponer ninguna mejora en la lectura del mercado:
+Sobre la **misma secuencia de aciertos y fallos del año pasado** —34 ganadoras y 62
+perdedoras, sin suponer ninguna mejora en la lectura del mercado— y con riesgo fijo de
+$150 y objetivo a 2R:
 
-| Escenario | Resultado |
-|---|---:|
-| Ideal: toda ganadora cobra 2R, toda perdedora pierde 1R | +$900 |
-| Con deslizamiento (ganadora 1,9R) | +$390 |
-| Con deslizamiento y stop real 1,05R | −$44 |
-| Manteniendo las 4 ganadoras que no cobraron | −$220 |
-| **Lo que pasó en realidad** | **−$1.549** |
+| | Ganadoras / perdedoras | Neto | En dólares |
+|---|---|---:|---:|
+| Sólo C1 (riesgo fijo) | 34W / 62L | +6R | **+$900** |
+| **C1 + C4 (sin los primeros 30 min)** | **33W / 50L** | **+16R** | **+$2.400** |
+| C1 + C4 + C3 (sin las que hay que abandonar) | 29W / 50L | +8R | +$1.200 |
+| *Lo que pasó en realidad* | 34W / 62L | | *−$1.549* |
 
-Con ratio 2:1 el rango honesto va de **−$220 a +$900**: es decir, C1 sola convierte un año
-malo en un año plano. **Por eso hace falta C2 y C3.** Con 2,5:1 y sin ganadoras
-desperdiciadas, la esperanza sube a unos +$29 por operación, pero ese número depende de
-que el winrate aguante el objetivo más lejano, y eso todavía no está medido.
+El rango honesto es **+$1.200 a +$2.400**. La diferencia entre las dos últimas filas es
+qué se supone que habría pasado con las cuatro operaciones cerradas por debajo de 1R: si
+se hubieran dejado correr habrían aportado hasta 2R cada una, y si no se hubieran tomado
+no aportan nada. No hay forma de saber cuál de las dos, así que quedan las dos puntas.
 
-**La predicción falsable:** si el winrate se mantiene en el 33–36 % con el objetivo a
-2,5:1, el sistema pasa a positivo. Si al llevar el objetivo más lejos el winrate cae por
-debajo del 30 %, el 2,5:1 no compensa y hay que volver a 2:1 — donde el margen es medio
-punto y entonces el trabajo pasa a ser subir el acierto, no la geometría.
+Lo llamativo es que **C4 vale más que C1**: descartar trece operaciones de la primera media
+hora suma +10R, mientras que igualar el riesgo suma +6R. La corrección más barata del
+documento es también la más rentable.
 
-**Lo que sí es seguro:** igualar el riesgo en dólares entre escenarios no tiene
-contrapartida. No reduce el número de operaciones, no exige acertar más y no depende de
-ninguna hipótesis sobre el mercado. Es aritmética: recupera 0,44 puntos de R que se
-estaban perdiendo por dimensionamiento.
+### Lo que es seguro y lo que no
+
+**Seguro:** igualar el riesgo en dólares no tiene contrapartida. No reduce el número de
+operaciones, no exige acertar más, no depende de ninguna hipótesis sobre el mercado.
+Recupera 0,44 puntos de R que se estaban perdiendo por dimensionamiento.
+
+**Razonablemente firme:** la ventana desde el minuto 30. Trece operaciones con una sola
+ganadora, p = 0,029, y una explicación mecánica de por qué debería ser así.
+
+**Todavía abierto:** el margen sobre el equilibrio sigue siendo delgado. Con riesgo fijo y
+2:1 neto de comisiones el equilibrio está en el 34,5–35,4 % y tu winrate medido es 35,4 %.
+C4 es lo que abre el hueco, al sacar de la muestra un grupo de operaciones con un 7,7 % de
+acierto. Si en las próximas 40 operaciones el winrate fuera del grupo de la primera media
+hora no se sostiene por encima del 38 %, el sistema vuelve a quedar sobre la línea y el
+trabajo pasa a ser subir el acierto — no la geometría, que ya está donde tiene que estar.
+
+### Una observación de las capturas que conviene mirar
+
+En la operación del 08/04 el precio bajó, tocó el stop y **desde ahí se fue directo hasta
+la zona del objetivo**. La dirección estaba bien leída; lo que falló fue el momento de
+entrar: hubo una perforación del mínimo antes del movimiento bueno.
+
+Es un solo caso y no alcanza para concluir nada, pero es exactamente el fenómeno que el
+set up Giro está pensado para aprovechar (esperar la manipulación en vez de anticiparla).
+Con el resto de las capturas se puede contar en cuántas perdedoras se repite. Si fueran
+muchas, ahí habría una mejora de winrate — que es justo lo que hace falta y lo único que
+el ajuste de geometría no puede dar.
