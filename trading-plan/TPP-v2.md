@@ -95,7 +95,7 @@ Si el pivote objetivo no permite 2:1 desde el stop del escenario, **no hay opera
 | Operaciones por día | **máximo 2** |
 | Pérdida diaria | **−2R (2 stops, $300) cierran el día** |
 | Pérdida semanal | **−3R ($450) cierran la semana** |
-| Pérdida mensual | `[PENDIENTE — bloque 2]` |
+| Pérdida mensual | **el drawdown de la cuenta de fondeo** (ver abajo) |
 
 Después del segundo stop no se vuelve a mirar el gráfico hasta el día siguiente.
 
@@ -115,6 +115,11 @@ cierra la semana cuando el neto toca **−3R**.
 sólo **−1R de margen** para el resto de la semana. Es decir, tras un día de dos stops, un
 único stop más el día siguiente cierra la semana. Es estricto a propósito, pero conviene
 saberlo antes de que pase.
+
+**No hay tope mensual propio.** En la cuenta de fondeo, el drawdown máximo de la cuenta ya
+funciona como tope de mes: si se toca, la cuenta se termina, con regla o sin ella. Poner
+uno más chico sólo tendría sentido para cortar *antes* de reventarla; por ahora manda el
+drawdown de la cuenta.
 
 ---
 
