@@ -93,11 +93,28 @@ Si el pivote objetivo no permite 2:1 desde el stop del escenario, **no hay opera
 | | |
 |---|---|
 | Operaciones por día | **máximo 2** |
-| Pérdida diaria | **2 stops ($300) cierran el día** |
-| Pérdida semanal | `[PENDIENTE — bloque 2]` |
+| Pérdida diaria | **−2R (2 stops, $300) cierran el día** |
+| Pérdida semanal | **−3R ($450) cierran la semana** |
 | Pérdida mensual | `[PENDIENTE — bloque 2]` |
 
 Después del segundo stop no se vuelve a mirar el gráfico hasta el día siguiente.
+
+**Todo se cuenta en R.** Con ratio 2:1, cada ganadora suma **+2R** y cada perdedora
+**−1R**. El tope semanal es sobre el **neto acumulado de la semana**, no sobre las
+pérdidas sueltas: si la semana está en +2R y después perdés, seguís operando; sólo se
+cierra la semana cuando el neto toca **−3R**.
+
+| Semana | Neto | ¿Sigo? |
+|---|---:|:-:|
+| 1 perdedora | −1R | sí |
+| 1 perdedora + 1 ganadora | +1R | sí |
+| 1 perdedora + 2 ganadoras | +3R | sí |
+| 3 perdedoras sin ganar | −3R | **no — semana cerrada** |
+
+**Consecuencia a tener presente:** como el día se cierra en −2R, un día malo completo deja
+sólo **−1R de margen** para el resto de la semana. Es decir, tras un día de dos stops, un
+único stop más el día siguiente cierra la semana. Es estricto a propósito, pero conviene
+saberlo antes de que pase.
 
 ---
 
@@ -105,18 +122,46 @@ Después del segundo stop no se vuelve a mirar el gráfico hasta el día siguien
 
 ### 2.1 Ventana operativa
 
-`[PENDIENTE — bloque 2]`
+**Sesión de 2 horas y media desde la apertura cash**, repartida así:
 
-**Regla firme del análisis:** la ventana **abre a los 30 minutos** de la apertura cash.
-Trece operaciones en la primera media hora, una sola ganadora, −$1.448 (Fisher p = 0,029).
-Esa media hora es de observación.
+| Tramo | Desde apertura | Qué se hace |
+|---|---|---|
+| Observación | 0 – 30 min | Se marcan niveles y se confirma/descarta la hipótesis. **No se opera.** |
+| **Operativa** | **30 – 150 min** | Se buscan y se toman las ventanas de oportunidad. |
+| Cierre | a los 150 min | No se abren operaciones nuevas. |
 
-Recordatorio: la apertura cash se mueve entre las 10:00 y las 11:00 de Buenos Aires con el
-horario de verano de EE.UU. Recalcular en **noviembre** y en **marzo**.
+La media hora de observación no es opcional: es la corrección de mayor impacto del
+análisis. Trece operaciones en la primera media hora del año pasado dieron **una sola
+ganadora** y −$1.448 (Fisher p = 0,029), más que la pérdida total del sistema. El
+algoritmo necesita estructura formada para aplicarse, y en los primeros minutos todavía no
+la hay.
+
+**Ninguna entrada pasados los 150 minutos.** Si a esa altura hay una operación abierta, se
+rige por §6 (no se cierra a mercado salvo que haya que dejar la sesión).
+
+Recordatorio: la apertura cash se mueve entre las **10:00 y las 11:00 de Buenos Aires**
+según el horario de verano de EE.UU. Recalcular la hora de arranque en **noviembre** y en
+**marzo**, y con ella los dos hitos (minuto 30 y minuto 150).
 
 ### 2.2 Días que no se opera
 
-`[PENDIENTE — bloque 2]`
+*(Se mantienen las exclusiones del plan 2025.)*
+
+- **Festivos de EE.UU.** — sesiones de volumen reducido o media rueda.
+- **Días de inventarios de crudo (EIA).** Miércoles 10:30 ET; los jueves cuando hay
+  feriado de por medio. Se consultan en ForexFactory.
+- **Rollover de contrato, en torno al día 18.** A partir del día 15 se compara el volumen
+  del contrato viejo y el nuevo antes de operar.
+- **Baja volatilidad estacional.** Todo agosto, y el período entre las dos últimas semanas
+  de diciembre y la primera de enero.
+
+*(Nota: el archivo analizado arranca el 22/10, así que no cubre un agosto completo y no hay
+datos propios para confirmar la exclusión estacional. Se mantiene por criterio, no por
+medición.)*
+
+Además, del plan vigente: si no se puede atender la operativa al 100 %, se cierran sesión
+y operaciones en ejecución; si se llega al objetivo o a la pérdida máxima del día, se
+cierra la sesión.
 
 ---
 
