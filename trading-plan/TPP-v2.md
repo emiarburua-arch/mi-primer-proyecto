@@ -40,27 +40,45 @@ CL y MCL. La elección no es por preferencia sino por volatilidad: define el esc
 cada mes según el capital de la cuenta.
 
 Que sea fijo es justamente el punto: es lo que hace que los cuatro escenarios de §1.3
-arriesguen exactamente lo mismo.
+arriesguen exactamente lo mismo. **Este es el principio que no se negocia.**
 
-**Principio que no se negocia:** el riesgo en dólares es **idéntico en los cuatro
-escenarios**. Es la corrección de mayor valor del análisis — arriesgar más en unas
-operaciones que en otras llevó el R de 2,00 a 1,53 sin incumplir nunca el ratio.
+### 1.3 Escenarios de volatilidad — **la tabla**
 
-### 1.3 Escenarios de volatilidad
+Se lee el **ATR(14) en M60** antes de la sesión. Ese número decide todo lo demás: no hay
+nada que improvisar durante la operativa.
 
-El stop deja de elegirse operación por operación. Se elige el escenario según el ATR(14)
-en M60, y el escenario trae stop, instrumento y contratos ya fijados.
+| ATR M60 | Escenario | Stop | Instrumento | Contratos | **Target** | Riesgo | Gana | Pierde |
+|---|:-:|---:|:-:|---:|---:|---:|---:|---:|
+| **< 500** | **A** | **15 tk** | CL | **1** | **30 tk** | $150 | +$294,68 | −$155,32 |
+| **500 – 1000** | **B** | **30 tk** | MCL | **5** | **60 tk** | $150 | +$290,80 | −$159,20 |
+| **1000 – 1250** | **C** | **50 tk** | MCL | **3** | **100 tk** | $150 | +$294,48 | −$155,52 |
+| **1250 – 1500** | **D** | **75 tk** | MCL | **2** | **150 tk** | $150 | +$296,32 | −$153,68 |
+| **> 1500** | — | **no se opera** | | | | | | |
 
-| Escenario | ATR M60 | Instrumento | Stop | Contratos | Target 2:1 |
-|---|---|---|---:|---:|---:|
-| **A** | `[PENDIENTE]` | CL | 15 tk | 1 | 30 tk |
-| **B** | `[PENDIENTE]` | MCL | 30 tk | 5 | 60 tk |
-| **C** | `[PENDIENTE]` | MCL | 50 tk | 3 | 100 tk |
-| **D** | `[PENDIENTE]` | MCL | 75 tk | 2 | 150 tk |
-| — | por encima de D | **no se opera** | | | |
+El ATR se lee en la escala de la plataforma (milésimas de dólar): **500 = 0,500 = 50
+ticks** de rango medio por hora.
 
-Cuando dos escenarios sirvan para el mismo ATR, se elige **el que use menos contratos**:
-menos comisión, mejor R neto.
+El riesgo da **$150 exactos en los cuatro casos**: 15 × $10 = 30 × $5 = 50 × $3 = 75 × $2.
+Esa igualdad es toda la corrección — el año pasado el riesgo real fue de $121,63 cuando la
+operación ganaba y $155,79 cuando perdía, y esos 28 puntos de diferencia se llevaron el R
+de 2,00 a 1,53.
+
+**El stop es el del escenario, no el que pida el gráfico.** Si el pivote a proteger queda
+más lejos que el stop de la tabla, la operación **no se toma**. Esta es la regla que más
+operaciones va a descartar: sobre el histórico habrías tomado 68 de 96. Las 28 que quedan
+fuera dieron 3 ganadoras y 9 perdedoras entre las de stop ancho, con −$518 de resultado,
+así que el filtro no está dejando fuera nada bueno.
+
+| | R neto | Winrate de equilibrio |
+|:-:|---:|---:|
+| A | 1,90 | 34,5 % |
+| B | 1,83 | 35,4 % |
+| C | 1,89 | 34,6 % |
+| D | 1,93 | 34,2 % |
+
+El escenario B es el menos eficiente: cinco micros pagan $9,20 de comisión contra los
+$3,68 de dos. No hay nada que hacer al respecto —es el precio de operar con ATR medio—
+pero conviene saber que ahí el margen es más fino.
 
 ### 1.4 Ratio
 
