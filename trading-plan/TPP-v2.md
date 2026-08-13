@@ -236,10 +236,14 @@ Antes de mandar la orden:
 | Estructura + Vela de confirmación | **Activo** | 52 ops, 36,5 % |
 | Estructura + Falta de volumen | **Activo** | 8 ops, 50,0 % |
 | Giro + Vela de confirmación | **Activo** | 30 ops, 36,7 % — mismo acierto que ESTRUC+VC |
-| Giro + Falta de volumen | `[PENDIENTE — bloque 3]` | 6 ops, 0 ganadoras, −$946 |
+| Giro + Falta de volumen | **Eliminado** | 6 ops, 0 ganadoras, −$946 |
 
-Para Giro se usa manipulación (UT o SP) en un nivel relevante, en general máximo o mínimo
-de sesión anterior.
+Para Giro (sólo con vela de confirmación) se usa manipulación (UT o SP) en un nivel
+relevante, en general máximo o mínimo de sesión anterior.
+
+*Giro+FV queda fuera del plan: fue el único set up sin una sola ganadora en el año (0 de 6,
+−$946). Si en algún momento se lo quiere reevaluar, se anota como señal observada sin
+operar y se decide con datos nuevos.*
 
 Los pivotes dinámicos se usan como objetivos: para tomar una operación, el pivote tiene que
 permitir el recorrido hasta el target.
@@ -254,13 +258,40 @@ Orden limitada.
 
 Una vez dentro, **no se toca la operación hasta que cierre**.
 
-### 6.1 La excepción, ahora con límite
+### 6.1 Dos relojes distintos: el tuyo y el del mercado
 
-`[PENDIENTE — bloque 3]`
+El problema del año pasado: cuatro ganadoras se cerraron a mano entre 0,03R y 0,21R porque
+había que dejar la pantalla. El 12 % de las ganadoras del año aportando $69 donde
+correspondían ~$1.200. La causa fue confundir **"se terminó mi horario"** con **"se terminó
+la operación"**. Son dos relojes distintos.
 
-El plan vigente permite cerrar «si la operación se demora, no cierra por sí sola y debemos
-dejar la sesión». Sin límite, esa excepción costó cuatro ganadoras que cobraron entre
-0,03R y 0,21R: el 12 % de las ganadoras del año aportando $69 donde correspondían ~$1.200.
+**Toda operación entra con su bracket:** orden de entrada, stop del escenario y target 2:1,
+las tres cargadas de una (OCO). Una vez dentro, no se toca.
+
+| Momento | Qué pasa con una operación abierta |
+|---|---|
+| Durante la operativa (+30 a +150 min) | No se toca. El bracket manda. |
+| **Cierre de tu ventana (+150 min)** | **Dejás de mirar, pero NO cerrás a mercado.** El bracket (stop + target) queda trabajando solo y resuelve durante el resto de la rueda. |
+| **Cierre de la sesión cash** *(sin overnight)* | Si a esa hora todavía sigue abierta, **se aplana**. Es el único cierre forzado. |
+
+Entre tu ventana (+150 min) y el cierre cash hay varias horas: tiempo de sobra para que un
+target a 2R o un stop a 1R se resuelvan solos sin que estés delante. En la enorme mayoría
+de los casos la operación cierra antes de que llegue el aplanado.
+
+**La regla que corrige el problema:** nunca se cierra a mano una operación **por debajo de
+1R** sólo porque terminó tu horario. Si no llegó, se deja correr con su bracket. El único
+cierre que no depende de vos es el aplanado por no-overnight al final de la rueda, y ese
+manda sobre todo lo demás.
+
+**Requisito técnico:** el bracket tiene que quedar como orden OCO en la plataforma (en
+NinjaTrader, ATM con stop y target), de modo que resuelva sin que estés presente. Conviene
+además dejar programado el aplanado automático a la hora límite, para no depender de volver
+a la pantalla.
+
+> **[PENDIENTE de confirmar — hora del aplanado]** Tu plan de 2025 tomaba el cierre de la
+> sesión cash a las **16:00 / 17:00 hs de Buenos Aires** (según horario de EE.UU.). Uso ese
+> como hora de aplanado por defecto. **Confirmá si la cuenta de fondeo exige aplanar antes**
+> (muchas piden estar flat unos minutos antes del settlement); si es así, esa hora manda.
 
 ---
 
