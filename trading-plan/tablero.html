@@ -1,0 +1,277 @@
+<title>Tablero Operativo CL/MCL</title>
+<style>
+  :root{
+    --ground:#EDEFEC; --card:#FBFCFA; --card-2:#F1F3EE; --band:#E7EBE4;
+    --ink:#171F1B; --ink-2:#3d4a44; --muted:#6c7a72;
+    --line:#d3dace; --line-2:#bcc5b9;
+    --accent:#a35a0c; --accent-soft:#f2e6cf;
+    --pos:#2c6a4a; --pos-soft:#d9e8dd; --neg:#9c3020; --neg-soft:#f0dbd6;
+    --A:#2c6a4a; --B:#8a7413; --C:#a35a0c; --D:#9c3020;
+    --serif:"Iowan Old Style",Palatino,Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --ground:#0c110f; --card:#141b17; --card-2:#1a221d; --band:#1e2620;
+    --ink:#e6ece7; --ink-2:#b7c1ba; --muted:#8b978f;
+    --line:#26302a; --line-2:#354039;
+    --accent:#df9c44; --accent-soft:#2c2417;
+    --pos:#5cbc88; --pos-soft:#16281e; --neg:#df6f5c; --neg-soft:#2d1b18;
+    --A:#5cbc88; --B:#d9b64e; --C:#df9c44; --D:#df6f5c;
+  }}
+  :root[data-theme="dark"]{
+    --ground:#0c110f; --card:#141b17; --card-2:#1a221d; --band:#1e2620;
+    --ink:#e6ece7; --ink-2:#b7c1ba; --muted:#8b978f;
+    --line:#26302a; --line-2:#354039;
+    --accent:#df9c44; --accent-soft:#2c2417;
+    --pos:#5cbc88; --pos-soft:#16281e; --neg:#df6f5c; --neg-soft:#2d1b18;
+    --A:#5cbc88; --B:#d9b64e; --C:#df9c44; --D:#df6f5c;
+  }
+  *{box-sizing:border-box;margin:0}
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+    line-height:1.3;padding:16px;-webkit-font-smoothing:antialiased}
+  .sheet{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:11px}
+
+  /* header */
+  .top{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    border-bottom:2.5px solid var(--ink);padding-bottom:9px}
+  .brand{display:flex;flex-direction:column;gap:2px}
+  .brand .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent)}
+  .brand h1{font-family:var(--serif);font-size:23px;line-height:1;letter-spacing:-.01em}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{background:var(--card);border:1px solid var(--line-2);border-radius:5px;padding:5px 12px;
+    display:flex;flex-direction:column;align-items:center;min-width:82px}
+  .chip .cl{font-family:var(--mono);font-size:8px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
+  .chip .cv{font-family:var(--mono);font-size:16px;font-weight:700;letter-spacing:-.01em}
+
+  .grid{display:grid;gap:11px}
+  .g3{grid-template-columns:1.15fr 1fr 1fr}
+  .g2{grid-template-columns:1fr 1fr}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 13px;
+    display:flex;flex-direction:column;gap:8px}
+  .ct{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+    display:flex;align-items:center;gap:8px}
+  .ct::after{content:"";height:1px;background:var(--line);flex:1}
+
+  /* ATR hero table */
+  .hero{background:var(--card);border:1.5px solid var(--line-2);border-radius:10px;overflow:hidden}
+  .hero-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+    padding:9px 14px;background:var(--ink);color:var(--ground)}
+  .hero-h .t{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+  .hero-h .s{font-family:var(--mono);font-size:10px;color:#b9c3bb}
+  table{border-collapse:collapse;width:100%}
+  .atr td,.atr th{padding:8px 10px;text-align:center;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+  .atr thead th{font-family:var(--mono);font-size:8.5px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--muted);font-weight:600;background:var(--card-2);padding:6px 10px}
+  .atr tbody tr:last-child td{border-bottom:0}
+  .atr .esc{font-family:var(--serif);font-size:20px;font-weight:700;width:42px}
+  .atr .rng{font-family:var(--mono);font-size:15px;font-weight:700;text-align:left;white-space:nowrap}
+  .atr .big{font-family:var(--mono);font-size:17px;font-weight:700}
+  .atr .ins{font-family:var(--mono);font-size:12px;font-weight:600}
+  .atr .sub{font-size:8.5px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em}
+  .atr .tgt{color:var(--pos);font-family:var(--mono);font-size:17px;font-weight:700}
+  .rowA{border-left:5px solid var(--A)} .rowB{border-left:5px solid var(--B)}
+  .rowC{border-left:5px solid var(--C)} .rowD{border-left:5px solid var(--D)}
+  .noop td{background:var(--neg-soft);color:var(--neg);font-family:var(--mono);font-weight:700;
+    letter-spacing:.1em;text-transform:uppercase;font-size:12px;padding:7px}
+  .hero-f{padding:6px 14px;background:var(--card-2);font-family:var(--mono);font-size:10px;color:var(--ink-2);
+    display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line)}
+  .hero-f b{color:var(--accent)}
+
+  /* timeline */
+  .tl{display:flex;flex-direction:column;gap:6px}
+  .tl-bar{display:flex;height:30px;border-radius:5px;overflow:hidden;border:1px solid var(--line-2)}
+  .tl-seg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;color:#fff;
+    font-family:var(--mono);font-size:8.5px;line-height:1.1;text-align:center;letter-spacing:.03em}
+  .tl-obs{background:var(--muted);flex:1}
+  .tl-op{background:var(--pos);flex:4}
+  .tl-x{background:var(--neg);flex:.7}
+  .tl-lab{display:flex;justify-content:space-between;font-family:var(--mono);font-size:8.5px;color:var(--muted)}
+  .tl-note{font-size:10.5px;color:var(--ink-2)}
+  .tl-note b{color:var(--accent)}
+
+  /* setups */
+  .su{display:flex;flex-direction:column;gap:5px}
+  .su-row{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11.5px}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--pos)}
+  .su-off{color:var(--muted);text-decoration:line-through}
+  .dot-off{background:var(--neg)}
+  .su-note{font-size:9.5px;color:var(--muted);line-height:1.35;margin-top:1px}
+
+  /* topes */
+  .tp{display:flex;flex-direction:column;gap:6px}
+  .tp-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+    padding-bottom:5px;border-bottom:1px solid var(--line)}
+  .tp-row:last-child{border-bottom:0;padding-bottom:0}
+  .tp-k{font-size:10.5px;color:var(--ink-2)}
+  .tp-v{font-family:var(--mono);font-size:13px;font-weight:700}
+  .tp-v.neg{color:var(--neg)}
+
+  /* checklist */
+  .ck{display:flex;flex-direction:column;gap:7px}
+  .ck-item{display:flex;align-items:flex-start;gap:9px;font-size:11.5px;line-height:1.3}
+  .box{width:15px;height:15px;border:1.7px solid var(--accent);border-radius:3px;flex:none;margin-top:1px}
+  .ck-item b{color:var(--ink)}
+  .ck-note{color:var(--muted);font-size:9.5px}
+
+  /* reglas */
+  .rl{display:flex;flex-direction:column;gap:6px}
+  .rl-item{display:flex;gap:8px;font-size:11px;line-height:1.32;color:var(--ink-2)}
+  .rl-item .n{font-family:var(--mono);color:var(--neg);font-weight:700;flex:none}
+  .rl-item b{color:var(--ink)}
+
+  /* footer strip */
+  .strip{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .fstrip{background:var(--card-2);border:1px solid var(--line);border-radius:7px;padding:9px 12px}
+  .fstrip .ft{font-family:var(--mono);font-size:8.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+  .fstrip .fx{font-size:10px;color:var(--ink-2);line-height:1.4}
+  .fstrip .fx b{color:var(--accent)}
+
+  @media (max-width:820px){
+    .g3,.g2,.strip{grid-template-columns:1fr}
+    .atr .esc{font-size:17px}.atr .rng{font-size:13px}
+  }
+  @media print{ body{padding:0}.sheet{max-width:none;gap:8px} }
+</style>
+
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <span class="k">Tablero Operativo · antes de operar</span>
+      <h1>Sistema CL / MCL — Ankora</h1>
+    </div>
+    <div class="chips">
+      <div class="chip"><span class="cl">Riesgo / op</span><span class="cv">$150</span></div>
+      <div class="chip"><span class="cl">Ratio</span><span class="cv">2 : 1</span></div>
+      <div class="chip"><span class="cl">Máx / día</span><span class="cv">2</span></div>
+    </div>
+  </div>
+
+  <!-- HERO: tabla ATR -->
+  <div class="hero">
+    <div class="hero-h">
+      <span class="t">Leé el ATR(14) en M60 → tu escenario del día</span>
+      <span class="s">escala plataforma · 500 = 50 ticks</span>
+    </div>
+    <table class="atr">
+      <thead>
+        <tr><th></th><th>ATR M60</th><th>Instrumento</th><th>Stop</th><th>Contratos</th><th>Target 2:1</th></tr>
+      </thead>
+      <tbody>
+        <tr class="rowA">
+          <td class="esc" style="color:var(--A)">A</td>
+          <td class="rng">&lt; 500</td>
+          <td><span class="ins">CL</span></td>
+          <td><span class="big">15</span> <span class="sub">tk</span></td>
+          <td><span class="big">1</span></td>
+          <td><span class="tgt">30</span> <span class="sub">tk</span></td>
+        </tr>
+        <tr class="rowB">
+          <td class="esc" style="color:var(--B)">B</td>
+          <td class="rng">500 – 1000</td>
+          <td><span class="ins">MCL</span></td>
+          <td><span class="big">30</span> <span class="sub">tk</span></td>
+          <td><span class="big">5</span></td>
+          <td><span class="tgt">60</span> <span class="sub">tk</span></td>
+        </tr>
+        <tr class="rowC">
+          <td class="esc" style="color:var(--C)">C</td>
+          <td class="rng">1000 – 1250</td>
+          <td><span class="ins">MCL</span></td>
+          <td><span class="big">50</span> <span class="sub">tk</span></td>
+          <td><span class="big">3</span></td>
+          <td><span class="tgt">100</span> <span class="sub">tk</span></td>
+        </tr>
+        <tr class="rowD">
+          <td class="esc" style="color:var(--D)">D</td>
+          <td class="rng">1250 – 1500</td>
+          <td><span class="ins">MCL</span></td>
+          <td><span class="big">75</span> <span class="sub">tk</span></td>
+          <td><span class="big">2</span></td>
+          <td><span class="tgt">150</span> <span class="sub">tk</span></td>
+        </tr>
+        <tr class="noop"><td colspan="6">ATR &gt; 1500 — no se opera</td></tr>
+      </tbody>
+    </table>
+    <div class="hero-f">
+      <span>Riesgo <b>$150</b> exactos en los cuatro. El stop es el del escenario, <b>no</b> el del gráfico.</span>
+      <span>Si dos sirven, elegí el de <b>menos contratos</b>.</span>
+    </div>
+  </div>
+
+  <!-- fila media -->
+  <div class="grid g3">
+    <div class="card">
+      <div class="ct">Ventana horaria</div>
+      <div class="tl">
+        <div class="tl-bar">
+          <div class="tl-seg tl-obs">0–30<br>observar</div>
+          <div class="tl-seg tl-op">30–150 · OPERATIVA</div>
+          <div class="tl-seg tl-x">stop</div>
+        </div>
+        <div class="tl-lab"><span>apertura cash</span><span>+150 min</span></div>
+        <div class="tl-note"><b>Primeros 30 min: NO se opera.</b> Sin entradas pasados los 150.
+          Apertura = 10 u 11 hs BA según horario USA.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ct">Set ups</div>
+      <div class="su">
+        <div class="su-row"><span class="dot"></span>ESTRUC + VC</div>
+        <div class="su-row"><span class="dot"></span>ESTRUC + FV</div>
+        <div class="su-row"><span class="dot"></span>GIRO + VC</div>
+        <div class="su-row su-off"><span class="dot dot-off"></span>GIRO + FV</div>
+      </div>
+      <div class="su-note">Giro = manipulación (UT/SP) en nivel relevante — máx/mín de sesión anterior.</div>
+    </div>
+
+    <div class="card">
+      <div class="ct">Topes — todo en R</div>
+      <div class="tp">
+        <div class="tp-row"><span class="tp-k">Ganadora / Perdedora</span><span class="tp-v">+2R / −1R</span></div>
+        <div class="tp-row"><span class="tp-k">Día (2 stops)</span><span class="tp-v neg">−2R</span></div>
+        <div class="tp-row"><span class="tp-k">Semana (neto)</span><span class="tp-v neg">−3R</span></div>
+        <div class="tp-row"><span class="tp-k">Mes</span><span class="tp-v">drawdown cuenta</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- fila entrada + reglas -->
+  <div class="grid g2">
+    <div class="card">
+      <div class="ct">Antes de entrar — los 4 sí</div>
+      <div class="ck">
+        <div class="ck-item"><span class="box"></span><span><b>Ventana de oportunidad</b> revisada</span></div>
+        <div class="ck-item"><span class="box"></span><span><b>Escenario del día definido</b> <span class="ck-note">(ATR → stop, instrumento, contratos)</span></span></div>
+        <div class="ck-item"><span class="box"></span><span>El objetivo <b>permite 2:1 desde el stop</b> <span class="ck-note">— si no, no hay operación</span></span></div>
+        <div class="ck-item"><span class="box"></span><span>Pasaron <b>30 min</b> de la apertura</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ct">Reglas de oro — los no</div>
+      <div class="rl">
+        <div class="rl-item"><span class="n">✕</span><span>El stop <b>del escenario</b>, no el del gráfico. Si el pivote no entra, <b>no se opera</b>.</span></div>
+        <div class="rl-item"><span class="n">✕</span><span>Una vez dentro, <b>no se toca</b>. Bracket OCO: entrada + stop + target de una.</span></div>
+        <div class="rl-item"><span class="n">✕</span><span>No cerrar <b>por debajo de 1R</b> porque terminó tu horario — dejá correr el bracket.</span></div>
+        <div class="rl-item"><span class="n">✕</span><span><b>Aplanar antes del cierre cash.</b> Sin overnight.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- footer -->
+  <div class="strip">
+    <div class="fstrip">
+      <div class="ft">No se opera</div>
+      <div class="fx"><b>Festivos USA</b> · <b>Inventarios EIA</b> (mié) · <b>Rollover</b> días 15–18 · <b>Agosto</b> y fin de diciembre</div>
+    </div>
+    <div class="fstrip">
+      <div class="ft">Pre-operativa</div>
+      <div class="fx">Respirar 5' · abrir plataforma + planillas · noticias · <b>leer ATR</b> · replay sesión previa · niveles M60/M5 · <b>hipótesis A/B</b></div>
+    </div>
+  </div>
+
+</div>
