@@ -3,7 +3,8 @@
 **Emiliano Arburua** · CL / MCL · Metodología Ankora
 Basado en el TPP vigente y en el análisis de 97 operaciones reales (22/10/2025 → 26/06/2026).
 
-> Estado: **en construcción**. Los bloques marcados `[PENDIENTE]` esperan definición.
+> Estado: **completo**, salvo un dato a confirmar — la hora exacta del aplanado por
+> no-overnight que exija la cuenta de fondeo (§7.1).
 
 ---
 
@@ -142,11 +143,12 @@ algoritmo necesita estructura formada para aplicarse, y en los primeros minutos 
 la hay.
 
 **Ninguna entrada pasados los 150 minutos.** Si a esa altura hay una operación abierta, se
-rige por §6 (no se cierra a mercado salvo que haya que dejar la sesión).
+rige por §7 (no se cierra a mercado salvo que haya que dejar la sesión).
 
 Recordatorio: la apertura cash se mueve entre las **10:00 y las 11:00 de Buenos Aires**
 según el horario de verano de EE.UU. Recalcular la hora de arranque en **noviembre** y en
-**marzo**, y con ella los dos hitos (minuto 30 y minuto 150).
+**marzo**, y con ella los dos hitos (minuto 30 y minuto 150). El aplanado por no-overnight
+está en §7.
 
 ### 2.2 Días que no se opera
 
@@ -170,7 +172,25 @@ cierra la sesión.
 
 ---
 
-## 3 · Contexto — trazado de niveles M60
+## 3 · Pre-operativa (rutina de arranque)
+
+Antes de que abra la sesión, en orden:
+
+1. **Cinco minutos de respiración.** Entrar sosegado, sin arrastrar el día.
+2. **Abrir la plataforma y todas las planillas** (B20x50 y diario emocional).
+3. **Noticias de la jornada.** Revisar el calendario: inventarios de crudo, festivos,
+   eventos de alto impacto. Confirmar que el día se opera (§2.2).
+4. **Leer el ATR(14) en M60** y fijar el escenario del día (§1.3): stop, instrumento,
+   contratos y target quedan decididos acá, no durante la operativa.
+5. **Mirada al pasar de la sesión anterior** (market replay rápido).
+6. **Actualización de niveles** en M60 y M5 (§4 y §5).
+7. **Formulación de hipótesis** A y B para el día (§4.4).
+
+Recién con esto hecho empieza la media hora de observación de §2.1.
+
+---
+
+## 4 · Contexto — trazado de niveles M60
 
 *(Del plan vigente, sin cambios: el winrate se mantuvo estable en 35–36 % durante ocho
 meses, así que la lectura funciona.)*
@@ -184,14 +204,14 @@ meses, así que la lectura funciona.)*
 - Apertura diaria
 - Soporte relevante para el contexto
 
-### 3.1 Lectura mensual
+### 4.1 Lectura mensual
 
 Dónde está el precio respecto de los máximos y mínimos del mes anterior. Si hubo
 manipulaciones o acumulación en alguno de los niveles. Por encima o por debajo del cierre
 del mes anterior. ¿Estamos por encima del máximo, dentro del rango, por debajo del mínimo?
 ¿En qué semana del mes estamos?
 
-### 3.2 Lectura semanal
+### 4.2 Lectura semanal
 
 Con los máximos y mínimos de las semanas anteriores, en qué día de la semana estamos.
 ¿Por encima del máximo de la semana anterior, dentro del rango, por debajo del mínimo?
@@ -199,18 +219,18 @@ Con los máximos y mínimos de las semanas anteriores, en qué día de la semana
 la apertura del día? ¿Hay dirección clara hacia alguno de los extremos de la semana
 anterior?
 
-### 3.3 Zona de inflexión
+### 4.3 Zona de inflexión
 
 Zona que, de ser superada o perforada, invalida la dirección que traía el mercado.
 
-### 3.4 Hipótesis
+### 4.4 Hipótesis
 
 - **Hipótesis A** — hacia dónde será dirigido el precio y desde dónde puedo operar en esa dirección.
 - **Hipótesis B** — desde qué nivel estoy habilitado a operar en dirección contraria, y por qué.
 
 ---
 
-## 4 · Trazado de niveles M5
+## 5 · Trazado de niveles M5
 
 - Máximos y mínimos de sesión asiática, europea y americana
 - Pivotes dinámicos
@@ -218,9 +238,9 @@ Zona que, de ser superada o perforada, invalida la dirección que traía el merc
 
 ---
 
-## 5 · Toma de operación
+## 6 · Toma de operación
 
-### 5.1 Requisitos previos
+### 6.1 Requisitos previos
 
 Antes de mandar la orden:
 
@@ -229,7 +249,7 @@ Antes de mandar la orden:
 - [ ] Objetivo identificado y **verificado que permite 2:1 desde el stop**
 - [ ] Han pasado 30 minutos desde la apertura cash
 
-### 5.2 Set ups
+### 6.2 Set ups
 
 | Set up | Estado | Motivo |
 |---|---|---|
@@ -248,17 +268,17 @@ operar y se decide con datos nuevos.*
 Los pivotes dinámicos se usan como objetivos: para tomar una operación, el pivote tiene que
 permitir el recorrido hasta el target.
 
-### 5.3 Ejecución
+### 6.3 Ejecución
 
 Orden limitada.
 
 ---
 
-## 6 · Gestión de la posición
+## 7 · Gestión de la posición
 
 Una vez dentro, **no se toca la operación hasta que cierre**.
 
-### 6.1 Dos relojes distintos: el tuyo y el del mercado
+### 7.1 Dos relojes distintos: el tuyo y el del mercado
 
 El problema del año pasado: cuatro ganadoras se cerraron a mano entre 0,03R y 0,21R porque
 había que dejar la pantalla. El 12 % de las ganadoras del año aportando $69 donde
@@ -295,28 +315,100 @@ a la pantalla.
 
 ---
 
-## 7 · Registro
+## 8 · Registro
 
-`[PENDIENTE — bloque 4]`
+Se mantiene todo el registro que ya venías haciendo, y se suman dos campos.
 
-**Obligatorio y hoy ausente:** MFE y MAE en cada operación. Están vacíos en 96 de 97.
+### 8.1 Planilla B20x50 — cada operación
+
+Todos los campos de siempre (fecha, hora, símbolo, dirección, patrón, contratos, entrada,
+salida, ticks, resultado, disciplina) **más**, ahora obligatorios:
+
+- **MFE** (máxima excursión favorable, en ticks) — lo más lejos que fue a favor.
+- **MAE** (máxima excursión adversa, en ticks) — lo más lejos que fue en contra.
+
+Los dos los calcula NinjaTrader solo, en el reporte de *Trade Performance* (columnas MAE y
+MFE por operación). No hay que mirarlos vela por vela: se copian los dos números a la
+planilla. **Las columnas ya existen en la B20x50** (estaban vacías las 97 veces).
+
+Por qué dejan de ser opcionales: son el único dato que separa "la entrada fue buena y el
+target quedó lejos" de "la entrada estuvo mal", y por lo tanto lo que decide si el próximo
+ajuste va sobre la salida o sobre la entrada. Con cuatro capturas alcanzó para descartar el
+2,5:1; con 40 registros se puede afinar de verdad.
+
+Además, junto con cada operación: **el escenario usado (A/B/C/D)**, para poder revisar
+después si el riesgo quedó parejo entre escenarios.
+
+### 8.2 Diario emocional
+
+Se mantiene, tal como venías haciéndolo. Es la contraparte del registro numérico: el
+número dice *qué* pasó, el diario dice *cómo lo viviste*, y juntos son los que permiten,
+en la revisión del domingo, separar un error de sistema de un error de estado.
 
 ---
 
-## 8 · Cierre de sesión
+## 9 · Cierre de sesión
 
-- Verificar que esté todo documentado
-- Captura de pantalla de la sesión, guardada
-- `[PENDIENTE — bloque 4]`
+Al terminar la ventana operativa, en orden:
+
+1. **Chequear el registro de las planillas.** Que cada operación del día tenga todos los
+   campos, incluidos MFE y MAE (§8.1).
+2. **Guardar la captura** de la sesión.
+3. **Pequeña respiración.** Cerrar el día también en lo emocional.
+4. **Cerrar la plataforma** hasta el día siguiente.
+
+*(Recordatorio: esto es el cierre de tu jornada operativa. No es el aplanado de posiciones
+abiertas, que se rige por el reloj del mercado —§7.1—, no por el tuyo.)*
 
 ---
 
-## 9 · Revisión y criterios de parada
+## 10 · Revisión y criterios de parada
 
-`[PENDIENTE — bloque 4]`
+### 10.1 Revisión semanal — domingo, 60 minutos
+
+Cada domingo, una hora de revisión sobre lo acumulado en la semana:
+
+- **Números en R.** Winrate y R realizado de la semana y del acumulado desde el inicio de
+  la fase. ¿El R va hacia 1,85? ¿El winrate se sostiene por encima del 35 %?
+- **MFE / MAE.** ¿Cuántas perdedoras llegaron a moverse a favor antes de girarse (problema
+  de salida) y cuántas fueron en contra desde el arranque (problema de entrada)?
+- **Escenarios.** ¿El riesgo en dólares quedó realmente parejo entre A/B/C/D?
+- **Disciplina.** Cruce con el diario emocional: ¿las desviaciones fueron de sistema o de
+  estado?
+- **Cumplimiento de topes** (día, semana) y de la ventana horaria.
+
+### 10.2 El corte de las 40 operaciones
+
+A las **40 operaciones** registradas bajo este plan, se decide con datos:
+
+| Resultado | Lectura | Qué se hace |
+|---|---|---|
+| R ≥ 1,85 y winrate ≥ 35 % | Las correcciones funcionan | Se sigue; se puede pensar en objetivo de dinero |
+| R ≥ 1,85 pero winrate < 33 % | La geometría se arregló, la entrada no | Se vuelve sobre la lógica de entrada, no sobre la gestión |
+| R < 1,7 | El riesgo fijo no se está respetando | Se revisa la ejecución de la tabla (§1.3), no la estrategia |
+
+También a las 40 se reevalúa **Giro+VC** (hoy activo con R 1,29): con riesgo igualado
+debería subir; si no, se trata aparte.
+
+### 10.3 Criterios de parada dura
+
+- Se toca el **drawdown de la cuenta** de fondeo → la cuenta se termina; se analiza antes
+  de abrir otra.
+- **Tres semanas seguidas** cerradas en −3R → se frena la operativa en real y se vuelve a
+  simulado a revisar, aunque la cuenta siga viva.
 
 ---
 
-## 10 · Plan de contingencia
+## 11 · Plan de contingencia
 
-`[PENDIENTE — bloque 4]`
+*(Del plan vigente.)* Ante imprevistos durante la operativa:
+
+- **Celular cargado y PC configurada** para que el móvil pueda dar internet a la PC si
+  falla la conexión del proveedor.
+- **App de NinjaTrader** con la cuenta abierta, para poder cerrar operaciones en caso de
+  corte de suministro eléctrico.
+- **Canales de comunicación de la fondeadora** a mano por cualquier problema.
+
+Con el esquema de bracket OCO (§7.1), una caída de conexión ya no deja la operación
+desprotegida: el stop y el target quedan en el servidor del broker. La contingencia es
+para poder **intervenir** si hiciera falta, no para evitar un desastre por una desconexión.
