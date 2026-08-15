@@ -387,8 +387,17 @@ A las **40 operaciones** registradas bajo este plan, se decide con datos:
 | R ≥ 1,85 pero winrate < 33 % | La geometría se arregló, la entrada no | Se vuelve sobre la lógica de entrada, no sobre la gestión |
 | R < 1,7 | El riesgo fijo no se está respetando | Se revisa la ejecución de la tabla (§1.3), no la estrategia |
 
-También a las 40 se reevalúa **Giro+VC** (hoy activo con R 1,29): con riesgo igualado
-debería subir; si no, se trata aparte.
+**No se toca nada hasta ese corte.** Todos los set ups siguen como están; a las 40
+operaciones se revisa cómo vienen, con datos, estas cuatro cosas:
+
+- **Giro+VC** (hoy activo con R 1,29): con riesgo igualado debería subir; si no, se trata aparte.
+- **ESTRUC+FV** (4 de 8, +$678, pero p=0,45 — inconcluso): se mira si el 50 % se sostiene
+  o se cae. Es el set up con menos datos, así que es el que más gana con el registro nuevo.
+- **El objetivo (2R):** con MFE de las ganadoras ya registrado, ¿el precio sigue frenándose
+  cerca de 2R, o hay margen para más? Es la pregunta que hoy sólo pudimos responder con
+  cuatro capturas.
+- **Parciales:** con MFE/MAE en mano, ¿conviene tomar una parte en 1R y dejar correr el
+  resto, o el lote único rinde igual? Hoy no hay datos para decidirlo; a las 40, sí.
 
 ### 10.3 Criterios de parada dura
 

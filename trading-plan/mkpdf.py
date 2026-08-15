@@ -92,5 +92,16 @@ doc = f'''<!doctype html><html lang="es"><head><meta charset="utf-8">
 </div>
 {html_body}
 </body></html>'''
-open('plan.html','w').write(doc)
+import os, subprocess
+HERE = os.path.dirname(os.path.abspath(__file__))
+html_path = os.path.join(HERE, 'plan.html')
+pdf_path  = os.path.join(HERE, 'TPP-v2.pdf')
+open(html_path, 'w').write(doc)
 print('html generado,', len(doc), 'chars')
+
+# Render a PDF con Chromium headless (pw-browsers)
+CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
+subprocess.run([CHROME, '--headless', '--no-sandbox', '--disable-gpu',
+    '--no-pdf-header-footer', '--print-to-pdf=' + pdf_path,
+    'file://' + html_path], check=True, stderr=subprocess.DEVNULL)
+print('PDF generado ->', pdf_path)
