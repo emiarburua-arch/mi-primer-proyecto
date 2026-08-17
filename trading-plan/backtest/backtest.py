@@ -224,6 +224,118 @@ def backtest(m5, m60, atr, target_R=2.0, use_structure=False,
     return trades
 
 
+def europe_levels(m5):
+    """máx/mín de la sesión Europa (07:00–13:00 UTC = 04:00–10:00 BA) por día."""
+    eu = {}
+    for b in m5:
+        if 7 <= b[0].hour < 13:
+            d = b[0].date()
+            lo, hi = eu.get(d, (None, None))
+            eu[d] = (b[3] if lo is None else min(lo, b[3]),
+                     b[2] if hi is None else max(hi, b[2]))
+    return eu
+
+
+def giro_window(dt):
+    """Ventana del giro: 08:00–11:30 ET. Más temprana que la de ESTRUC porque el
+    barrido de Europa ocurre en torno a la apertura de NY (visto en las operaciones reales)."""
+    ny = dt.replace(tzinfo=UTC).astimezone(NY)
+    op = ny.replace(hour=9, minute=0, second=0, microsecond=0)
+    return op - timedelta(minutes=60) <= ny <= op + timedelta(minutes=WINDOW_CLOSE_MIN)
+
+
+def backtest_giro(m5, m60, atr, target_R=2.0, reject=False):
+    """GIRO+VC sobre el nivel de Europa (§6.2.1). Alcista sobre europa_low (corto espejo):
+    manipulación (perfora el nivel) → confirmación (1ª vela a favor) → entrada al romper su
+    extremo, stop del escenario debajo del pivote (mín. de la manipulación). No incluye giros
+    sobre pivotes dinámicos (≈⅓ de los reales; ver 07-GIRO-validacion.md).
+    `reject`: exige que la manipulación muestre rechazo (mecha ≥60% o vol ≥3× mediana de 20)."""
+    eu = europe_levels(m5)
+    trades = []
+    i, n = 30, len(m5)
+    last_day, day_count = None, 0
+    while i < n - 3:
+        b = m5[i]
+        if not giro_window(b[0]):
+            i += 1
+            continue
+        day = b[0].date()
+        if day != last_day:
+            last_day, day_count = day, 0
+        if day_count >= MAX_TRADES_DAY or day not in eu:
+            i += 1
+            continue
+        lo, hi = eu[day]
+        fired = False
+        for is_long in (True, False):
+            level = lo if is_long else hi
+            manip = None
+            for j in range(max(i - 12, 20), i):
+                perf = (m5[j][3] < level - TICK) if is_long else (m5[j][2] > level + TICK)
+                if perf and (manip is None or ((m5[j][3] < m5[manip][3]) if is_long
+                                               else (m5[j][2] > m5[manip][2]))):
+                    manip = j
+            if manip is None:
+                continue
+            trig = None
+            for j in range(manip, i):
+                if (color(m5[j]) == 'V') if is_long else (color(m5[j]) == 'R'):
+                    trig = j
+                    break
+            if trig is None:
+                continue
+            if reject:
+                mb = m5[manip]
+                rng = mb[2] - mb[3]
+                wick = ((min(mb[1], mb[4]) - mb[3]) / rng if is_long
+                        else (mb[2] - max(mb[1], mb[4])) / rng) if rng > 0 else 0
+                med = sorted(x[5] for x in m5[max(manip - 20, 0):manip])
+                medv = med[len(med) // 2] if med else 0
+                if not (wick >= 0.60 or (medv > 0 and mb[5] >= 3 * medv)):
+                    continue
+            brk = m5[trig][2] if is_long else m5[trig][3]
+            if not ((b[2] > brk) if is_long else (b[3] < brk)):
+                continue
+            sc = scenario(atr_before(m60, atr, b[0]))
+            if sc is None:
+                continue
+            lab, stk, ctr = sc
+            entry = brk + (TICK if is_long else -TICK)
+            dist = stk * TICK
+            manip_px = m5[manip][3] if is_long else m5[manip][2]
+            # el pivote (manipulación) debe caer dentro del stop del escenario (§1.3)
+            if (entry - manip_px if is_long else manip_px - entry) > dist + 2 * TICK:
+                continue
+            stop = entry - dist if is_long else entry + dist
+            tgt = entry + target_R * dist if is_long else entry - target_R * dist
+            out, ei = None, i
+            for k in range(i, n):
+                bb = m5[k]
+                if bb[0].hour >= FLAT_UTC_HOUR and bb[0].date() == day:
+                    px = bb[4]
+                    out = ((px - entry) / dist) if is_long else ((entry - px) / dist)
+                    ei = k
+                    break
+                hitS = bb[3] <= stop if is_long else bb[2] >= stop
+                hitT = bb[2] >= tgt if is_long else bb[3] <= tgt
+                if hitS:
+                    out, ei = -1.0, k
+                    break
+                if hitT:
+                    out, ei = target_R, k
+                    break
+            if out is None:
+                out = 0.0
+            trades.append({'day': day, 'dir': 'L' if is_long else 'C', 'esc': lab, 'R': round(out, 3)})
+            day_count += 1
+            fired = True
+            i = ei + 1
+            break
+        if not fired:
+            i += 1
+    return trades
+
+
 def stats(trades):
     R = [t['R'] for t in trades]
     if not R:
@@ -273,6 +385,18 @@ def main():
         h2 = stats([t for t in tr if t['day'] >= mid])
         name = mode or 'sin filtro'
         print(f'  {name:9}: n={s["n"]:3d}  WR {s["winrate"]:.0f}%  R/trade {s["R_medio"]:+.3f}  '
+              f'PF {s["PF"]:.2f}  | mitades {h1.get("R_medio",0):+.3f} / {h2.get("R_medio",0):+.3f}')
+
+    print('\nGIRO+VC sobre nivel de Europa (a 2R) — solo giros de Europa, no pivotes:')
+    gbase = backtest_giro(m5, m60, atr, target_R=2.0)
+    gmid = gbase[len(gbase) // 2]['day']
+    for rj in (False, True):
+        tr = backtest_giro(m5, m60, atr, target_R=2.0, reject=rj)
+        s = stats(tr)
+        h1 = stats([t for t in tr if t['day'] < gmid])
+        h2 = stats([t for t in tr if t['day'] >= gmid])
+        name = 'con rechazo' if rj else 'sin rechazo'
+        print(f'  {name:11}: n={s["n"]:3d}  WR {s["winrate"]:.0f}%  R/trade {s["R_medio"]:+.3f}  '
               f'PF {s["PF"]:.2f}  | mitades {h1.get("R_medio",0):+.3f} / {h2.get("R_medio",0):+.3f}')
 
 
