@@ -46,12 +46,12 @@ No introduce reglas nuevas — sólo hace explícito y determinista lo que el pl
 apertura_cash(fecha)  = 09:00 ET  (hora del pit RTH de CL; verificar contra Ankora)
 ventana_abre          = apertura_cash + 30 min      # §2.1 del plan
 ventana_cierra        = apertura_cash + 150 min      # no se abren entradas después
-cierre_sesion_cash    = ‹PARÁM: 14:30 ET / hora de aplanado no-overnight›   # §7.1
+aplanado_no_overnight = 18:00 America/Argentina/Buenos_Aires = 21:00 UTC   # §7.1 (cuenta de fondeo)
 ```
 
 - Todo se convierte a la hora del exchange; el DST lo maneja la zona horaria, no un offset fijo.
-- **Sesión Europa** (para el giro): `[europa_ini, europa_fin]` = `‹PARÁM›` (hora + zona,
-  según config de Ankora del operador).
+- **Sesión Europa** (para el giro): **04:00–10:00 America/Argentina/Buenos_Aires = 07:00–13:00 UTC**
+  (config de Ankora del operador). Termina en torno a la apertura de NY, que es lo que la barre.
 
 **Zonas horarias resueltas de los datos entregados** (nov-2025 → jul-2026):
 
@@ -195,8 +195,8 @@ No se automatiza en v1. Tres formas de tratarlo, en orden de preferencia:
 
 | Parámetro | Dónde | Valor propuesto |
 |---|---|---|
-| Horario sesión Europa (ini/fin + zona) | §2, §3 | ‹de la config de Ankora› |
-| Hora de aplanado no-overnight | §2 | ‹regla de la cuenta de fondeo› |
+| Horario sesión Europa (ini/fin + zona) | §2, §3 | **04:00–10:00 BA = 07:00–13:00 UTC** ✓ |
+| Hora de aplanado no-overnight | §2 | **18:00 BA = 21:00 UTC** ✓ |
 | Perforación mínima de la manipulación | §5.2 | 1 tick |
 | Mecha de rechazo | §5.2 | ≥ 60 % del rango de la vela |
 | Volumen de manipulación | §5.2 | ≥ 3× mediana de 20 velas |

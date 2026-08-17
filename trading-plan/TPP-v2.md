@@ -3,8 +3,7 @@
 **Emiliano Arburua** · CL / MCL · Metodología Ankora
 Basado en el TPP vigente y en el análisis de 97 operaciones reales (22/10/2025 → 26/06/2026).
 
-> Estado: **completo**, salvo un dato a confirmar — la hora exacta del aplanado por
-> no-overnight que exija la cuenta de fondeo (§7.1).
+> Estado: **completo**. Aplanado por no-overnight confirmado: **18:00 de Buenos Aires** (§7.1).
 
 ---
 
@@ -373,7 +372,7 @@ las tres cargadas de una (OCO). Una vez dentro, no se toca.
 |---|---|
 | Durante la operativa (+30 a +150 min) | No se toca. El bracket manda. |
 | **Cierre de tu ventana (+150 min)** | **Dejás de mirar, pero NO cerrás a mercado.** El bracket (stop + target) queda trabajando solo y resuelve durante el resto de la rueda. |
-| **Cierre de la sesión cash** *(sin overnight)* | Si a esa hora todavía sigue abierta, **se aplana**. Es el único cierre forzado. |
+| **Aplanado por no-overnight — 18:00 hs de Buenos Aires** | Si a esa hora todavía sigue abierta, **se aplana a mercado**. Es el único cierre forzado, y manda sobre todo lo demás. |
 
 Entre tu ventana (+150 min) y el cierre cash hay varias horas: tiempo de sobra para que un
 target a 2R o un stop a 1R se resuelvan solos sin que estés delante. En la enorme mayoría
@@ -389,10 +388,10 @@ NinjaTrader, ATM con stop y target), de modo que resuelva sin que estés present
 además dejar programado el aplanado automático a la hora límite, para no depender de volver
 a la pantalla.
 
-> **[PENDIENTE de confirmar — hora del aplanado]** Tu plan de 2025 tomaba el cierre de la
-> sesión cash a las **16:00 / 17:00 hs de Buenos Aires** (según horario de EE.UU.). Uso ese
-> como hora de aplanado por defecto. **Confirmá si la cuenta de fondeo exige aplanar antes**
-> (muchas piden estar flat unos minutos antes del settlement); si es así, esa hora manda.
+> **Hora del aplanado — confirmada: 18:00 hs de Buenos Aires** (21:00 UTC; ~16:00–17:00 hs de
+> Nueva York según el horario de verano de EE.UU.). A esa hora se aplana a mercado cualquier
+> posición todavía abierta. Si en algún momento la cuenta de fondeo exigiera estar flat antes,
+> esa hora más temprana pasaría a mandar.
 
 ---
 
