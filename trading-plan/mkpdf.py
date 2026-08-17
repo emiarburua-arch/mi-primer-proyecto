@@ -53,6 +53,7 @@ ul,ol{ margin:0 0 8pt; padding-left:17pt; }
 li{ margin:0 0 3pt; }
 hr{ border:none; border-top:1pt solid var(--line); margin:16pt 0; }
 a{ color:var(--accent); text-decoration:none; }
+img{ max-width:100%; height:auto; display:block; margin:8pt 0 5pt; border:0.75pt solid var(--line-2); border-radius:3pt; break-inside:avoid; }
 
 table{
   border-collapse:collapse; width:100%; margin:8pt 0 11pt; font-size:9pt;

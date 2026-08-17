@@ -337,8 +337,14 @@ arriba, no esperando una flecha.
 Giro+VC largo, **escenario B** (ATR 0,598 → banda 500–1000): MCL, **5 contratos**, stop
 **30 tk**, target **60 tk** (2:1), ATM "B -30 t MCL". El precio barrió el mínimo de Europa
 a media mañana, reingresó al rango, retrocedió y sobre la vela verde de confirmación se
-entró en largo, corriendo al objetivo. *(Cuando subas la captura como archivo la dejo
-anotada sobre el gráfico, señalando cada paso del checklist.)*
+entró en largo, corriendo al objetivo.
+
+![Giro+VC — ejemplo anotado del 15/08/2026, con los cinco pasos del checklist señalados sobre el gráfico](giro-ejemplo.png)
+
+*Los números 1–5 sobre el gráfico son los pasos del checklist: 1 barrido del mínimo de
+Europa con mecha de rechazo · 2 reingreso al rango · 3 retroceso (vela roja) · 4 vela verde
+de confirmación · 5 entrada al romper su máximo. Las líneas 0 / 30 / 60 son entrada, stop y
+target del escenario B.*
 
 Los pivotes dinámicos se usan como objetivos: para tomar una operación, el pivote tiene que
 permitir el recorrido hasta el target.
