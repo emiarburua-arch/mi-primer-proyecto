@@ -6,3 +6,6 @@ tablero_card.png
 # datos de precio (grandes, se regeneran con build_data.py)
 backtest/data/
 backtest/raw/
+
+# cache de Python
+__pycache__/
