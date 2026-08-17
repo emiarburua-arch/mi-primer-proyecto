@@ -44,6 +44,8 @@ h2{
 }
 h3{ font-family:"Helvetica Neue",Arial,sans-serif; font-size:10.5pt; color:var(--accent);
   margin:13pt 0 5pt; break-after:avoid; }
+h4{ font-family:"Helvetica Neue",Arial,sans-serif; font-size:10pt; color:var(--ink);
+  margin:11pt 0 4pt; break-after:avoid; }
 p{ margin:0 0 7pt; }
 strong{ color:#0f1815; }
 em{ color:var(--ink-2); }

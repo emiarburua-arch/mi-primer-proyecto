@@ -258,12 +258,87 @@ Antes de mandar la orden:
 | Giro + Vela de confirmación | **Activo** | 30 ops, 36,7 % — mismo acierto que ESTRUC+VC |
 | Giro + Falta de volumen | **Eliminado** | 6 ops, 0 ganadoras, −$946 |
 
-Para Giro (sólo con vela de confirmación) se usa manipulación (UT o SP) en un nivel
-relevante, en general máximo o mínimo de sesión anterior.
-
 *Giro+FV queda fuera del plan: fue el único set up sin una sola ganadora en el año (0 de 6,
 −$946). Si en algún momento se lo quiere reevaluar, se anota como señal observada sin
 operar y se decide con datos nuevos.*
+
+#### 6.2.1 · Giro+VC — definición sin ambigüedad
+
+El giro es el set up más subjetivo, así que se define como un checklist de "esto cuenta /
+esto no". **Todo se lee en M5.** Descripción para el caso **alcista** (giro sobre el mínimo
+de Europa); para un **corto** es exactamente lo inverso (sobre el máximo de Europa).
+
+**Nivel de referencia — el rango de Europa**
+
+- El giro sólo cuenta sobre el **máximo o el mínimo de la sesión europea**, que Ankora
+  marca solo con su **línea marrón**. La sesión la delimita Ankora (horario fijo).
+- **Marrón = siempre Europa.** No es ningún otro nivel.
+
+**Secuencia (los cinco pasos, todos obligatorios)**
+
+1. **Manipulación.** El precio **perfora** el mínimo de Europa —tiene que perforarlo; un
+   simple toque del nivel **no** vale— y deja **mecha de rechazo *o* volumen anómalo**
+   (con **una** de las dos alcanza) que delate que el barrido es a propósito.
+2. **Reingreso al rango.** El precio vuelve a entrar al rango de Europa. Puede tardar lo
+   que sea, pero **no vale si arma un rango/base por debajo del nivel durante un tiempo
+   considerable y recién después vuelve** — eso es aceptación, no barrido. Cuanto más
+   rápido reingresa, mejor.
+3. **Retroceso.** Dentro del rango se espera un retroceso de **al menos una vela roja**. El
+   retroceso sigue siendo válido **mientras ninguna vela cierre por debajo del mínimo
+   anterior** (el mínimo de la manipulación). **Si una vela cierra por debajo de ese
+   mínimo, el giro se cancela.**
+4. **Vela de confirmación.** La **primera vela verde cerrada** que retoma al alza. Alcanza
+   con que sea verde y cierre; no necesita cerrar por encima de nada en particular.
+5. **Disparador / entrada.** Orden **limitada**; se entra cuando la vela siguiente **rompe
+   el máximo de la vela verde de confirmación**. La ubicación de la orden se elige de modo
+   que **el stop del escenario quede por debajo del pivote** (el mínimo de la
+   manipulación).
+
+**Stop, tamaño y "no se opera"**
+
+- El stop es la **distancia fija del escenario** (§1.3) desde la entrada. **Nunca se
+  ensancha** para "meter" el pivote.
+- Si con esa distancia el stop **no** queda por debajo del pivote (el mínimo de la
+  manipulación está más lejos que el stop del escenario), **no se opera**.
+
+**Objetivo (2R)**
+
+- Tiene que haber **espacio de 2R** tanto hasta el **próximo pivote dinámico** como hasta
+  el **nivel opuesto de Europa**.
+- Ese nivel opuesto tiene que seguir **activo**: si ya fue **roto durante la sesión**, no
+  cuenta como referencia. Si no hay espacio, no se opera.
+
+**Dirección — tiene que coincidir con la hipótesis del día**
+
+> El giro sólo se toma si apunta hacia la **hipótesis A o la B** (§4.4). Como la hipótesis
+> B es justamente "desde qué nivel estoy habilitado a operar en dirección contraria", el
+> giro a contra-movimiento en un extremo de Europa casi siempre **es** una hipótesis B —
+> pero pre-planificada. Un barrido en una dirección que **ni A ni B** contemplaron **no se
+> opera**; se anota como señal observada.
+>
+> *(Regla propuesta a partir de tu método; confirmá o ajustá.)*
+
+**Ventana y repetición**
+
+- La manipulación **puede formarse en los primeros 30 min** (observación); lo que importa
+  es que la **entrada dispare después del minuto 30**.
+- Si un primer giro sobre un nivel te saca en stop, se puede tomar una **segunda entrada
+  sobre el mismo nivel** siempre que la nueva confirmación sea **clara** — dentro del tope
+  de 2 operaciones / 2 stops del día (§1.5).
+
+**Las flechas del gráfico no son la señal**
+
+La flecha **azul** es el marcador de **entrada larga** de NinjaTrader; la **rosa**, el de
+**entrada corta**. No son la señal del giro: el giro se identifica por la estructura de
+arriba, no esperando una flecha.
+
+**Ejemplo de referencia — 15/08/2026 (MCL)**
+
+Giro+VC largo, **escenario B** (ATR 0,598 → banda 500–1000): MCL, **5 contratos**, stop
+**30 tk**, target **60 tk** (2:1), ATM "B -30 t MCL". El precio barrió el mínimo de Europa
+a media mañana, reingresó al rango, retrocedió y sobre la vela verde de confirmación se
+entró en largo, corriendo al objetivo. *(Cuando subas la captura como archivo la dejo
+anotada sobre el gráfico, señalando cada paso del checklist.)*
 
 Los pivotes dinámicos se usan como objetivos: para tomar una operación, el pivote tiene que
 permitir el recorrido hasta el target.
