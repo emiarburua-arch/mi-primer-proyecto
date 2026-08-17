@@ -19,6 +19,7 @@ Uso:  CL_DATA_DIR=/ruta/a/csvs python backtest.py
       (por defecto lee ./data relativo al cwd)
 """
 import os
+import bisect
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from collections import defaultdict
@@ -77,16 +78,19 @@ def ema(vals, n):
     return out
 
 
+_m60_times = {}
+
+
 def m60_completed_idx(m60, dt):
     """Índice de la última barra M60 CERRADA antes de dt (sin mirar al futuro).
-    Los timestamps de M60 son hora de apertura; la barra cierra 60 min después."""
-    best = None
-    for i in range(len(m60)):
-        if m60[i][0] <= dt - timedelta(minutes=60):
-            best = i
-        elif m60[i][0] > dt:
-            break
-    return best
+    Los timestamps de M60 son hora de apertura; la barra cierra 60 min después.
+    Usa búsqueda binaria sobre las marcas de tiempo (cacheadas) para escalar."""
+    times = _m60_times.get(id(m60))
+    if times is None:
+        times = [b[0] for b in m60]
+        _m60_times[id(m60)] = times
+    pos = bisect.bisect_right(times, dt - timedelta(minutes=60)) - 1
+    return pos if pos >= 0 else None
 
 
 def color(b):

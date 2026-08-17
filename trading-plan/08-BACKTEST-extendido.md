@@ -1,53 +1,67 @@
-# Backtest extendido — 13,5 meses (jun-2025 → jul-2026)
+# Backtest sobre 2,5 años (dic-2023 → jul-2026)
 
-Actualización de `06-BACKTEST-v0.md` con más datos: se sumaron 5 contratos hacia atrás
-(CL 07-25 … 11-25), llevando la serie continua a **jun-2025 → jul-2026**. La novedad
-importante: **con más datos el giro no se rompe, se estabiliza** — la firma de un edge real,
-no de un artefacto.
+Actualización de `06-BACKTEST-v0.md` con la muestra completa: 31 contratos mensuales de CL
+empalmados, **112.427 barras M5**, período **dic-2023 → jul-2026**. Con este volumen los
+resultados ya son defendibles. El hallazgo central: **el GIRO tiene un edge real y estable;
+el gatillo de ESTRUC, no.**
 
-## Cambio clave: el GIRO se estabiliza
+## Hallazgo central — año por año
 
-| GIRO+VC Europa-only (2R) | 9 meses | **13,5 meses** |
-|---|---|---|
-| R/trade | +0,380 | **+0,425** |
-| Profit factor | 1,71 | **1,81** |
-| 1ª / 2ª mitad | +0,08 / +0,67 ⚠️ | **+0,40 / +0,45** ✅ |
-| n | 177 | 243 |
+Es la prueba que separa un edge real de una casualidad de muestra: ¿se repite cada año?
 
-Las dos mitades ahora son positivas y parecidas. Además la 1ª mitad es en buena parte
-**jun–oct 2025, período NO operado en vivo** → es out-of-sample genuino. Que el edge aparezca
-ahí es la mejor señal que tuvimos.
+### GIRO+VC sobre nivel de Europa (2R) — positivo TODOS los años
 
-## Resto de resultados (2R, 13,5 meses)
+| Año | n | Winrate | R/trade | Profit factor |
+|---|---|---|---|---|
+| 2024 | 102 | 50 % | **+0,488** | 1,98 |
+| 2025 | 169 | 41 % | **+0,243** | 1,41 |
+| 2026 | 116 | 52 % | **+0,537** | 2,11 |
+| **Total** | **392** | **47 %** | **+0,393** | **1,74** |
 
-- **ESTRUC+VC** (gatillo mecánico): n=411, WR 37 %, **R/trade +0,094**, PF 1,15. Mitades
-  +0,131 / +0,058 → **ambas positivas** (antes la 2ª daba negativa). Modesto pero más consistente.
-- **Filtro M60**: sigue **sin ayudar** — ema50 +0,017 < baseline +0,094; slope6/combo con 2ª
-  mitad negativa. Confirmado con más datos: no es un filtro válido.
-- **Escenario A** (ATR bajo, CL): +0,182 sobre **260 trades** — la pista más robusta.
-- **Objetivo 2R** sigue siendo el mejor múltiplo.
-- **Filtro de rechazo del giro** (mecha/vol 3×): baja n (243→95) y R/trade (+0,425→+0,277),
-  aunque ahora ambas mitades quedan positivas. No es necesario como regla dura.
+Positivo en los tres años completos, con PF 1,4–2,1. Es un edge **temporalmente estable**.
 
-## Advertencias que siguen vigentes
+### ESTRUC+VC gatillo mecánico (2R) — depende del año
 
-- 243 giros / 411 estruc en 13,5 meses: mejor, pero no es una muestra enorme; es petróleo 2025-26.
-- Los detectores **sobre-disparan** respecto de la selección discrecional real (el giro real
-  fueron ~30 operaciones; el detector dispara 243). Se mide el **edge mecánico**, no la selección.
-- Modelo v0: stop pesimista intrabar, **sin parciales**, giro **solo sobre Europa** (falta el ⅓
-  sobre pivotes).
-- El split en mitades es tiempo adyacente, no walk-forward estricto.
+| Año | n | R/trade | PF |
+|---|---|---|---|
+| 2024 | 263 | **−0,134** | 0,81 |
+| 2025 | 269 | +0,142 | 1,23 |
+| 2026 | 228 | +0,073 | 1,11 |
+| **Total** | **778** | **+0,025** | **1,04** |
 
-## Estado de los datos
+Negativo en 2024, positivo después. **El gatillo de ESTRUC, solo, es breakeven y no confiable.**
 
-Serie continua jun-2025 → jul-2026 con **huecos de segunda quincena** en jun/jul/ago/sep 2025
-(los contratos 07-25…11-25 se exportaron a ~15 días cada uno, solo la primera mitad del mes) y
-los huecos festivos ya conocidos (dic-2025/ene-2026). No rompen el backtest (se saltan los días
-sin datos) pero conviene, al seguir hacia atrás (meta: ene-2024), **exportar cada contrato por
-su vida completa (~30 días)** para no dejar quincenas afuera.
+## Lo que se cayó al sumar 2024 (era ruido)
 
-## Conclusión operativa (provisional)
+- **Dirección:** en 13,5 meses los largos parecían mejores; en 2,5 años se dieron vuelta
+  (cortos +0,105, largos −0,046). No es robusto → no operar por dirección.
+- **Escenario A:** de +0,182 (13,5 m) a +0,048 (2,5 a). Se diluyó.
+- **Filtro M60:** confirmado sin aporte (baseline +0,025 vs ema50 +0,013). Muerto.
 
-El **giro es el candidato fuerte** y es el primero que mejora al agregar datos. La prioridad
-sigue siendo **más histórico** (hacia ene-2024) para: (1) confirmar el giro con walk-forward
-real, (2) testear la hipótesis de regímenes ESTRUC↔GIRO, (3) darle potencia al escenario A.
+Todo esto es exactamente lo que se esperaba de cortes hechos sobre muestras chicas: se evaporan
+con más datos. El giro, en cambio, se **fortaleció**.
+
+## Qué implica para el plan
+
+1. **El GIRO es el setup fuerte, con evidencia dura.** El detector dispara ~392 giros vs los
+   ~30 que se toman selectivamente; aun así la regla mecánica cruda es positiva todos los años.
+   La selección discrecional se monta **encima** de un edge que ya existe.
+2. **El gatillo de ESTRUC es breakeven.** La lectura discrecional podría salvarlo, pero la regla
+   sola no tiene edge confiable. Material para revisar el peso de cada setup en el plan.
+
+## Advertencias vigentes
+
+- El detector del giro **sobre-dispara** vs la selección real; mide el edge mecánico, no la
+  selección fina.
+- Giro **solo sobre Europa** (falta el ⅓ sobre pivotes dinámicos).
+- Datos con **huecos de segunda quincena** (contratos exportados a ~15 días) y festivos; no
+  rompen el backtest pero reducen la cobertura.
+- Modelo v0: stop pesimista intrabar, sin parciales. Un CL, un período macro (2024-2026).
+- El split por año es robusto, pero un walk-forward estricto lo confirmaría aún mejor.
+
+## Próximos pasos naturales
+
+1. **Modelar parciales** (l1/l2/l3) para acercar el simulador a la gestión real.
+2. **Giro sobre pivotes dinámicos** (el ⅓ faltante), si se decide que son intencionales.
+3. **Régimen ESTRUC↔GIRO:** ahora con 2,5 años se puede empezar a testear si hay períodos que
+   favorecen a cada uno.
