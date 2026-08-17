@@ -128,7 +128,7 @@ objetivo      : 2R del escenario; debe haber espacio hasta el próximo pivote di
 # alcista, sobre europa_low(d):
 1. MANIPULACIÓN: una vela PERFORA europa_low (low < europa_low − ‹PARÁM: 1 tick›)   # toque no vale
    y muestra rechazo:  mecha_inferior ≥ ‹PARÁM: 60%› del rango de la vela
-                       OR volumen ≥ ‹PARÁM: 1,5×› la mediana de las últimas ‹N=20› velas
+                       OR volumen ≥ ‹PARÁM: 3×› la mediana de las últimas ‹N=20› velas
 2. REINGRESO: una vela posterior cierra de nuevo por encima de europa_low.
    INVALIDA si antes se forma una base por debajo durante > ‹PARÁM: K=6› velas M5.
 3. RETROCESO: ≥1 vela roja; válido mientras ninguna vela CIERRE por debajo del mínimo de
@@ -188,7 +188,7 @@ No se automatiza en v1. Tres formas de tratarlo, en orden de preferencia:
 | Hora de aplanado no-overnight | §2 | ‹regla de la cuenta de fondeo› |
 | Perforación mínima de la manipulación | §5.2 | 1 tick |
 | Mecha de rechazo | §5.2 | ≥ 60 % del rango de la vela |
-| Volumen de manipulación | §5.2 | ≥ 1,5× mediana de 20 velas |
+| Volumen de manipulación | §5.2 | ≥ 3× mediana de 20 velas |
 | "Base considerable" que invalida el reingreso | §5.2 | > 6 velas M5 |
 | Volumen FV | §5.0 | menor que las 2 velas previas (regla del plan) |
 | Umbrales de ATR | §4 | 500 / 1000 / 1250 / 1500 (ya fijados) |
