@@ -53,6 +53,17 @@ cierre_sesion_cash    = ‹PARÁM: 14:30 ET / hora de aplanado no-overnight›  
 - **Sesión Europa** (para el giro): `[europa_ini, europa_fin]` = `‹PARÁM›` (hora + zona,
   según config de Ankora del operador).
 
+**Zonas horarias resueltas de los datos entregados** (nov-2025 → jul-2026):
+
+- **Datos de precio** (export NT8, 1 min): **UTC**. Verificado por los cortes de sesión CME —
+  el halt diario (17:00 ET) cae a las 22:00 y la apertura del domingo (18:00 ET) a las 23:01,
+  ambos exactos con UTC.
+- **Registro B20x50** (Excel de las 97 operaciones): **America/Argentina/Buenos_Aires (UTC−3)**.
+  Verificado cruzando las operaciones de salida única contra el precio real (el offset +3 h
+  minimiza el error de magnitud). Para alinear: `hora_UTC = hora_Excel + 3 h`.
+- DST: EE.UU. sale de horario de verano el 2/11/2025 (→ EST −5) y entra el 8/3/2026 (→ EDT −4);
+  Buenos Aires no tiene DST. Se maneja con zona horaria real, no offset fijo.
+
 ---
 
 ## 3 · Niveles
@@ -205,6 +216,13 @@ Correr el detector sobre el **período de las 97 operaciones reales** (22/10/202
 
 Si coincide razonablemente, el backtest largo es creíble. Si no, se ajustan las reglas de
 §5 hasta que reproduzca lo conocido. Recién ahí se corre sobre años.
+
+**Datos disponibles (estado a ago-2026).** Serie continua de CL empalmada a partir de 9
+contratos mensuales (12-25 … 08-26), cubre **oct-2025 → jul-2026**. Cruzada contra el
+registro: **89 de las 97 operaciones (91 %) tienen datos de precio**. Las 8 restantes caen en
+las semanas festivas de fin de año (17/dic → fin de ene, exports cortados por el proveedor) o
+tienen la fecha mal cargada en el Excel (op #96, año "1900"). La cobertura alcanza para la
+validación; las semanas festivas son de liquidez atípica y su exclusión no distorsiona.
 
 ---
 
