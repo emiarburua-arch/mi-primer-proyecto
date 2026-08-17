@@ -2,3 +2,7 @@ plan.html
 tablero_img.html
 tablero_hi.png
 tablero_card.png
+
+# datos de precio (grandes, se regeneran con build_data.py)
+backtest/data/
+backtest/raw/
