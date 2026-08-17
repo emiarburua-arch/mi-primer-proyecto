@@ -81,6 +81,35 @@ overfitting. Se confirman con **más datos y out-of-sample**, no se adoptan ahor
 
 ---
 
+## 3.4 · Filtro de contexto M60 (hipótesis A/B mecánica): NO robusto
+
+Se probó si el contexto del M60 favorece al ESTRUC+VC — la idea económica es sólida (un setup
+de continuación debería rendir más a favor de la tendencia mayor). Se aplicó como **regla real**
+(filtrando en la detección, no post-hoc) sobre **todas** las señales, partido en dos mitades:
+
+| Filtro M60 | R/trade total | 1ª mitad | 2ª mitad |
+|---|---|---|---|
+| sin filtro | −0,021 | +0,006 | −0,048 |
+| precio vs EMA50 | +0,014 | +0,051 | −0,023 |
+| pendiente 6h | +0,002 | **+0,121** | **−0,123** |
+| EMA20 + pendiente6 | +0,000 | **+0,132** | **−0,147** |
+
+**Conclusión: el filtro M60 no aguanta out-of-sample.** Los filtros de pendiente se ven
+excelentes en la 1ª mitad y se **dan vuelta a negativo en la 2ª** — la firma clásica de algo
+que funcionó en un régimen y falló en otro, no de un edge real.
+
+> **Nota de método (importante).** Una versión anterior de este análisis reportó que el filtro
+> EMA50 daba +0,185. Era un **artefacto**: se filtraban las operaciones *ya tomadas* (post-hoc),
+> lo que interactúa con el tope de 2 trades/día y cambia qué operaciones entran. Aplicado como
+> regla real, el efecto desaparece. Se deja registrado como recordatorio de por qué el filtro
+> se prueba **dentro** de la simulación, no encima de sus resultados.
+
+**Lo que esto implica:** con 9 meses no hay potencia para separar edge de ruido, y cualquier
+corte que "brille" (incluidos los de §3.3) es sospechoso de overfitting. **La prioridad es más
+datos**, no exprimir esta muestra.
+
+---
+
 ## 4 · Advertencias del modelo v0 (importantes)
 
 - **Stop pesimista:** si una barra M5 toca stop y objetivo, se cuenta stop. Subestima resultados.

@@ -69,6 +69,26 @@ def atr14(m60):
     return a
 
 
+def ema(vals, n):
+    k = 2 / (n + 1)
+    out = [vals[0]]
+    for v in vals[1:]:
+        out.append(out[-1] + k * (v - out[-1]))
+    return out
+
+
+def m60_completed_idx(m60, dt):
+    """Índice de la última barra M60 CERRADA antes de dt (sin mirar al futuro).
+    Los timestamps de M60 son hora de apertura; la barra cierra 60 min después."""
+    best = None
+    for i in range(len(m60)):
+        if m60[i][0] <= dt - timedelta(minutes=60):
+            best = i
+        elif m60[i][0] > dt:
+            break
+    return best
+
+
 def color(b):
     return 'V' if b[4] > b[1] else ('R' if b[4] < b[1] else '-')
 
@@ -100,16 +120,41 @@ def has_structure(m5, t, is_long, look=24):
 
 
 def atr_before(m60, atr, dt):
-    best = None
-    for i in range(len(m60)):
-        if m60[i][0] <= dt and atr[i] is not None:
-            best = atr[i]
-        elif m60[i][0] > dt:
-            break
-    return best
+    """ATR de la última barra M60 cerrada antes de dt (preparación de sesión, §4)."""
+    j = m60_completed_idx(m60, dt)
+    while j is not None and atr[j] is None:
+        j -= 1
+        if j < 0:
+            return None
+    return atr[j] if j is not None else None
 
 
-def backtest(m5, m60, atr, target_R=2.0, use_structure=False):
+def m60_trend_ok(m60, ema20, ema50, dt, is_long, mode):
+    """Filtro de contexto M60: ¿está la tendencia a favor de la dirección?
+    Mide el sesgo direccional (la 'hipótesis A/B' vuelta mecánica). Modos:
+      'ema50'  : precio del lado correcto de la EMA50
+      'slope6' : pendiente del M60 (close vs 6 barras atrás) a favor
+      'combo'  : EMA20 alineada Y pendiente6 a favor (el más robusto en v0)
+    """
+    j = m60_completed_idx(m60, dt)
+    if j is None or j < 50:
+        return False
+    close = m60[j][4]
+    if mode == 'ema50':
+        return (close > ema50[j]) if is_long else (close < ema50[j])
+    if mode == 'slope6':
+        s = close - m60[j - 6][4]
+        return (s > 0) if is_long else (s < 0)
+    if mode == 'combo':
+        s = close - m60[j - 6][4]
+        if is_long:
+            return close > ema20[j] and s > 0
+        return close < ema20[j] and s < 0
+    return True
+
+
+def backtest(m5, m60, atr, target_R=2.0, use_structure=False,
+             m60_mode=None, ema20=None, ema50=None):
     trades = []
     i, n = 6, len(m5)
     last_day, day_count = None, 0
@@ -137,6 +182,8 @@ def backtest(m5, m60, atr, target_R=2.0, use_structure=False):
                 brk = trig[2] if is_long else trig[3]
                 if (b[2] > brk) if is_long else (b[3] < brk):
                     if use_structure and not has_structure(m5, t, is_long):
+                        continue
+                    if m60_mode and not m60_trend_ok(m60, ema20, ema50, b[0], is_long, m60_mode):
                         continue
                     sc = scenario(atr_before(m60, atr, b[0]))
                     if sc is None:
@@ -213,6 +260,20 @@ def main():
         for k in sorted(groups):
             s = stats(groups[k])
             print(f'  {field}={k}: n={s["n"]}  WR {s["winrate"]:.0f}%  R/trade {s["R_medio"]:+.3f}')
+
+    print('\nFiltro de contexto M60 (a 2R) — sesgo direccional = hipótesis A/B mecánica:')
+    e20 = ema([b[4] for b in m60], 20)
+    e50 = ema([b[4] for b in m60], 50)
+    base = backtest(m5, m60, atr, target_R=2.0)
+    mid = base[len(base) // 2]['day']
+    for mode in (None, 'ema50', 'slope6', 'combo'):
+        tr = backtest(m5, m60, atr, target_R=2.0, m60_mode=mode, ema20=e20, ema50=e50)
+        s = stats(tr)
+        h1 = stats([t for t in tr if t['day'] < mid])
+        h2 = stats([t for t in tr if t['day'] >= mid])
+        name = mode or 'sin filtro'
+        print(f'  {name:9}: n={s["n"]:3d}  WR {s["winrate"]:.0f}%  R/trade {s["R_medio"]:+.3f}  '
+              f'PF {s["PF"]:.2f}  | mitades {h1.get("R_medio",0):+.3f} / {h2.get("R_medio",0):+.3f}')
 
 
 if __name__ == '__main__':
