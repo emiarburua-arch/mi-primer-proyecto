@@ -282,15 +282,79 @@ def giro_window(dt):
     return op - timedelta(minutes=60) <= ny <= op + timedelta(minutes=WINDOW_CLOSE_MIN)
 
 
+def _giro_signal(m5, m60, atr, i, level, is_long, target_R, reject):
+    """Intenta un GIRO+VC sobre `level` en la barra i, dirección dada. Devuelve
+    (R, exit_i, escenario) si hay entrada válida; si no, None. Sin efectos secundarios.
+    Mecánica (alcista sobre el mínimo; corto espejo): manipulación (perfora el nivel) →
+    confirmación (1ª vela a favor) → entrada al romper su extremo, stop del escenario debajo
+    del pivote (mín. de la manipulación)."""
+    n = len(m5)
+    b = m5[i]
+    manip = None
+    for j in range(max(i - 12, 20), i):
+        perf = (m5[j][3] < level - TICK) if is_long else (m5[j][2] > level + TICK)
+        if perf and (manip is None or ((m5[j][3] < m5[manip][3]) if is_long
+                                       else (m5[j][2] > m5[manip][2]))):
+            manip = j
+    if manip is None:
+        return None
+    trig = None
+    for j in range(manip, i):
+        if (color(m5[j]) == 'V') if is_long else (color(m5[j]) == 'R'):
+            trig = j
+            break
+    if trig is None:
+        return None
+    if reject:
+        mb = m5[manip]
+        rng = mb[2] - mb[3]
+        wick = ((min(mb[1], mb[4]) - mb[3]) / rng if is_long
+                else (mb[2] - max(mb[1], mb[4])) / rng) if rng > 0 else 0
+        med = sorted(x[5] for x in m5[max(manip - 20, 0):manip])
+        medv = med[len(med) // 2] if med else 0
+        if not (wick >= 0.60 or (medv > 0 and mb[5] >= 3 * medv)):
+            return None
+    brk = m5[trig][2] if is_long else m5[trig][3]
+    if not ((b[2] > brk) if is_long else (b[3] < brk)):
+        return None
+    sc = scenario(atr_before(m60, atr, b[0]))
+    if sc is None:
+        return None
+    lab, stk, ctr = sc
+    entry = brk + (TICK if is_long else -TICK)
+    dist = stk * TICK
+    manip_px = m5[manip][3] if is_long else m5[manip][2]
+    # el pivote (manipulación) debe caer dentro del stop del escenario (§1.3)
+    if (entry - manip_px if is_long else manip_px - entry) > dist + 2 * TICK:
+        return None
+    stop = entry - dist if is_long else entry + dist
+    tgt = entry + target_R * dist if is_long else entry - target_R * dist
+    day = b[0].date()
+    out, ei = None, i
+    for k in range(i, n):
+        bb = m5[k]
+        if bb[0].hour >= FLAT_UTC_HOUR and bb[0].date() == day:
+            px = bb[4]
+            out = ((px - entry) / dist) if is_long else ((entry - px) / dist)
+            ei = k
+            break
+        hitS = bb[3] <= stop if is_long else bb[2] >= stop
+        hitT = bb[2] >= tgt if is_long else bb[3] <= tgt
+        if hitS:
+            out, ei = -1.0, k
+            break
+        if hitT:
+            out, ei = target_R, k
+            break
+    if out is None:
+        out = 0.0
+    return round(out, 3), ei, lab
+
+
 def backtest_giro(m5, m60, atr, target_R=2.0, reject=False, levels=None, min_utc_hour=None):
-    """GIRO+VC sobre un nivel de sesión (§6.2.1). Alcista sobre el mínimo (corto espejo):
-    manipulación (perfora el nivel) → confirmación (1ª vela a favor) → entrada al romper su
-    extremo, stop del escenario debajo del pivote (mín. de la manipulación). No incluye giros
-    sobre pivotes dinámicos (≈⅓ de los reales; ver 07-GIRO-validacion.md).
-    `reject`: exige que la manipulación muestre rechazo (mecha ≥60% o vol ≥3× mediana de 20).
-    `levels`: dict día→(lo,hi) con el nivel a barrer. Por defecto, Europa.
-    `min_utc_hour`: si se da, no se abren giros antes de esa hora UTC (para niveles que aún se
-    están formando, p.ej. el rango de apertura de NY, que cierra a las 14:00 UTC)."""
+    """GIRO+VC sobre UN nivel de sesión (§6.2.1). `levels`: dict día→(lo,hi); por defecto Europa.
+    `min_utc_hour`: no abre giros antes de esa hora UTC (para niveles que aún se forman, p.ej.
+    el rango de apertura de NY que cierra a las 14:00). Para el bot ver `backtest_giro_multi`."""
     if levels is None:
         levels = europe_levels(m5)
     trades = []
@@ -310,69 +374,68 @@ def backtest_giro(m5, m60, atr, target_R=2.0, reject=False, levels=None, min_utc
         lo, hi = levels[day]
         fired = False
         for is_long in (True, False):
-            level = lo if is_long else hi
-            manip = None
-            for j in range(max(i - 12, 20), i):
-                perf = (m5[j][3] < level - TICK) if is_long else (m5[j][2] > level + TICK)
-                if perf and (manip is None or ((m5[j][3] < m5[manip][3]) if is_long
-                                               else (m5[j][2] > m5[manip][2]))):
-                    manip = j
-            if manip is None:
+            res = _giro_signal(m5, m60, atr, i, lo if is_long else hi, is_long, target_R, reject)
+            if res:
+                R, ei, lab = res
+                trades.append({'day': day, 'dir': 'L' if is_long else 'C', 'esc': lab, 'R': R})
+                day_count += 1
+                fired = True
+                i = ei + 1
+                break
+        if not fired:
+            i += 1
+    return trades
+
+
+def giro_sources(m5):
+    """Las fuentes de nivel del auto-giro: los tres niveles de sesión del mismo día.
+    Cada fuente es (nombre, dict_niveles, min_utc_hour). Pivotes dinámicos quedan afuera
+    (sin edge; ver 07-GIRO-validacion.md)."""
+    lv = session_levels(m5)
+    return [('asia', lv['asia'], None),
+            ('europa', lv['europa'], None),
+            ('nyor', lv['nyor'], 14)]   # el rango de apertura cierra 14:00 UTC
+
+
+def backtest_giro_multi(m5, m60, atr, target_R=2.0, sources=None):
+    """AUTO-GIRO del bot: dispara sobre CUALQUIERA de los niveles de sesión (Asia/Europa/NY),
+    tope de 2/día, una operación por vez. En cada barra prueba las fuentes en orden y toma el
+    primer giro válido."""
+    if sources is None:
+        sources = giro_sources(m5)
+    trades = []
+    i, n = 30, len(m5)
+    last_day, day_count = None, 0
+    while i < n - 3:
+        b = m5[i]
+        if not giro_window(b[0]):
+            i += 1
+            continue
+        day = b[0].date()
+        if day != last_day:
+            last_day, day_count = day, 0
+        if day_count >= MAX_TRADES_DAY:
+            i += 1
+            continue
+        fired = False
+        for name, levels, mh in sources:
+            if mh is not None and b[0].hour < mh:
                 continue
-            trig = None
-            for j in range(manip, i):
-                if (color(m5[j]) == 'V') if is_long else (color(m5[j]) == 'R'):
-                    trig = j
+            if day not in levels or levels[day][0] is None:
+                continue
+            lo, hi = levels[day]
+            for is_long in (True, False):
+                res = _giro_signal(m5, m60, atr, i, lo if is_long else hi, is_long, target_R, False)
+                if res:
+                    R, ei, lab = res
+                    trades.append({'day': day, 'dir': 'L' if is_long else 'C',
+                                   'esc': lab, 'src': name, 'R': R})
+                    day_count += 1
+                    fired = True
+                    i = ei + 1
                     break
-            if trig is None:
-                continue
-            if reject:
-                mb = m5[manip]
-                rng = mb[2] - mb[3]
-                wick = ((min(mb[1], mb[4]) - mb[3]) / rng if is_long
-                        else (mb[2] - max(mb[1], mb[4])) / rng) if rng > 0 else 0
-                med = sorted(x[5] for x in m5[max(manip - 20, 0):manip])
-                medv = med[len(med) // 2] if med else 0
-                if not (wick >= 0.60 or (medv > 0 and mb[5] >= 3 * medv)):
-                    continue
-            brk = m5[trig][2] if is_long else m5[trig][3]
-            if not ((b[2] > brk) if is_long else (b[3] < brk)):
-                continue
-            sc = scenario(atr_before(m60, atr, b[0]))
-            if sc is None:
-                continue
-            lab, stk, ctr = sc
-            entry = brk + (TICK if is_long else -TICK)
-            dist = stk * TICK
-            manip_px = m5[manip][3] if is_long else m5[manip][2]
-            # el pivote (manipulación) debe caer dentro del stop del escenario (§1.3)
-            if (entry - manip_px if is_long else manip_px - entry) > dist + 2 * TICK:
-                continue
-            stop = entry - dist if is_long else entry + dist
-            tgt = entry + target_R * dist if is_long else entry - target_R * dist
-            out, ei = None, i
-            for k in range(i, n):
-                bb = m5[k]
-                if bb[0].hour >= FLAT_UTC_HOUR and bb[0].date() == day:
-                    px = bb[4]
-                    out = ((px - entry) / dist) if is_long else ((entry - px) / dist)
-                    ei = k
-                    break
-                hitS = bb[3] <= stop if is_long else bb[2] >= stop
-                hitT = bb[2] >= tgt if is_long else bb[3] <= tgt
-                if hitS:
-                    out, ei = -1.0, k
-                    break
-                if hitT:
-                    out, ei = target_R, k
-                    break
-            if out is None:
-                out = 0.0
-            trades.append({'day': day, 'dir': 'L' if is_long else 'C', 'esc': lab, 'R': round(out, 3)})
-            day_count += 1
-            fired = True
-            i = ei + 1
-            break
+            if fired:
+                break
         if not fired:
             i += 1
     return trades
@@ -452,6 +515,22 @@ def main():
             by[t['day'].year].append(t)
         yr = '  '.join(f'{y}:{stats(v)["R_medio"]:+.2f}' for y, v in sorted(by.items()))
         print(f'  {name:12}: n={s["n"]:3d}  R/trade {s["R_medio"]:+.3f}  PF {s["PF"]:.2f}  | {yr}')
+
+    print('\nAUTO-GIRO del bot (Asia+Europa+NY combinados, 2R, por año):')
+    tr = backtest_giro_multi(m5, m60, atr, target_R=2.0)
+    s = stats(tr)
+    by = defaultdict(list)
+    for t in tr:
+        by[t['day'].year].append(t)
+    yr = '  '.join(f'{y}:{stats(v)["R_medio"]:+.2f}' for y, v in sorted(by.items()))
+    src = defaultdict(list)
+    for t in tr:
+        src[t['src']].append(t)
+    print(f'  combinado : n={s["n"]:3d}  WR {s["winrate"]:.0f}%  R/trade {s["R_medio"]:+.3f}  '
+          f'PF {s["PF"]:.2f}  Rtot {s["R_total"]:+.0f}  | {yr}')
+    for k in sorted(src):
+        ss = stats(src[k])
+        print(f'    por fuente {k:7}: n={ss["n"]:3d}  R/trade {ss["R_medio"]:+.3f}  PF {ss["PF"]:.2f}')
 
     print('\nComparación de setups (2R, por año):')
     setups = [('ESTRUC+VC', backtest(m5, m60, atr, target_R=2.0, trigger='VC')),
