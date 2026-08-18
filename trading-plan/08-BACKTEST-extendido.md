@@ -31,6 +31,30 @@ Positivo en los tres años completos, con PF 1,4–2,1. Es un edge **temporalmen
 
 Negativo en 2024, positivo después. **El gatillo de ESTRUC, solo, es breakeven y no confiable.**
 
+### ESTRUC+FV (falta de volumen) — perdedor todos los años
+
+Disparador FV mecánico = vela contraria al impulso con volumen < las 2 previas (§5.0).
+
+| Año | n | Winrate | R/trade | PF |
+|---|---|---|---|---|
+| 2024 | 257 | 26 % | −0,218 | 0,71 |
+| 2025 | 252 | 31 % | −0,078 | 0,89 |
+| 2026 | 216 | 30 % | −0,097 | 0,86 |
+| **Total** | **743** | **28 %** | **−0,154** | **0,78** |
+
+Negativo todos los años y a todos los objetivos (1R a 3R). Como regla mecánica, este disparador
+**no tiene edge**. El FV real del registro dio +$678 pero en **8 operaciones** (4 ganadas):
+demasiado poco para contradecir 743 casos perdedores. *Salvedad:* la definición mecánica de FV
+puede ser más laxa que la lectura real; aun así la consistencia negativa es contundente.
+
+### Ranking de los tres setups (2R, 2,5 años)
+
+| Setup | R/trade | PF | Por año | Veredicto |
+|---|---|---|---|---|
+| **GIRO+VC** (Europa) | **+0,393** | 1,74 | + + + | ✅ el fuerte |
+| ESTRUC+VC | +0,025 | 1,04 | −/+/+ | ⚖️ breakeven |
+| ESTRUC+FV | −0,154 | 0,78 | − − − | ❌ perdedor |
+
 ## Lo que se cayó al sumar 2024 (era ruido)
 
 - **Dirección:** en 13,5 meses los largos parecían mejores; en 2,5 años se dieron vuelta

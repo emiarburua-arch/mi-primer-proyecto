@@ -158,7 +158,11 @@ def m60_trend_ok(m60, ema20, ema50, dt, is_long, mode):
 
 
 def backtest(m5, m60, atr, target_R=2.0, use_structure=False,
-             m60_mode=None, ema20=None, ema50=None):
+             m60_mode=None, ema20=None, ema50=None, trigger='VC'):
+    """`trigger`:
+      'VC' = vela a favor cerrada (verde en alcista) tras un retroceso contrario.
+      'FV' = vela CONTRARIA al impulso (roja en alcista) con volumen < las 2 previas
+             ('falta de volumen' en el retroceso), precedida de impulso a favor."""
     trades = []
     i, n = 6, len(m5)
     last_day, day_count = None, 0
@@ -177,12 +181,22 @@ def backtest(m5, m60, atr, target_R=2.0, use_structure=False,
         for is_long in (True, False):
             for t in range(i - 1, i - 4, -1):
                 trig = m5[t]
-                if (color(trig) != 'V') if is_long else (color(trig) != 'R'):
-                    continue
-                # retroceso: >=1 vela contraria inmediatamente antes del disparador
-                if not any(((color(m5[t - m]) == 'R') if is_long else (color(m5[t - m]) == 'V'))
-                           for m in range(1, 4)):
-                    continue
+                if trigger == 'VC':
+                    if (color(trig) != 'V') if is_long else (color(trig) != 'R'):
+                        continue
+                    # retroceso: >=1 vela contraria inmediatamente antes del disparador
+                    if not any(((color(m5[t - m]) == 'R') if is_long else (color(m5[t - m]) == 'V'))
+                               for m in range(1, 4)):
+                        continue
+                else:  # FV: la vela disparador es el retroceso contrario con poco volumen
+                    if (color(trig) != 'R') if is_long else (color(trig) != 'V'):
+                        continue
+                    if not (trig[5] < m5[t - 1][5] and trig[5] < m5[t - 2][5]):
+                        continue
+                    # impulso a favor antes del retroceso
+                    if not any(((color(m5[t - m]) == 'V') if is_long else (color(m5[t - m]) == 'R'))
+                               for m in range(1, 4)):
+                        continue
                 brk = trig[2] if is_long else trig[3]
                 if (b[2] > brk) if is_long else (b[3] < brk):
                     if use_structure and not has_structure(m5, t, is_long):
@@ -402,6 +416,18 @@ def main():
         name = 'con rechazo' if rj else 'sin rechazo'
         print(f'  {name:11}: n={s["n"]:3d}  WR {s["winrate"]:.0f}%  R/trade {s["R_medio"]:+.3f}  '
               f'PF {s["PF"]:.2f}  | mitades {h1.get("R_medio",0):+.3f} / {h2.get("R_medio",0):+.3f}')
+
+    print('\nComparación de setups (2R, por año):')
+    setups = [('ESTRUC+VC', backtest(m5, m60, atr, target_R=2.0, trigger='VC')),
+              ('ESTRUC+FV', backtest(m5, m60, atr, target_R=2.0, trigger='FV')),
+              ('GIRO+VC',   backtest_giro(m5, m60, atr, target_R=2.0))]
+    for name, tr in setups:
+        s = stats(tr)
+        by = defaultdict(list)
+        for t in tr:
+            by[t['day'].year].append(t)
+        yr = '  '.join(f'{y}:{stats(v)["R_medio"]:+.2f}' for y, v in sorted(by.items()))
+        print(f'  {name:10}: n={s["n"]:3d}  R/trade {s["R_medio"]:+.3f}  PF {s["PF"]:.2f}  | {yr}')
 
 
 if __name__ == '__main__':
