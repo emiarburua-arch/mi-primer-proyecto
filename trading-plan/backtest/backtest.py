@@ -31,7 +31,7 @@ DATA_DIR = os.environ.get('CL_DATA_DIR', 'data')
 # --- parámetros congelados (04-SPEC.md §9) ---
 WINDOW_OPEN_MIN = 30      # entradas desde apertura_cash + 30
 WINDOW_CLOSE_MIN = 150    # hasta apertura_cash + 150
-FLAT_UTC_HOUR = 21        # aplanado no-overnight (18:00 BA)
+FLAT_UTC_HOUR = 20        # aplanado no-overnight 17:00 BA (límite operativo del operador)
 MAX_TRADES_DAY = 2
 TICK = 0.01
 
