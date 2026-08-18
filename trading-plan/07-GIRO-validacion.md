@@ -73,8 +73,25 @@ fuerte.** Implementado en `backtest.py` (`session_levels` + `backtest_giro(level
 > *durante* esa hora, usando datos del futuro. Con el guard `min_utc_hour=14` cayó a +0,31,
 > consistente con los demás. Es el tipo de error que solo se ve midiendo con rigor.
 
-Falta el último tipo de nivel: los **pivotes dinámicos** (máx/mín de sesiones de días anteriores
-que aún no fueron rotos). Es el siguiente paso.
+### Pivotes dinámicos (días anteriores): sin edge mecánico
+
+Se probó el giro sobre **pivotes dinámicos** = máx/mín de sesiones (Asia/EU/NY) de **días
+anteriores** que aún no fueron rotos, tomando el giro en el primer cruce de un pivote vivo
+(sin lookahead, búsqueda del cruce acotada a 6 días).
+
+| Nivel del giro | n | R/trade | PF | Por año |
+|---|---|---|---|---|
+| Pivotes dinámicos (días previos) | 63 | **−0,286** | 0,62 | − − ~0 − |
+
+**Negativo.** El edge del giro parece ser el **barrido intradía de la sesión** (el rango de
+Asia/Europa se barre en falso en la apertura de NY y revierte). Un nivel viejo no tiene esa
+dinámica: al tocarlo, muchas veces el precio lo **rompe de verdad** y sigue, así que fadearlo
+pierde. *Salvedad:* es una primera mecanización del pivote; podría refinarse. Pero el contraste
+con los niveles de sesión (todos positivos) es fuerte.
+
+**Conclusión (spec del giro para el bot):** el giro automático se dispara sobre **niveles de
+sesión del mismo día — Asia, Europa y apertura de NY**. Los pivotes de días anteriores quedan
+afuera. Además simplifica el bot.
 
 ## Nota de método
 
