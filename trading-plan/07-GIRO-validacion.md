@@ -53,6 +53,29 @@ sobre pivotes (≈⅓). A objetivo 2R:
 3. **El filtro de rechazo (mecha/volumen 3×) no se justifica en esta muestra:** corta la mitad
    de los trades y baja el R/trade. Queda como opción medible, no como regla dura.
 
+## El giro funciona sobre cualquier nivel de sesión (paso 1 de mecanización)
+
+Al mecanizar los pivotes, primero se testeó el giro sobre los **niveles de cada sesión**
+(máx/mín), no solo Europa. Sesiones (hora BA → UTC): Asia 15:30–04:00, Europa 04:00–10:00,
+NY 10:00–15:30; rango de apertura = 1ª hora de NY (13:00–14:00 UTC). A 2R, sin lookahead:
+
+| Nivel del giro | n | R/trade | PF | Por año |
+|---|---|---|---|---|
+| **Asia** | 529 | **+0,687** | **2,57** | +0,91 / +0,82 / +0,54 / +0,68 |
+| Europa | 392 | +0,393 | 1,74 | +0,20 / +0,49 / +0,24 / +0,54 |
+| Apertura NY (post 14:00 UTC) | 342 | +0,312 | 1,56 | +1,40 / +0,34 / +0,22 / +0,38 |
+
+**El giro tiene edge sobre los tres niveles de sesión, positivo todos los años — Asia es el más
+fuerte.** Implementado en `backtest.py` (`session_levels` + `backtest_giro(levels=...)`).
+
+> **Nota de método (lookahead cazado).** La 1ª medición del rango de apertura de NY dio +1,40
+> R/trade y PF 8 — irreal. La causa: el rango cierra a las 14:00 UTC pero el giro podía dispararse
+> *durante* esa hora, usando datos del futuro. Con el guard `min_utc_hour=14` cayó a +0,31,
+> consistente con los demás. Es el tipo de error que solo se ve midiendo con rigor.
+
+Falta el último tipo de nivel: los **pivotes dinámicos** (máx/mín de sesiones de días anteriores
+que aún no fueron rotos). Es el siguiente paso.
+
 ## Nota de método
 
 También se vio que el sub-requisito de "reingreso al rango" y el de "rechazo por mecha/volumen"

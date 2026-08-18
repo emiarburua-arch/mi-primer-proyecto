@@ -242,16 +242,36 @@ def backtest(m5, m60, atr, target_R=2.0, use_structure=False,
     return trades
 
 
-def europe_levels(m5):
-    """máx/mín de la sesión Europa (07:00–13:00 UTC = 04:00–10:00 BA) por día."""
-    eu = {}
+def session_levels(m5):
+    """máx/mín por día de cada sesión (hora BA → UTC):
+      asia   15:30–04:00 BA = 18:30–07:00 UTC (cruza medianoche → cuenta al día siguiente)
+      europa 04:00–10:00 BA = 07:00–13:00 UTC
+      nyor   10:00–11:00 BA = 13:00–14:00 UTC (rango de apertura: 1ª hora de NY)
+    Devuelve {'asia':{d:(lo,hi)}, 'europa':{...}, 'nyor':{...}}."""
+    asia, eu, nyor = {}, {}, {}
+
+    def upd(store, d, b):
+        lo, hi = store.get(d, (None, None))
+        store[d] = (b[3] if lo is None else min(lo, b[3]),
+                    b[2] if hi is None else max(hi, b[2]))
+
     for b in m5:
-        if 7 <= b[0].hour < 13:
-            d = b[0].date()
-            lo, hi = eu.get(d, (None, None))
-            eu[d] = (b[3] if lo is None else min(lo, b[3]),
-                     b[2] if hi is None else max(hi, b[2]))
-    return eu
+        t = b[0]
+        h = t.hour + t.minute / 60
+        if h < 7:
+            upd(asia, t.date(), b)
+        elif h >= 18.5:
+            upd(asia, t.date() + timedelta(days=1), b)
+        if 7 <= h < 13:
+            upd(eu, t.date(), b)
+        if 13 <= h < 14:
+            upd(nyor, t.date(), b)
+    return {'asia': asia, 'europa': eu, 'nyor': nyor}
+
+
+def europe_levels(m5):
+    """Compatibilidad: solo los niveles de Europa."""
+    return session_levels(m5)['europa']
 
 
 def giro_window(dt):
@@ -262,28 +282,32 @@ def giro_window(dt):
     return op - timedelta(minutes=60) <= ny <= op + timedelta(minutes=WINDOW_CLOSE_MIN)
 
 
-def backtest_giro(m5, m60, atr, target_R=2.0, reject=False):
-    """GIRO+VC sobre el nivel de Europa (§6.2.1). Alcista sobre europa_low (corto espejo):
+def backtest_giro(m5, m60, atr, target_R=2.0, reject=False, levels=None, min_utc_hour=None):
+    """GIRO+VC sobre un nivel de sesión (§6.2.1). Alcista sobre el mínimo (corto espejo):
     manipulación (perfora el nivel) → confirmación (1ª vela a favor) → entrada al romper su
     extremo, stop del escenario debajo del pivote (mín. de la manipulación). No incluye giros
     sobre pivotes dinámicos (≈⅓ de los reales; ver 07-GIRO-validacion.md).
-    `reject`: exige que la manipulación muestre rechazo (mecha ≥60% o vol ≥3× mediana de 20)."""
-    eu = europe_levels(m5)
+    `reject`: exige que la manipulación muestre rechazo (mecha ≥60% o vol ≥3× mediana de 20).
+    `levels`: dict día→(lo,hi) con el nivel a barrer. Por defecto, Europa.
+    `min_utc_hour`: si se da, no se abren giros antes de esa hora UTC (para niveles que aún se
+    están formando, p.ej. el rango de apertura de NY, que cierra a las 14:00 UTC)."""
+    if levels is None:
+        levels = europe_levels(m5)
     trades = []
     i, n = 30, len(m5)
     last_day, day_count = None, 0
     while i < n - 3:
         b = m5[i]
-        if not giro_window(b[0]):
+        if not giro_window(b[0]) or (min_utc_hour is not None and b[0].hour < min_utc_hour):
             i += 1
             continue
         day = b[0].date()
         if day != last_day:
             last_day, day_count = day, 0
-        if day_count >= MAX_TRADES_DAY or day not in eu:
+        if day_count >= MAX_TRADES_DAY or day not in levels or levels[day][0] is None:
             i += 1
             continue
-        lo, hi = eu[day]
+        lo, hi = levels[day]
         fired = False
         for is_long in (True, False):
             level = lo if is_long else hi
@@ -417,10 +441,22 @@ def main():
         print(f'  {name:11}: n={s["n"]:3d}  WR {s["winrate"]:.0f}%  R/trade {s["R_medio"]:+.3f}  '
               f'PF {s["PF"]:.2f}  | mitades {h1.get("R_medio",0):+.3f} / {h2.get("R_medio",0):+.3f}')
 
+    print('\nGIRO por nivel de sesión (2R, por año):')
+    lv = session_levels(m5)
+    for name, key, mh in [('Europa', 'europa', None), ('Asia', 'asia', None),
+                          ('Apertura NY', 'nyor', 14)]:
+        tr = backtest_giro(m5, m60, atr, target_R=2.0, levels=lv[key], min_utc_hour=mh)
+        s = stats(tr)
+        by = defaultdict(list)
+        for t in tr:
+            by[t['day'].year].append(t)
+        yr = '  '.join(f'{y}:{stats(v)["R_medio"]:+.2f}' for y, v in sorted(by.items()))
+        print(f'  {name:12}: n={s["n"]:3d}  R/trade {s["R_medio"]:+.3f}  PF {s["PF"]:.2f}  | {yr}')
+
     print('\nComparación de setups (2R, por año):')
     setups = [('ESTRUC+VC', backtest(m5, m60, atr, target_R=2.0, trigger='VC')),
               ('ESTRUC+FV', backtest(m5, m60, atr, target_R=2.0, trigger='FV')),
-              ('GIRO+VC',   backtest_giro(m5, m60, atr, target_R=2.0))]
+              ('GIRO+VC Eu', backtest_giro(m5, m60, atr, target_R=2.0))]
     for name, tr in setups:
         s = stats(tr)
         by = defaultdict(list)
