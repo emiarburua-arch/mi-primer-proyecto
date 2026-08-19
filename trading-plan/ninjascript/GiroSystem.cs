@@ -19,6 +19,8 @@
 #region Using declarations
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using NinjaTrader.Cbi;
 using NinjaTrader.Data;
 using NinjaTrader.NinjaScript;
@@ -168,8 +170,9 @@ namespace NinjaTrader.NinjaScript.Strategies
                 // niveles del día nuevo: se vuelven a marcar "listos" cuando cada sesión cierre
                 asiaReady = euReady = nyorReady = false;
             }
-            int wk = System.Globalization.ISOWeek.GetWeekOfYear(tUtc);
-            int wkKey = tUtc.Year * 100 + wk;
+            // clave de semana = fecha del lunes de esa semana (evita ISOWeek, ausente en .NET 4.8)
+            DateTime monday = tUtc.Date.AddDays(-(((int)tUtc.DayOfWeek + 6) % 7));
+            int wkKey = monday.Year * 10000 + monday.Month * 100 + monday.Day;
             if (wkKey != curWeek) { curWeek = wkKey; weekR = 0; }
         }
 
