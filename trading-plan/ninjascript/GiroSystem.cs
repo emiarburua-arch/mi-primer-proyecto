@@ -4,17 +4,20 @@
 // Implementa lo validado en el backtest de Python (trading-plan/backtest, docs 10 y 11):
 //   - niveles de sesión Asia / Europa / rango de apertura de NY (máx/mín del mismo día),
 //   - GIRO+VC: manipulación (perfora el nivel) -> confirmación (1ª vela a favor) ->
-//     entrada al romper su extremo, stop del escenario debajo del pivote, objetivo 2R,
+//     ENTRADA CON ORDEN STOP EN EL NIVEL DE RUPTURA (no a mercado; esto es clave para el edge),
+//   - stop del escenario debajo del pivote, objetivo 2R,
 //   - sizing por tabla ATR(14) M60 con riesgo configurable (default $50),
 //   - topes: máx 2/día y −3R semanal; aplanado no-overnight 17:00 BA (20:00 UTC).
 //
-// IMPORTANTE — zona horaria: este código asume que las marcas de tiempo de las barras
-// están en UTC. Configurá NinjaTrader en Tools > Options > General > Time zone = "(UTC)"
-// para que Time[0] sea UTC y la lógica de sesiones coincida con el backtest.
+// v2 — La entrada ahora es una orden STOP que descansa en el nivel de ruptura. En v1 se
+// entraba a mercado al cierre de la vela, lo que entra tarde y se come todo el edge
+// (backtest: entrada límite +0,63 R/trade vs entrada a mercado +0,04 R/trade).
 //
-// Estado: v1 para compilar y validar en Sim101. No fue compilado por su autor; esperá
-// iterar sobre errores de compilación. Objetivo de la validación: que reproduzca el
-// backtest de Python antes de confiar en él.
+// IMPORTANTE — zona horaria: se asume que las marcas de tiempo están en UTC. Configurá
+// NinjaTrader en Tools > Options > General > Time zone = "(UTC)".
+//
+// Estado: para compilar y validar en Sim101. La gestión de órdenes (arme/cancelación) es
+// lo más delicado; esperá iterar en Sim.
 // =====================================================================================
 #region Using declarations
 using System;
@@ -51,26 +54,34 @@ namespace NinjaTrader.NinjaScript.Strategies
         [Display(Name = "Tope semanal (R)", Order = 4, GroupName = "Parámetros")]
         public double WeeklyStopR { get; set; } = -3.0;
 
-        // Valor del tick de MCL en dólares por contrato (Micro WTI = $1,00 por tick de 0,01).
         [NinjaScriptProperty]
         [Display(Name = "Valor tick MCL ($)", Order = 5, GroupName = "Parámetros")]
         public double TickValueMcl { get; set; } = 1.0;
 
+        [NinjaScriptProperty]
+        [Range(1, 12)]
+        [Display(Name = "Vida de la orden (velas)", Order = 6, GroupName = "Parámetros")]
+        public int OrderLifeBars { get; set; } = 3;
+
         // ---------------- Estado interno ----------------
         private ATR atr60;
 
-        // acumuladores de niveles de sesión (se resetean al inicio de cada sesión)
         private double asiaHi, asiaLo, euHi, euLo, nyorHi, nyorLo;
         private bool prevInAsia, prevInEu, prevInNyor;
         private bool asiaReady, euReady, nyorReady;
 
-        // topes / estado de cuenta
         private DateTime curDay = DateTime.MinValue;
         private int curWeek = -1;
         private int tradesToday = 0;
         private double weekR = 0;
-        private double entryRiskDollars = 0;   // riesgo $ de la operación abierta (para calcular R)
-        private int lastCountedTrade = 0;       // cuántos trades ya contabilizamos en R
+        private double entryRiskDollars = 0;
+        private int lastCountedTrade = 0;
+
+        // orden de entrada pendiente (stop en el nivel de ruptura)
+        private Order giroEntryOrder = null;
+        private int armBar = -1;
+        private bool armLong = false;
+        private double armManip = 0;
 
         private static readonly TimeZoneInfo Et =
             TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
@@ -89,8 +100,7 @@ namespace NinjaTrader.NinjaScript.Strategies
             }
             else if (State == State.Configure)
             {
-                // serie secundaria de 60 min para el ATR
-                AddDataSeries(BarsPeriodType.Minute, 60);
+                AddDataSeries(BarsPeriodType.Minute, 60);   // serie de 60 min para el ATR
             }
             else if (State == State.DataLoaded)
             {
@@ -100,10 +110,10 @@ namespace NinjaTrader.NinjaScript.Strategies
 
         protected override void OnBarUpdate()
         {
-            if (BarsInProgress != 0) return;                 // operar sobre la serie de 5 min
+            if (BarsInProgress != 0) return;
             if (CurrentBars[0] < 20 || CurrentBars[1] < 14) return;
 
-            DateTime tUtc = Time[0];                          // se asume UTC (ver cabecera)
+            DateTime tUtc = Time[0];
             double h = tUtc.Hour + tUtc.Minute / 60.0;
 
             UpdateSessionLevels(tUtc, h);
@@ -113,33 +123,39 @@ namespace NinjaTrader.NinjaScript.Strategies
             // aplanado no-overnight 17:00 BA = 20:00 UTC
             if (h >= 20.0)
             {
-                if (Position.MarketPosition != MarketPosition.Flat)
-                    ExitLongOrShort("Aplanado");
+                CancelPendingEntry();
+                if (Position.MarketPosition != MarketPosition.Flat) ExitLongOrShort("Aplanado");
                 return;
             }
 
-            // ventana del giro: 08:00–11:30 ET (apertura cash 09:00, −60/+150)
             DateTime tEt = TimeZoneInfo.ConvertTimeFromUtc(tUtc, Et);
             double etH = tEt.Hour + tEt.Minute / 60.0;
             bool inGiroWindow = etH >= 8.0 && etH <= 11.5;
-            if (!inGiroWindow) return;
 
-            // ya en posición o topes tocados → no buscar nuevas entradas
+            // si hay una entrada pendiente, gestionar su cancelación
+            if (giroEntryOrder != null)
+            {
+                bool invalidated = armLong ? Close[0] < armManip : Close[0] > armManip;
+                if (!inGiroWindow || (CurrentBar - armBar) > OrderLifeBars || invalidated)
+                    CancelPendingEntry();
+                return;   // no armar otra mientras haya una pendiente
+            }
+
+            if (!inGiroWindow) return;
             if (Position.MarketPosition != MarketPosition.Flat) return;
             if (tradesToday >= MaxTradesDay) return;
             if (weekR <= WeeklyStopR) return;
 
-            // escenario por ATR(14) M60 (escala plataforma = ATR$ * 1000)
-            int stopTicks; int contracts;
+            int stopTicks, contracts;
             if (!ScenarioSizing(out stopTicks, out contracts)) return;
 
             // probar las tres fuentes en orden (Asia el más fuerte); NY-OR solo tras cerrar (14:00 UTC)
-            if (asiaReady && TryGiro(asiaLo, asiaHi, stopTicks, contracts, "asia")) return;
-            if (euReady && TryGiro(euLo, euHi, stopTicks, contracts, "europa")) return;
-            if (nyorReady && h >= 14.0 && TryGiro(nyorLo, nyorHi, stopTicks, contracts, "nyor")) return;
+            if (asiaReady && ArmGiro(asiaLo, asiaHi, stopTicks, contracts, "asia")) return;
+            if (euReady && ArmGiro(euLo, euHi, stopTicks, contracts, "europa")) return;
+            if (nyorReady && h >= 14.0) ArmGiro(nyorLo, nyorHi, stopTicks, contracts, "nyor");
         }
 
-        // ---------- niveles de sesión (UTC): Asia 18:30–07:00, Europa 07:00–13:00, NY-OR 13:00–14:00 ----------
+        // ---------- niveles de sesión (UTC) ----------
         private void UpdateSessionLevels(DateTime tUtc, double h)
         {
             bool inAsia = (h >= 18.5) || (h < 7.0);
@@ -148,7 +164,7 @@ namespace NinjaTrader.NinjaScript.Strategies
 
             if (inAsia && !prevInAsia) { asiaHi = High[0]; asiaLo = Low[0]; }
             else if (inAsia) { asiaHi = Math.Max(asiaHi, High[0]); asiaLo = Math.Min(asiaLo, Low[0]); }
-            if (!inAsia && prevInAsia) asiaReady = true;      // Asia cerró → nivel listo
+            if (!inAsia && prevInAsia) asiaReady = true;
 
             if (inEu && !prevInEu) { euHi = High[0]; euLo = Low[0]; }
             else if (inEu) { euHi = Math.Max(euHi, High[0]); euLo = Math.Min(euLo, Low[0]); }
@@ -167,80 +183,88 @@ namespace NinjaTrader.NinjaScript.Strategies
             {
                 curDay = tUtc.Date;
                 tradesToday = 0;
-                // niveles del día nuevo: se vuelven a marcar "listos" cuando cada sesión cierre
                 asiaReady = euReady = nyorReady = false;
             }
-            // clave de semana = fecha del lunes de esa semana (evita ISOWeek, ausente en .NET 4.8)
             DateTime monday = tUtc.Date.AddDays(-(((int)tUtc.DayOfWeek + 6) % 7));
             int wkKey = monday.Year * 10000 + monday.Month * 100 + monday.Day;
             if (wkKey != curWeek) { curWeek = wkKey; weekR = 0; }
         }
 
-        // ---------- tabla ATR → stop del escenario + contratos por riesgo ----------
         private bool ScenarioSizing(out int stopTicks, out int contracts)
         {
             stopTicks = 0; contracts = 0;
-            double u = atr60[0] * 1000.0;                     // escala plataforma
+            double u = atr60[0] * 1000.0;
             if (u < 500) stopTicks = 15;
             else if (u < 1000) stopTicks = 30;
             else if (u < 1250) stopTicks = 50;
             else if (u < 1500) stopTicks = 75;
-            else return false;                                 // atr ≥ 1500: no se opera
-            // contratos MCL para ~RiskPerTrade (riesgo = stopTicks * valor tick * contratos)
+            else return false;
             contracts = Math.Max(1, (int)Math.Round(RiskPerTrade / (stopTicks * TickValueMcl)));
             return true;
         }
 
-        // ---------- detección del giro sobre un nivel; entra si hay señal ----------
-        private bool TryGiro(double lo, double hi, int stopTicks, int contracts, string tag)
+        // ---------- arma una orden STOP de entrada en el nivel de ruptura ----------
+        private bool ArmGiro(double lo, double hi, int stopTicks, int contracts, string tag)
         {
-            // alcista sobre el mínimo; corto espejo sobre el máximo
             for (int dir = 0; dir < 2; dir++)
             {
                 bool isLong = dir == 0;
                 double level = isLong ? lo : hi;
 
-                // manipulación: perforación del nivel en las últimas 12 velas
-                int manip = -1;
-                for (int j = 1; j <= 12; j++)
+                // manipulación: perforación más extrema en las últimas 12 velas
+                int manipK = -1;
+                for (int k = 1; k <= 12; k++)
                 {
-                    bool perf = isLong ? (Low[j] < level - TickSize) : (High[j] > level + TickSize);
-                    if (perf && (manip < 0 || (isLong ? Low[j] < Low[manip] : High[j] > High[manip])))
-                        manip = j;
+                    bool perf = isLong ? (Low[k] < level - TickSize) : (High[k] > level + TickSize);
+                    if (perf && (manipK < 0 || (isLong ? Low[k] < Low[manipK] : High[k] > High[manipK])))
+                        manipK = k;
                 }
-                if (manip < 0) continue;
+                if (manipK < 0) continue;
 
-                // confirmación: 1ª vela a favor entre la manipulación y ahora
-                int trig = -1;
-                for (int j = manip; j >= 1; j--)
+                // confirmación: 1ª vela a favor después de la manipulación (más reciente que manipK)
+                int trigK = -1;
+                for (int k = manipK - 1; k >= 0; k--)
                 {
-                    bool favor = isLong ? (Close[j] > Open[j]) : (Close[j] < Open[j]);
-                    if (favor) { trig = j; break; }
+                    bool favor = isLong ? (Close[k] > Open[k]) : (Close[k] < Open[k]);
+                    if (favor) { trigK = k; break; }
                 }
-                if (trig < 0) continue;
+                if (trigK < 0) continue;
 
-                // ruptura del extremo de la vela de confirmación en la barra actual
-                double brk = isLong ? High[trig] : Low[trig];
-                bool broke = isLong ? (High[0] > brk) : (Low[0] < brk);
-                if (!broke) continue;
+                double brk = isLong ? High[trigK] : Low[trigK];
+                // que todavía NO haya sido rota (para entrar EN el nivel, no tarde)
+                bool broken = false;
+                for (int k = trigK - 1; k >= 0; k--)
+                    if (isLong ? High[k] > brk : Low[k] < brk) { broken = true; break; }
+                if (broken) continue;
 
                 double entry = brk + (isLong ? TickSize : -TickSize);
                 double dist = stopTicks * TickSize;
-                double manipPx = isLong ? Low[manip] : High[manip];
-                // el pivote (manipulación) debe caer dentro del stop del escenario (§1.3)
+                double manipPx = isLong ? Low[manipK] : High[manipK];
                 double pivDist = isLong ? (entry - manipPx) : (manipPx - entry);
                 if (pivDist > dist + 2 * TickSize) continue;
 
-                // sizing por riesgo y bracket
+                // arma la orden stop en el nivel + bracket (stop/target se adjuntan al llenarse)
                 entryRiskDollars = stopTicks * TickValueMcl * contracts;
                 SetStopLoss(CalculationMode.Ticks, stopTicks);
                 SetProfitTarget(CalculationMode.Ticks, TargetR * stopTicks);
-                if (isLong) EnterLong(contracts, "giro_" + tag);
-                else EnterShort(contracts, "giro_" + tag);
-                tradesToday++;
+                giroEntryOrder = isLong
+                    ? EnterLongStopMarket(0, true, contracts, entry, "giro_" + tag)
+                    : EnterShortStopMarket(0, true, contracts, entry, "giro_" + tag);
+                armBar = CurrentBar;
+                armLong = isLong;
+                armManip = manipPx;
                 return true;
             }
             return false;
+        }
+
+        private void CancelPendingEntry()
+        {
+            if (giroEntryOrder != null)
+            {
+                CancelOrder(giroEntryOrder);
+                giroEntryOrder = null;
+            }
         }
 
         private void ExitLongOrShort(string reason)
@@ -249,7 +273,20 @@ namespace NinjaTrader.NinjaScript.Strategies
             else if (Position.MarketPosition == MarketPosition.Short) ExitShort(reason);
         }
 
-        // ---------- contabilizar R de las operaciones cerradas para los topes ----------
+        // ---------- ciclo de vida de la orden de entrada ----------
+        protected override void OnOrderUpdate(Order order, double limitPrice, double stopPrice,
+            int quantity, int filled, double averageFillPrice, OrderState orderState,
+            DateTime time, ErrorCode error, string nativeError)
+        {
+            if (giroEntryOrder != null && order == giroEntryOrder)
+            {
+                if (orderState == OrderState.Filled) { tradesToday++; giroEntryOrder = null; }
+                else if (orderState == OrderState.Cancelled || orderState == OrderState.Rejected)
+                    giroEntryOrder = null;
+            }
+        }
+
+        // ---------- contabilizar R de operaciones cerradas para los topes ----------
         private void AccountRFromClosedTrades()
         {
             var trades = SystemPerformance.AllTrades;
@@ -257,8 +294,7 @@ namespace NinjaTrader.NinjaScript.Strategies
             {
                 var t = trades[lastCountedTrade];
                 double risk = entryRiskDollars > 0 ? entryRiskDollars : RiskPerTrade;
-                double r = t.ProfitCurrency / risk;
-                weekR += r;
+                weekR += t.ProfitCurrency / risk;
                 lastCountedTrade++;
             }
         }

@@ -42,13 +42,26 @@ el riesgo. El input `Valor tick MCL ($)` debe ser **1.0** (MCL: $1 por tick de 0
 2. Ajustar diferencias (fills, redondeos, zona horaria) hasta que reproduzca razonablemente.
 3. Recién ahí, **Sim101** (paper) en un chart de 5 min.
 
-## Diferencias conocidas con el backtest de Python (a reconciliar)
+## La entrada es LO que define el edge (hallazgo de la validación)
 
-- **Entrada:** el backtest entra a `ruptura + 1 tick` cuando una vela posterior rompe el extremo;
-  esta v1 entra **a mercado al cierre de la barra** que rompe. Diferencia chica, a medir en Sim.
-- **Stop pesimista:** el backtest, si una barra toca stop y target, cuenta stop; NT usa la
-  ejecución real. El bot debería salir un poco mejor que el backtest, no peor.
+Comparando la 1ª corrida en NinjaTrader (v1, entrada a mercado) contra Python se descubrió que
+**cómo entra el bot cambia todo**:
+
+| Modo de entrada | Winrate | R/trade | PF |
+|---|---|---|---|
+| Orden STOP en el nivel de ruptura (v2, correcto) | 54 % | **+0,63** | 2,38 |
+| Mercado al cierre de la vela (v1, incorrecto) | 35 % | +0,04 | 1,06 |
+
+El v1 entraba tarde (a mercado, después de que la vela ya rompió) y **eso se comía todo el edge**.
+La v2 pone una **orden stop que descansa en el nivel** y se llena cuando el precio lo rompe —
+que es lo que el plan siempre dijo ("orden limitada al romper"). Si volvés a correr el Strategy
+Analyzer con la v2, el winrate debería subir de ~35 % a ~50 % y el PF acercarse a ~2.
+
+## Otras diferencias con el backtest de Python (a reconciliar en Sim)
+
 - **Sizing a $50:** con contratos enteros de MCL el riesgo no queda perfectamente constante
-  (A≈$45, B≈$60, C=$50, D=$75). Es aceptable para probar.
-- **R para los topes:** se calcula de `ProfitCurrency / riesgo$` de cada trade cerrado; en Sim
-  puede diferir levemente del R teórico por comisión/slippage.
+  (A≈$45, B≈$60, C=$50, D=$75). Aceptable para probar.
+- **Contrato único en NinjaTrader:** el Strategy Analyzer corre UN contrato; Python usa el
+  continuo (front de cada día). Para comparar, correr NT en un rango donde el contrato elegido
+  ERA el front (p.ej. MCL Aug26 en jun–jul 2026), no meses donde estaba ilíquido.
+- **R para los topes:** se calcula de `ProfitCurrency / riesgo$` de cada trade cerrado.
