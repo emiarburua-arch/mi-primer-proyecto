@@ -13,16 +13,24 @@
 //   - Entrada al cierre de la vela de ruptura. Stop = extremo opuesto del rango.
 //     Objetivo = 1R (una altura de rango). Una operación por día. Aplanado no-overnight.
 //
-// Resultado del backtest (MES, 3 años, con costos): PF 1.41, media +$18/op, DD $1.010 (1 lote),
-// positivo todos los años; entra a 2 lotes en cuenta de $2.500 DD / $900 diario.
+// RESULTADO REAL sobre datos limpios de NinjaTrader (MES SEP26, ene–ago 2026, 32 ops):
+//   - A FAVOR de la ruptura (breakout): PF 0,35, 28 % aciertos, −$1.674. NO tiene ventaja.
+//   - FADEADO (parámetro Fade=true): la inversión exacta dio PF 2,87, 72 %, +$1.514.
+//     Coincide con la lógica del doc 13: los índices REVIERTEN intradía → hay que fadear.
+// Mi backtest en Python daba PF 1,41 pero usaba un continuo stitcheado con artefactos en los
+// rolls (rangos de apertura inflados). NO es confiable; la verdad salió de la ejecución limpia.
+//
+// Parámetros clave:
+//   - Fade: false = sigue la ruptura (petróleo); true = fadea (índices: MES/MNQ).
+//   - UsarFiltros: media 200 + dirección del día previo (pensados para el breakout; probar
+//     apagados para el fade).
 //
 // IMPORTANTE:
-//   - Poné NinjaTrader en zona horaria US Eastern (Tools > Options > General > Time zone),
-//     porque la ventana de apertura se mide a las 09:30 ET.
-//   - Usá una serie de 1 minuto que incluya el overnight (Globex), NO solo RTH: la media de
-//     200 necesita las barras continuas para coincidir con el backtest.
+//   - Poné NinjaTrader en zona horaria US Eastern; la ventana de apertura se mide a las 09:30 ET.
+//   - Usá 1 minuto con overnight (Globex) para que la media de 200 tenga barras continuas.
+//   - Preferí UN solo contrato (evita artefactos de roll) para validar en el Strategy Analyzer.
 //
-// Estado: v1 para compilar y validar en el Strategy Analyzer. Esperá iterar en compilación.
+// Estado: pendiente confirmar el fade con una corrida real y más años antes de Sim101.
 // =====================================================================================
 #region Using declarations
 using System;
@@ -67,6 +75,17 @@ namespace NinjaTrader.NinjaScript.Strategies
         [NinjaScriptProperty]
         [Display(Name = "Aplanado (HHMM ET)", Order = 6, GroupName = "Horarios")]
         public int FlattenHHMM { get; set; } = 1555;
+
+        // Fade = fadear la ruptura (para índices, que revierten intradía) en vez de seguirla.
+        // Sobre MES el breakout perdió (PF 0,35); la inversión fadeada dio PF 2,87 en 7 meses.
+        [NinjaScriptProperty]
+        [Display(Name = "Fade (fadear la ruptura)", Order = 7, GroupName = "Parámetros")]
+        public bool Fade { get; set; } = false;
+
+        // Filtros de tendencia/dirección: útiles al breakout, dudosos al fade. Se pueden apagar.
+        [NinjaScriptProperty]
+        [Display(Name = "Usar filtros media/dirección", Order = 8, GroupName = "Parámetros")]
+        public bool UsarFiltros { get; set; } = true;
 
         private SMA sma;
 
@@ -179,22 +198,39 @@ namespace NinjaTrader.NinjaScript.Strategies
             // optimista que infla las operaciones y no existe en el backtest de Python.
             tradedToday = true;
 
-            bool isLong = up;
-            // filtro de tendencia (media 200)
-            if (isLong && !(Close[0] > sma[0])) return;
-            if (!isLong && !(Close[0] < sma[0])) return;
-            // filtro de dirección del día previo
-            if (isLong && prevDayDir != 1) return;
-            if (!isLong && prevDayDir != -1) return;
+            bool breakoutUp = up;   // dirección de la ruptura (independiente de si operamos a favor o fade)
+
+            // Filtros (opcionales). Se evalúan sobre la dirección de la RUPTURA, como en el
+            // breakout original, para poder comparar los mismos setups a favor y fadeados.
+            if (UsarFiltros)
+            {
+                if (breakoutUp && !(Close[0] > sma[0])) return;      // tendencia (media 200)
+                if (!breakoutUp && !(Close[0] < sma[0])) return;
+                if (breakoutUp && prevDayDir != 1) return;           // dirección del día previo
+                if (!breakoutUp && prevDayDir != -1) return;
+            }
 
             double range = orbHi - orbLo;
             double entry = Close[0];
-            double stop = isLong ? orbLo : orbHi;
-            double target = isLong ? entry + range : entry - range;
+            // A favor: seguimos la ruptura. Fade: la invertimos.
+            //   - Objetivo del fade = el extremo OPUESTO del rango (mismo nivel que el stop del breakout).
+            //   - Stop del fade = 1R más allá de la entrada (mismo nivel que el objetivo del breakout).
+            bool goLong = Fade ? !breakoutUp : breakoutUp;
+            double stop, target;
+            if (!Fade)
+            {
+                stop   = breakoutUp ? orbLo : orbHi;
+                target = breakoutUp ? entry + range : entry - range;
+            }
+            else
+            {
+                target = breakoutUp ? orbLo : orbHi;
+                stop   = breakoutUp ? entry + range : entry - range;
+            }
 
             SetStopLoss(CalculationMode.Price, stop);
             SetProfitTarget(CalculationMode.Price, target);
-            if (isLong) EnterLong(Contratos, "pe_long");
+            if (goLong) EnterLong(Contratos, "pe_long");
             else EnterShort(Contratos, "pe_short");
             tradedToday = true;
         }
