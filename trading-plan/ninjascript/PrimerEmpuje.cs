@@ -73,7 +73,7 @@ namespace NinjaTrader.NinjaScript.Strategies
         // estado de la sesión
         private DateTime curDay = DateTime.MinValue;
         private double orbHi, orbLo;
-        private bool orbSet, tradedToday, orbActive;
+        private bool orbSet, tradedToday, orbActive, orbEvaluated;
         private double sessOpen, sessClose;
         private bool sessOpenSet;
         private int prevDayDir;                 // 1 alcista, -1 bajista, 0 desconocido
@@ -115,7 +115,7 @@ namespace NinjaTrader.NinjaScript.Strategies
                     prevDayDir = sessClose > sessOpen ? 1 : -1;   // dirección de la RTH de AYER
                 curDay = t.Date;
                 orbHi = double.MinValue; orbLo = double.MaxValue;
-                orbSet = false; orbActive = false; tradedToday = false;
+                orbSet = false; orbActive = false; tradedToday = false; orbEvaluated = false;
                 sessOpenSet = false;
                 int oh = RthOpen / 100, om = RthOpen % 100;
                 OrbEndMinutes = oh * 60 + om + OrbMinutes;
@@ -139,11 +139,11 @@ namespace NinjaTrader.NinjaScript.Strategies
                 if (High[0] > orbHi) orbHi = High[0];
                 if (Low[0] < orbLo) orbLo = Low[0];
             }
-            else if (orbActive && !orbSet && mins >= OrbEndMinutes)
+            else if (orbActive && !orbEvaluated && mins >= OrbEndMinutes)
             {
-                // rango recién cerrado: calcular fracción y filtro de volatilidad
-                orbSet = true;
-                double frac = orbLo > 0 ? (orbHi - orbLo) / orbLo : 0;
+                // rango recién cerrado: se evalúa UNA sola vez por día (bug corregido)
+                orbEvaluated = true;
+                double frac = orbHi > 0 ? (orbHi - orbLo) / orbHi : 0;   // igual que Python (R/hi)
                 bool volOK = false;
                 if (rangeHist.Count >= 10)
                 {
@@ -153,8 +153,8 @@ namespace NinjaTrader.NinjaScript.Strategies
                     double med = last[last.Count / 2];
                     volOK = frac > med;
                 }
-                rangeHist.Add(frac);
-                if (!volOK) orbSet = false;   // día de baja volatilidad: no se opera (marcamos como no listo)
+                rangeHist.Add(frac);       // se agrega una sola vez
+                orbSet = volOK;            // solo se opera si la volatilidad supera la mediana
             }
 
             // ---- aplanado no-overnight ----
