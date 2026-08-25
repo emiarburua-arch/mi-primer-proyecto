@@ -173,6 +173,12 @@ namespace NinjaTrader.NinjaScript.Strategies
             bool down = Close[0] < orbLo;
             if (!up && !down) return;
 
+            // REGLA D3: solo la PRIMERA ruptura de la sesión cuenta. Se cierra el día YA
+            // (pase o no los filtros) para no re-evaluar rupturas posteriores. Sin esto el bot
+            // seguiría escaneando y entraría en una ruptura más tardía/favorable — un artefacto
+            // optimista que infla las operaciones y no existe en el backtest de Python.
+            tradedToday = true;
+
             bool isLong = up;
             // filtro de tendencia (media 200)
             if (isLong && !(Close[0] > sma[0])) return;
