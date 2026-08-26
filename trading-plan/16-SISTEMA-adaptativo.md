@@ -66,3 +66,20 @@ Se corrió el adaptativo (mismo K=10) sobre contratos MES individuales de 2022-2
 
 **Lo relevante:** en el bear market de 2022 el sistema fue positivo — no depende de mercado alcista.
 Con las corridas del bot corregido: MES 5 años (2022-26) = +$3.378, positivo 4 de 5.
+
+## Portfolio final validado (bot corregido, filtrado)
+
+Con el bot corregido y `UsarFiltros=true` en ambos instrumentos:
+
+| Año | Portfolio MES+MNQ (1+1) |
+|---|---|
+| 2024 | +$1.837 |
+| 2025 | +$4.677 |
+| 2026 | +$2.870 |
+| **Total** | **+$9.384** |
+
+**Max drawdown −$1.729** (bajo el tope de $2.500). **Peor día combinado −$565** (bajo los $900).
+
+**CRÍTICO — los filtros no son opcionales.** Con `UsarFiltros=false`, MNQ pasa a 78 operaciones de
+peor calidad y el drawdown del portfolio salta a **−$3.628**, que rompe el tope de $2.500. En papel
+y en real, `UsarFiltros` debe estar en **TRUE siempre**.
