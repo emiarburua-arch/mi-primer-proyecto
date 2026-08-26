@@ -42,14 +42,19 @@ Se corrió `PrimerEmpuje2` con `Fade=true` en el Strategy Analyzer sobre el mism
 
 | Versión | n | WR | Neto | PF | media/op | Max DD (1 lote) |
 |---|---|---|---|---|---|---|
-| Fade sin filtros | 76 | 58 % | **+$1.804** | 1,65 | +$24 | **−$554** |
-| Fade con filtros (inversión de las 33) | 33 | 73 % | +$1.591 | 2,87 | +$47 | — |
+| Fade sin filtros | 76 | 58 % | +$1.804 | 1,65 | +$24 | −$554 |
+| **Fade con filtros** (corrida real) | 33 | **70 %** | **+$1.415** | **2,59** | +$43 | **−$276** |
 
-Positivo en 6 de 8 meses. **Es el primer resultado positivo, real y sobre datos limpios del
-proyecto.** El drawdown de −$554 a 1 lote deja mucho margen contra el tope de $2.500.
+Positivo en 6 de 8 meses ambas versiones. **Es el primer resultado positivo, real y sobre datos
+limpios del proyecto.**
 
-Los filtros agregan calidad: las 33 operaciones filtradas rinden +$47/op; las 43 extra sin filtro
-sumaron ~+$5/op. Menos operaciones, mejor PF, curva más suave — preferible para fondeo.
+Los filtros agregan calidad: las 33 operaciones filtradas rinden +$43/op con PF 2,59 y DD de solo
+−$276; las 43 extra sin filtro sumaron ~+$5/op. Menos operaciones, mejor PF, curva más suave.
+
+**Riesgo vs topes de fondeo ($2.500 DD / $900 diario):** con 1 operación por día la pérdida diaria
+máxima posible es un stop (~$178), muy por debajo de $900. Racha perdedora máxima: 3. El DD de
+−$276 a 1 lote deja margen para escalar a varios contratos — con prudencia, dada la muestra de
+7 meses.
 
 ## Lo que falta antes de confiar
 
