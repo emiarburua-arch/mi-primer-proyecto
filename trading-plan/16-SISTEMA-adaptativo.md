@@ -51,3 +51,18 @@ Positivo los **6 años-instrumento**.
    confirmación independiente de verdad.
 4. Si el papel acompaña varias semanas, recién ahí evaluar plata real, escalando de a poco y
    respetando $2.500 DD / $900 diario.
+
+
+## Extensión a 2022-2023 (MES, datos limpios sueltos)
+
+Se corrió el adaptativo (mismo K=10) sobre contratos MES individuales de 2022-2023 con
+`backtest/adaptativo_bt.py` (señal continua, fiel al bot corregido). Muestra chica y con huecos
+(archivos recortados; warmup de volatilidad por contrato) → 49 operaciones en 2 años.
+
+| Año | Neto (1 lote) |
+|---|---|
+| 2022 (bear market) | +$528 |
+| 2023 | -$174 (12 ops, ruido) |
+
+**Lo relevante:** en el bear market de 2022 el sistema fue positivo — no depende de mercado alcista.
+Con las corridas del bot corregido: MES 5 años (2022-26) = +$3.378, positivo 4 de 5.
