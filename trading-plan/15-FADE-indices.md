@@ -35,6 +35,22 @@ del breakout.
 Y `UsarFiltros` para probar con/sin media 200 + dirección del día previo (esos filtros se pensaron
 para el breakout; en el fade hay que revalidarlos).
 
+## Confirmación con corrida REAL (no inversión)
+
+Se corrió `PrimerEmpuje2` con `Fade=true` en el Strategy Analyzer sobre el mismo contrato limpio
+(MES SEP26, ene–ago 2026). Resultado real de ejecución:
+
+| Versión | n | WR | Neto | PF | media/op | Max DD (1 lote) |
+|---|---|---|---|---|---|---|
+| Fade sin filtros | 76 | 58 % | **+$1.804** | 1,65 | +$24 | **−$554** |
+| Fade con filtros (inversión de las 33) | 33 | 73 % | +$1.591 | 2,87 | +$47 | — |
+
+Positivo en 6 de 8 meses. **Es el primer resultado positivo, real y sobre datos limpios del
+proyecto.** El drawdown de −$554 a 1 lote deja mucho margen contra el tope de $2.500.
+
+Los filtros agregan calidad: las 33 operaciones filtradas rinden +$47/op; las 43 extra sin filtro
+sumaron ~+$5/op. Menos operaciones, mejor PF, curva más suave — preferible para fondeo.
+
 ## Lo que falta antes de confiar
 
 La inversión de +$1.514 es sólida pero es **la inversión de 32 operaciones en 7 meses**. Antes de
