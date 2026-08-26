@@ -80,6 +80,33 @@ Un bot 100 % mecánico de dirección fija sobre este setup no es rentable. Para 
 detectar el régimen (tendencia vs reversión) por adelantado — que es el problema difícil de fondo,
 y muy propenso al sobreajuste.
 
+## Giro constructivo: bot ADAPTATIVO (seguir el régimen)
+
+Si el mercado alterna entre tendencia (gana breakout) y reversión (gana fade), un bot de dirección
+fija no sirve — pero uno que **siga el régimen** sí podría. Regla probada sobre las mismas 98
+operaciones (se reconstruye breakout = −fade): *operar fade si la suma de las últimas K operaciones
+fade ≥ 0; si no, breakout.*
+
+Resultado (1 lote, costos):
+
+| K | Neto | PF | DD |
+|---|---|---|---|
+| 8 | +$2.501 | 1,75 | −$475 |
+| 10 | +$2.929 | 1,92 | −$475 |
+| 11 | +$2.836 | 1,88 | −$545 |
+
+Por año con K=10: 2024 +$309 · 2025 +$1.420 · 2026 +$1.200 — **positivo los tres años**, solo 4
+cambios de dirección. **Robustez:** todo el rango **K≥6 es positivo** (PF 1,4–1,9); solo K=4 se cae.
+No es un valor mágico aislado.
+
+Es el primer candidato del proyecto que sobrevive un chequeo de robustez de parámetro y es positivo
+en cada año, con drawdown holgado ($475–575 a K=8–11, lejos del tope de $2.500).
+
+**Pero:** todo se apoya en UNA sola transición de régimen (tendencia 24-25 → reversión 26) en 98
+operaciones. Es una hipótesis fuerte, no un edge confirmado. La validación decisiva es
+**out-of-sample real**: correrlo en **MNQ** (instrumento independiente) y en **más años** (2022-23).
+Si aguanta ahí, es real. Si no, era el mismo espejismo con un parámetro más.
+
 ## Lo que falta antes de confiar
 
 La inversión de +$1.514 es sólida pero es **la inversión de 32 operaciones en 7 meses**. Antes de
