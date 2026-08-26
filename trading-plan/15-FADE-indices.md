@@ -56,6 +56,30 @@ máxima posible es un stop (~$178), muy por debajo de $900. Racha perdedora máx
 −$276 a 1 lote deja margen para escalar a varios contratos — con prudencia, dada la muestra de
 7 meses.
 
+## VALIDACIÓN EN 3 AÑOS: el fade tampoco tiene ventaja estable
+
+Se corrió el fade filtrado sobre 3 años limpios (un contrato por año: SEP24, SEP25, SEP26).
+Resultado:
+
+| Año | Fade filtrado | Breakout (= lo inverso) |
+|---|---|---|
+| 2024 | −$926 (PF 0,57) | +$771 |
+| 2025 | −$1.590 (PF 0,41) | +$1.420 |
+| 2026 | +$1.415 (PF 2,59) | −$1.580 |
+| **Total** | **−$1.101 (PF 0,84)** | +$611 |
+
+Max drawdown del fade a 1 lote: **−$2.995** (ya rompe el tope de $2.500). Meses positivos: 12/25.
+
+**El régimen se dio vuelta.** En 2024–2025 el MES tendía en la apertura (ganaba el breakout);
+en 2026 revirtió (ganaba el fade). **Ninguna dirección fija es estable**: la que elijas funciona
+un régimen y se da vuelta en el siguiente. El +$1.415 de 2026 era el régimen de ese año, no un
+edge — el mismo espejismo del giro, cazado por validar en muestra larga.
+
+**Conclusión: el ORB de apertura sobre MES no tiene ventaja mecánica estable en ninguna dirección.**
+Un bot 100 % mecánico de dirección fija sobre este setup no es rentable. Para operarlo haría falta
+detectar el régimen (tendencia vs reversión) por adelantado — que es el problema difícil de fondo,
+y muy propenso al sobreajuste.
+
 ## Lo que falta antes de confiar
 
 La inversión de +$1.514 es sólida pero es **la inversión de 32 operaciones en 7 meses**. Antes de
