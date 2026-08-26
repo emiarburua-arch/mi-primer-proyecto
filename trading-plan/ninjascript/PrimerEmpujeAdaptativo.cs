@@ -15,9 +15,9 @@
 //   - Filtros (opcionales): media 200 + dirección del día previo, sobre la dirección de la ruptura.
 //   - R = alto del rango. Objetivo 1R, stop al extremo opuesto. 1 op/día. Aplanado no-overnight.
 //
-// El resultado del fade se rastrea de forma independiente (qué nivel toca primero el precio:
-// el extremo opuesto del rango = reversión, o 1R en el sentido de la ruptura = tendencia),
-// así la señal de régimen no depende de qué dirección se operó ese día.
+// La señal de régimen usa el resultado REAL de cada operación cerrada (NinjaTrader lo calcula),
+// convertido a "equivalente-fade": si operamos fade, su P&L; si operamos breakout, su P&L negado
+// (lo que habría hecho el fade). Así la señal es idéntica a lo que pasó, sin supuestos de intrabar.
 //
 // IMPORTANTE: NinjaTrader en zona US Eastern; serie de 1 min con overnight (Globex) para la
 // media de 200; preferir UN contrato (evita artefactos de roll) al validar.
@@ -80,10 +80,9 @@ namespace NinjaTrader.NinjaScript.Strategies
         private readonly List<double> fadeHist = new List<double>();   // resultado-fade por operación
         private int OrbEndMinutes;
 
-        // rastreo independiente del resultado-fade del día en curso
-        private bool sigActive;
-        private bool sigUp;
-        private double sigEntry, sigR, sigRev, sigCont;
+        // señal de régimen basada en el resultado REAL de cada operación (fiel a los fills)
+        private int tradesVistos;      // cuántas operaciones cerradas ya contabilizamos
+        private bool opActualEsFade;   // la operación abierta, ¿es un fade?
 
         protected override void OnStateChange()
         {
@@ -134,19 +133,13 @@ namespace NinjaTrader.NinjaScript.Strategies
             bool inRth = mins >= rthOpenMin && hhmm < 1600;
             if (inRth) { if (!sessOpenSet) { sessOpen = Open[0]; sessOpenSet = true; } sessClose = Close[0]; }
 
-            // ---- rastreo independiente del resultado-fade (para la señal de régimen) ----
-            if (sigActive)
+            // ---- registrar el resultado-fade de las operaciones que se hayan cerrado ----
+            while (SystemPerformance.AllTrades.Count > tradesVistos)
             {
-                bool revHit, contHit;
-                if (sigUp) { revHit = Low[0] <= sigRev; contHit = High[0] >= sigCont; }
-                else       { revHit = High[0] >= sigRev; contHit = Low[0] <= sigCont; }
-                if (hhmm >= FlattenHHMM)
-                {
-                    double fp = sigUp ? (sigEntry - Close[0]) : (Close[0] - sigEntry);
-                    fadeHist.Add(fp); sigActive = false;
-                }
-                else if (revHit) { fadeHist.Add(Math.Abs(sigEntry - sigRev)); sigActive = false; }
-                else if (contHit) { fadeHist.Add(-sigR); sigActive = false; }
+                Trade tr = SystemPerformance.AllTrades[tradesVistos];
+                double pts = tr.ProfitPoints;                       // P&L de la operación en puntos
+                fadeHist.Add(opActualEsFade ? pts : -pts);          // equivalente-fade
+                tradesVistos++;
             }
 
             // ---- construir el rango de apertura ----
@@ -223,10 +216,7 @@ namespace NinjaTrader.NinjaScript.Strategies
             if (goLong) EnterLong(Contratos, "pe_long");
             else EnterShort(Contratos, "pe_short");
 
-            // armar el rastreo del resultado-fade de este día (independiente de lo operado)
-            sigActive = true; sigUp = breakoutUp; sigEntry = entry; sigR = range;
-            sigRev = breakoutUp ? orbLo : orbHi;               // extremo opuesto (reversión)
-            sigCont = breakoutUp ? entry + range : entry - range; // 1R en sentido ruptura (tendencia)
+            opActualEsFade = chooseFade;   // para clasificar el resultado cuando la operación cierre
         }
     }
 }
