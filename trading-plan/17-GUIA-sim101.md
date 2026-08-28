@@ -55,3 +55,23 @@ simulación que ya viene en NinjaTrader.
 ## Cuándo pasar a real
 Solo si el papel acompaña a los números del backtest durante varias semanas. Ahí sí, plata real,
 **1 contrato**, escalando de a poco.
+
+## Cómo frenar el bot (¡practicar en Sim!)
+
+Hay DOS cosas distintas, no confundirlas: **desactivar la estrategia** (el bot deja de operar) NO
+cierra la posición abierta. Si apagás el bot con una posición viva, esa posición queda a tu cargo.
+Por eso el orden correcto es: **primero cerrar la posición, después desactivar.**
+
+**Frenar UN bot (controlado):**
+1. Pestaña **Posiciones** → click derecho en la fila del instrumento → **Aplanar/Cerrar** (Flatten):
+   salís del mercado ya.
+2. Pestaña **Estrategias** → destildá **"Activado"** en esa fila (o click derecho → Deshabilitar).
+   Si pregunta por las órdenes, cancelalas. El otro bot sigue trabajando.
+
+**Freno de EMERGENCIA (salir de TODO ya):**
+- Botón **"Flatten Everything"** (Aplanar todo): cierra todas las posiciones y cancela todas las
+  órdenes de la cuenta. Es el botón de pánico.
+- Alternativa: pestaña **Cuentas** → click derecho en la cuenta → Flatten / Cancelar todo.
+
+**Practicá esto en Sim antes de operar real:** cerrá una posición y desactivá un bot a mano, para
+que el día real te salga por reflejo.
