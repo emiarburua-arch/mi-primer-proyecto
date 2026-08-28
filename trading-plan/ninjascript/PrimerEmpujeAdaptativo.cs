@@ -19,9 +19,9 @@
 // convertido a "equivalente-fade": si operamos fade, su P&L; si operamos breakout, su P&L negado
 // (lo que habría hecho el fade). Así la señal es idéntica a lo que pasó, sin supuestos de intrabar.
 //
-// ZONA HORARIA: el bot convierte la hora del gráfico a hora del Este internamente (parámetro
-// "Zona del gráfico"). Podés dejar NinjaTrader en hora argentina para operar manual: el bot mide
-// la apertura correcta igual. Si NinjaTrader está en US Eastern, dejá ese campo vacío.
+// ZONA HORARIA: correr NinjaTrader en US Eastern y dejar el campo "Zona del gráfico" VACÍO. Esa es
+// la configuración validada (reproduce el backtest exacto). El parámetro de conversión es
+// experimental y HOY no reproduce exacto (captura ventanas distintas): no usarlo para operar.
 // Serie de 1 min con overnight (Globex) para la media de 200; preferir UN contrato al validar.
 // =====================================================================================
 #region Using declarations
@@ -71,13 +71,13 @@ namespace NinjaTrader.NinjaScript.Strategies
         [Display(Name = "Aplanado (HHMM ET)", Order = 8, GroupName = "Horarios")]
         public int FlattenHHMM { get; set; } = 1555;
 
-        // Zona horaria del GRÁFICO (ID de Windows). El bot convierte esa hora a hora del Este
-        // internamente, así podés dejar NinjaTrader en hora argentina y operar manual sin tocar nada.
-        // "Argentina Standard Time" = Buenos Aires. Vacío = el gráfico ya está en hora del Este (sin
-        // conversión). Si algún día ponés NinjaTrader en US Eastern, dejá este campo vacío.
+        // Zona horaria del GRÁFICO (ID de Windows). EXPERIMENTAL: con el campo lleno el bot intenta
+        // convertir la hora del gráfico a hora del Este, PERO hoy no reproduce exacto el backtest
+        // validado (captura ventanas de apertura distintas). DEJAR VACÍO y correr NinjaTrader en
+        // US Eastern (configuración validada). No usar la conversión para operar hasta arreglarla.
         [NinjaScriptProperty]
-        [Display(Name = "Zona del gráfico (ID Windows)", Order = 9, GroupName = "Horarios")]
-        public string IdZonaGrafico { get; set; } = "Argentina Standard Time";
+        [Display(Name = "Zona del gráfico (vacío = US Eastern)", Order = 9, GroupName = "Horarios")]
+        public string IdZonaGrafico { get; set; } = "";
 
         private SMA sma;
         private TimeZoneInfo etZone;    // hora del Este (con horario de verano automático)
