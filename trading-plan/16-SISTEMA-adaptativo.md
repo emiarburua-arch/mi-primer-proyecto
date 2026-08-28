@@ -67,18 +67,21 @@ Se corrió el adaptativo (mismo K=10) sobre contratos MES individuales de 2022-2
 **Lo relevante:** en el bear market de 2022 el sistema fue positivo — no depende de mercado alcista.
 Con las corridas del bot corregido: MES 5 años (2022-26) = +$3.378, positivo 4 de 5.
 
-## Portfolio final validado (bot corregido, filtrado)
+## Portfolio final validado — bot REAL (corregido + filtrado en ambos)
 
-Con el bot corregido y `UsarFiltros=true` en ambos instrumentos:
+Corridas reales del `PrimerEmpujeAdaptativo` (K=10, `UsarFiltros=true`) en el Strategy Analyzer,
+un contrato limpio por año:
 
-| Año | Portfolio MES+MNQ (1+1) |
-|---|---|
-| 2024 | +$1.837 |
-| 2025 | +$4.677 |
-| 2026 | +$2.870 |
-| **Total** | **+$9.384** |
+| Año | MES | MNQ | Portfolio (1+1) |
+|---|---|---|---|
+| 2024 | +$236 | +$302 | +$538 |
+| 2025 | +$1.621 | +$3.055 | +$4.676 |
+| 2026 | +$1.307 | +$1.126 | +$2.433 |
+| **Total** | **+$3.165** | **+$4.483** | **+$7.648** |
 
-**Max drawdown −$1.729** (bajo el tope de $2.500). **Peor día combinado −$565** (bajo los $900).
+**Max drawdown −$1.848** (bajo el tope de $2.500). **Peor día combinado −$565** (bajo los $900).
+Positivo los 6 años-instrumento. (Mi simulación previa estimaba +$9.384; el número real es
++$7.648 — la diferencia son los fills reales de las órdenes OCO. El real es el que vale.)
 
 **CRÍTICO — los filtros no son opcionales.** Con `UsarFiltros=false`, MNQ pasa a 78 operaciones de
 peor calidad y el drawdown del portfolio salta a **−$3.628**, que rompe el tope de $2.500. En papel
