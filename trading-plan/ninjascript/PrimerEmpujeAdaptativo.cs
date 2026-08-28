@@ -19,8 +19,10 @@
 // convertido a "equivalente-fade": si operamos fade, su P&L; si operamos breakout, su P&L negado
 // (lo que habría hecho el fade). Así la señal es idéntica a lo que pasó, sin supuestos de intrabar.
 //
-// IMPORTANTE: NinjaTrader en zona US Eastern; serie de 1 min con overnight (Globex) para la
-// media de 200; preferir UN contrato (evita artefactos de roll) al validar.
+// ZONA HORARIA: el bot convierte la hora del gráfico a hora del Este internamente (parámetro
+// "Zona del gráfico"). Podés dejar NinjaTrader en hora argentina para operar manual: el bot mide
+// la apertura correcta igual. Si NinjaTrader está en US Eastern, dejá ese campo vacío.
+// Serie de 1 min con overnight (Globex) para la media de 200; preferir UN contrato al validar.
 // =====================================================================================
 #region Using declarations
 using System;
@@ -69,7 +71,17 @@ namespace NinjaTrader.NinjaScript.Strategies
         [Display(Name = "Aplanado (HHMM ET)", Order = 8, GroupName = "Horarios")]
         public int FlattenHHMM { get; set; } = 1555;
 
+        // Zona horaria del GRÁFICO (ID de Windows). El bot convierte esa hora a hora del Este
+        // internamente, así podés dejar NinjaTrader en hora argentina y operar manual sin tocar nada.
+        // "Argentina Standard Time" = Buenos Aires. Vacío = el gráfico ya está en hora del Este (sin
+        // conversión). Si algún día ponés NinjaTrader en US Eastern, dejá este campo vacío.
+        [NinjaScriptProperty]
+        [Display(Name = "Zona del gráfico (ID Windows)", Order = 9, GroupName = "Horarios")]
+        public string IdZonaGrafico { get; set; } = "Argentina Standard Time";
+
         private SMA sma;
+        private TimeZoneInfo etZone;    // hora del Este (con horario de verano automático)
+        private TimeZoneInfo srcZone;   // zona del gráfico (null = sin conversión)
         private DateTime curDay = DateTime.MinValue;
         private double orbHi, orbLo;
         private bool orbSet, tradedToday, orbActive, orbEvaluated;
@@ -96,7 +108,32 @@ namespace NinjaTrader.NinjaScript.Strategies
                 IsExitOnSessionCloseStrategy = false;
                 BarsRequiredToTrade = 220;
             }
-            else if (State == State.DataLoaded) { sma = SMA(MaPeriod); }
+            else if (State == State.DataLoaded)
+            {
+                sma = SMA(MaPeriod);
+                try { etZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time"); }
+                catch { etZone = null; }
+                srcZone = null;
+                if (!string.IsNullOrWhiteSpace(IdZonaGrafico))
+                {
+                    try { srcZone = TimeZoneInfo.FindSystemTimeZoneById(IdZonaGrafico.Trim()); }
+                    catch { srcZone = null; }
+                }
+            }
+        }
+
+        // Convierte la hora del gráfico a hora del Este (con DST). Si no hay zonas válidas o el
+        // campo está vacío, devuelve la hora tal cual (asume que el gráfico ya está en hora del Este).
+        private DateTime ToEastern(DateTime chartTime)
+        {
+            if (etZone == null || srcZone == null) return chartTime;
+            try
+            {
+                DateTime unspec = DateTime.SpecifyKind(chartTime, DateTimeKind.Unspecified);
+                DateTime utc = TimeZoneInfo.ConvertTimeToUtc(unspec, srcZone);
+                return TimeZoneInfo.ConvertTimeFromUtc(utc, etZone);
+            }
+            catch { return chartTime; }
         }
 
         private static int HHMM(DateTime t) { return t.Hour * 100 + t.Minute; }
@@ -113,7 +150,7 @@ namespace NinjaTrader.NinjaScript.Strategies
         protected override void OnBarUpdate()
         {
             if (BarsInProgress != 0 || CurrentBar < MaPeriod + 5) return;
-            DateTime t = Time[0];
+            DateTime t = ToEastern(Time[0]);   // hora del Este, sin importar la zona del gráfico
 
             if (t.Date != curDay)
             {

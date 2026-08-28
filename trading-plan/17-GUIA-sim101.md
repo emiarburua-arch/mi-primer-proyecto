@@ -7,8 +7,9 @@ simulación que ya viene en NinjaTrader.
 ## Antes de empezar
 1. **Conexión de datos.** Control Center → *Connections* → conectá tu proveedor (para que lleguen
    los precios en vivo). Sin conexión, el bot no recibe velas nuevas.
-2. **Zona horaria.** Tools → Options → General → Time zone = **(UTC-05:00) Eastern Time (US & Canada)**.
-   (Ya la tenés.)
+2. **Zona horaria: podés dejarla en hora argentina.** El bot convierte solo la hora del gráfico a
+   hora del Este (parámetro *Zona del gráfico*). Así seguís operando manual con el gráfico en
+   Buenos Aires y el bot mide la apertura de EE.UU. correctamente. Dejá NinjaTrader como lo tenés.
 3. **Compilado al día.** Que `PrimerEmpujeAdaptativo` compile sin errores (F5 en el editor).
 
 ## Activar el bot en un gráfico (hacelo para MES y de nuevo para MNQ)
@@ -25,6 +26,8 @@ simulación que ya viene en NinjaTrader.
    - **Usar filtros media/dirección** = **True**  ← obligatorio (sin filtros rompe el drawdown)
    - **Apertura RTH (HHMM ET)** = 930
    - **Aplanado (HHMM ET)** = 1555
+   - **Zona del gráfico (ID Windows)** = **Argentina Standard Time** (déjalo así si el gráfico está
+     en hora argentina; ponelo vacío solo si algún día pasás NinjaTrader a US Eastern)
    - **Account** = **Sim101**
    - **Enabled** = **True**
 7. **OK.** La estrategia queda corriendo en vivo sobre ese gráfico.
