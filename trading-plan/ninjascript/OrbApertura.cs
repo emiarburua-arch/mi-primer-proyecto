@@ -6,21 +6,17 @@
 //   - Stop inicial = extremo CONTRARIO del rango (largo: mínimo; corto: máximo). Riesgo = rango.
 //   - Break-even: cuando avanza +BeTicks a favor (por defecto 50t = 12,5pt), el stop pasa a la
 //     entrada (protege sin cortar los runners). Sin target: se deja correr.
-//   - Salida por tiempo: 13:00 hora Argentina (disponibilidad del operador). Sin overnight.
-//   - 1 operación por día (OCO): si el stop saca, no reingresa. Miércoles INCLUIDOS. Sin filtros.
+//   - Salida por tiempo (aplanado, sin overnight) y 1 operación por día. Miércoles INCLUIDOS. Sin filtros.
 //
-// ADVERTENCIA — POR QUÉ ESTÁ EN OBSERVACIÓN Y NO VALIDADO:
-//   In-sample (2023-2026) se veía muy bien (+$2.700-$3.100, positivo los 4 años, buena frecuencia).
-//   Pero en el OUT-OF-SAMPLE 2022-2023 se dio vuelta a NEGATIVO (-$2.000/-$2.656, rompía el
-//   drawdown): es un edge DEPENDIENTE DEL RÉGIMEN, no persistente. Se lleva a Sim solo para
-//   observarlo en papel en paralelo, NO para operar en real. El bot validado es ConnorsRsi2. Ver doc 19.
+// ZONA HORARIA — IMPORTANTE: correr NinjaTrader en US Eastern (Tools > Options > General > Time zone).
+// Este bot NO convierte zonas (la conversión resultó frágil y rompía el aplanado): usa la hora del
+// gráfico TAL CUAL con ToTime(). Con NinjaTrader en US Eastern, todos los horarios de abajo son
+// hora del Este. El aplanado por defecto es 12:00 ET ≈ 13:00 hora Argentina en verano de EE.UU.
+// (en invierno de EE.UU., 12:00 ET = 14:00 ART; si querés respetar 13:00 ART exacto en invierno,
+// poné el aplanado en 1100). Usar gráfico de 1 minuto (fills precisos de la ruptura y el break-even).
 //
-// El break-even (BeTicks) SÍ resultó gestión de riesgo real (redujo pérdidas también en 2022) —
-// por eso queda activado por defecto, aunque no alcance para dar vuelta el sistema.
-//
-// ZONA HORARIA: correr NinjaTrader en US Eastern. El rango de apertura se detecta en hora del Este
-// (sigue el horario de verano de EE.UU.); la salida se calcula en hora Argentina (UTC-3 fija).
-// Usar gráfico de 1 minuto (fills precisos de la ruptura y del break-even). Serie con overnight.
+// ADVERTENCIA — EN OBSERVACIÓN, NO VALIDADO: in-sample se veía bien pero FALLÓ el out-of-sample
+// 2022-2023 (edge dependiente del régimen). Se lleva a Sim solo para observar en papel. Ver doc 19.
 // =====================================================================================
 #region Using declarations
 using System;
@@ -51,15 +47,9 @@ namespace NinjaTrader.NinjaScript.Strategies
         public int BeTicks { get; set; } = 50;
 
         [NinjaScriptProperty][Range(0, 2359)]
-        [Display(Name = "Aplanado (HHMM ART)", Order = 5, GroupName = "Horarios")]
-        public int FinHHMM { get; set; } = 1300;
+        [Display(Name = "Aplanado (HHMM ET, 1200≈13:00 ART)", Order = 5, GroupName = "Horarios")]
+        public int FinHHMM { get; set; } = 1200;
 
-        [NinjaScriptProperty]
-        [Display(Name = "Zona del gráfico (Windows ID)", Order = 6, GroupName = "Horarios")]
-        public string IdZonaGrafico { get; set; } = "Eastern Standard Time";
-
-        private TimeZoneInfo srcZone;   // zona del gráfico
-        private TimeZoneInfo etZone;    // hora del Este (para el rango de apertura)
         private DateTime curDay = DateTime.MinValue;
         private double orbHi, orbLo, entryPrice;
         private bool orbActive, orbSet, tradedToday, beActivated;
@@ -70,40 +60,17 @@ namespace NinjaTrader.NinjaScript.Strategies
             if (State == State.SetDefaults)
             {
                 Name = "OrbApertura";
-                Description = "ORB de la apertura USA: buy/sell stop en el rango 09:30-10:00 ET, stop al extremo contrario, break-even, salida 13:00 ART.";
+                Description = "ORB de la apertura USA: buy/sell stop en el rango 09:30-10:00 ET, stop al extremo contrario, break-even, aplanado por tiempo. Correr NinjaTrader en US Eastern.";
                 Calculate = Calculate.OnBarClose;
                 EntriesPerDirection = 1;
                 EntryHandling = EntryHandling.AllEntries;
                 IsExitOnSessionCloseStrategy = false;
                 BarsRequiredToTrade = 20;
             }
-            else if (State == State.DataLoaded)
-            {
-                try { etZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time"); }
-                catch { etZone = null; }
-                try { srcZone = TimeZoneInfo.FindSystemTimeZoneById(IdZonaGrafico.Trim()); }
-                catch { srcZone = null; }
-            }
         }
 
-        private DateTime ToUtc(DateTime chartTime)
-        {
-            if (srcZone == null) return chartTime;
-            DateTime unspec = DateTime.SpecifyKind(chartTime, DateTimeKind.Unspecified);
-            return TimeZoneInfo.ConvertTimeToUtc(unspec, srcZone);
-        }
-        private DateTime ToEt(DateTime chartTime)
-        {
-            if (srcZone == null || etZone == null) return chartTime;
-            try { return TimeZoneInfo.ConvertTimeFromUtc(ToUtc(chartTime), etZone); }
-            catch { return chartTime; }
-        }
-        private DateTime ToArt(DateTime chartTime)
-        {
-            if (srcZone == null) return chartTime.AddHours(-2);
-            try { return ToUtc(chartTime).AddHours(-3); }   // Buenos Aires, UTC-3 fija
-            catch { return chartTime.AddHours(-2); }
-        }
+        // hora del gráfico como minutos desde medianoche (ET si NinjaTrader está en US Eastern)
+        private int MinDelDia(DateTime t) { return t.Hour * 60 + t.Minute; }
 
         protected override void OnExecutionUpdate(Execution execution, string executionId, double price,
             int quantity, MarketPosition marketPosition, string orderId, DateTime time)
@@ -122,14 +89,11 @@ namespace NinjaTrader.NinjaScript.Strategies
         {
             if (BarsInProgress != 0 || CurrentBar < 20) return;
 
-            DateTime et = ToEt(Time[0]);
-            DateTime art = ToArt(Time[0]);
-            int etMin = et.Hour * 60 + et.Minute;
-            int artHHMM = art.Hour * 100 + art.Minute;
+            int nowMin = MinDelDia(Time[0]);   // hora del Este (NinjaTrader en US Eastern)
 
-            if (et.Date != curDay)
+            if (Time[0].Date != curDay)
             {
-                curDay = et.Date;
+                curDay = Time[0].Date;
                 orbHi = double.MinValue; orbLo = double.MaxValue;
                 orbActive = false; orbSet = false; tradedToday = false; beActivated = false;
                 ordLong = null; ordShort = null;
@@ -137,22 +101,24 @@ namespace NinjaTrader.NinjaScript.Strategies
 
             int orOpen = (AperturaHHMM / 100) * 60 + (AperturaHHMM % 100);
             int orEnd = orOpen + MinutosRango;
+            int finMin = (FinHHMM / 100) * 60 + (FinHHMM % 100);
 
             // ---- construir el rango de apertura (09:30-10:00 ET) ----
-            if (etMin >= orOpen && etMin < orEnd)
+            if (nowMin >= orOpen && nowMin < orEnd)
             {
                 orbActive = true;
                 if (High[0] > orbHi) orbHi = High[0];
                 if (Low[0] < orbLo) orbLo = Low[0];
                 return;
             }
-            if (orbActive && !orbSet && etMin >= orEnd)
+            if (orbActive && !orbSet && nowMin >= orEnd)
             {
                 orbSet = orbHi > orbLo; orbActive = false;
             }
 
-            // ---- salida por tiempo (13:00 ART) ----
-            if (artHHMM >= FinHHMM)
+            // ---- aplanado por tiempo: fuera de la ventana [orEnd, finMin) cerramos y cancelamos ----
+            bool enVentana = orbSet && nowMin >= orEnd && nowMin < finMin;
+            if (!enVentana)
             {
                 if (Position.MarketPosition == MarketPosition.Long) ExitLong("finVentana");
                 else if (Position.MarketPosition == MarketPosition.Short) ExitShort("finVentana");
@@ -160,8 +126,6 @@ namespace NinjaTrader.NinjaScript.Strategies
                 if (ordShort != null) { CancelOrder(ordShort); ordShort = null; }
                 return;
             }
-
-            if (!orbSet) return;
 
             // ---- gestión de la posición abierta: stop dinámico (extremo contrario -> break-even) ----
             if (Position.MarketPosition == MarketPosition.Long)
@@ -177,8 +141,8 @@ namespace NinjaTrader.NinjaScript.Strategies
                 return;
             }
 
-            // ---- flat: colocar/mantener las dos órdenes stop de entrada (OCO) ----
-            if (!tradedToday && Position.MarketPosition == MarketPosition.Flat)
+            // ---- flat y dentro de la ventana: colocar/mantener las dos órdenes stop de entrada (OCO) ----
+            if (!tradedToday)
             {
                 ordLong = EnterLongStopMarket(0, true, Contratos, orbHi, "orb_long");
                 ordShort = EnterShortStopMarket(0, true, Contratos, orbLo, "orb_short");

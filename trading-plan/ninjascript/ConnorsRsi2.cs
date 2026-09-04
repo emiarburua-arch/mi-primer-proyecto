@@ -11,18 +11,19 @@
 // Salida Connors: el precio vuelve a cruzar la SMA10 (largo: Close > SMA10; corto: Close < SMA10).
 // Stop y target:  30 ticks cada uno (1:1). Connors no usaba stop; nosotros SÍ (freno de seguridad).
 //                 La salida por SMA10 suele activarse antes; el stop/target son la red.
-// Ventana:        09:00-13:00 hora Argentina (cuando el operador está disponible). Sin overnight:
-//                 aplanado a las 13:00 ART. Miércoles EXCLUIDO (se validó mejor sin ese día).
+// Ventana:        08:00-12:00 hora del Este (= 09:00-13:00 hora Argentina en verano de EE.UU.).
+//                 Sin overnight: aplanado al fin de la ventana. Miércoles EXCLUIDO (se validó mejor así).
 //
 // VALIDACIÓN (por qué este bot y no el ORB de apertura): en backtest fiel sobre MES 15 min,
 // esta config (30t/30t, sin ADX) fue positiva IN-SAMPLE (2023-2026) Y pasó el OUT-OF-SAMPLE
 // 2022-2023 —incluido el bear market de 2022— con PF > 2. Es un edge chico pero real y persistente.
 // Es de baja frecuencia (~30 operaciones/año). Ver docs 18-19.
 //
-// ZONA HORARIA: correr NinjaTrader en US Eastern (la configuración global que ya usás). El bot
-// convierte la hora del gráfico (Este, con DST) a hora Argentina (UTC-3 fija, sin DST) para la
-// ventana. Argentina no tiene horario de verano, así que esta conversión es simple y estable.
-// Serie de 15 min con overnight (Globex) para que la SMA 200 arranque caliente. Un contrato al validar.
+// ZONA HORARIA — IMPORTANTE: correr NinjaTrader en US Eastern. Este bot NO convierte zonas (la
+// conversión resultó frágil y rompía el aplanado): usa la hora del gráfico TAL CUAL. Con NinjaTrader
+// en US Eastern, la ventana 0800-1200 es hora del Este = 09:00-13:00 ART en verano de EE.UU. (en
+// invierno de EE.UU. equivale a 10:00-14:00 ART). Serie de 15 min con overnight (Globex) para que
+// la SMA 200 arranque caliente. Un contrato al validar.
 // =====================================================================================
 #region Using declarations
 using System;
@@ -74,34 +75,27 @@ namespace NinjaTrader.NinjaScript.Strategies
         public int TargetTicks { get; set; } = 30;
 
         [NinjaScriptProperty][Range(0, 2359)]
-        [Display(Name = "Inicio ventana (HHMM ART)", Order = 10, GroupName = "Horarios")]
-        public int InicioHHMM { get; set; } = 900;
+        [Display(Name = "Inicio ventana (HHMM ET)", Order = 10, GroupName = "Horarios")]
+        public int InicioHHMM { get; set; } = 800;
 
         [NinjaScriptProperty][Range(0, 2359)]
-        [Display(Name = "Fin/aplanado ventana (HHMM ART)", Order = 11, GroupName = "Horarios")]
-        public int FinHHMM { get; set; } = 1300;
+        [Display(Name = "Fin/aplanado ventana (HHMM ET)", Order = 11, GroupName = "Horarios")]
+        public int FinHHMM { get; set; } = 1200;
 
         [NinjaScriptProperty]
         [Display(Name = "Excluir miércoles", Order = 12, GroupName = "Horarios")]
         public bool ExcluirMiercoles { get; set; } = true;
 
-        // Zona horaria del GRÁFICO (ID de Windows). Por defecto US Eastern: el bot convierte esa
-        // hora a hora Argentina (UTC-3) para la ventana. Correr NinjaTrader en US Eastern.
-        [NinjaScriptProperty]
-        [Display(Name = "Zona del gráfico (Windows ID)", Order = 13, GroupName = "Horarios")]
-        public string IdZonaGrafico { get; set; } = "Eastern Standard Time";
-
         private RSI rsi;
         private SMA smaTend;
         private SMA smaRet;
-        private TimeZoneInfo srcZone;   // zona del gráfico (para pasar a UTC y de ahí a ART)
 
         protected override void OnStateChange()
         {
             if (State == State.SetDefaults)
             {
                 Name = "ConnorsRsi2";
-                Description = "Connors RSI(2) reversión a la media: SMA200 + SMA10 + RSI(2), 30t/30t, ventana ART.";
+                Description = "Connors RSI(2) reversión a la media: SMA200 + SMA10 + RSI(2), 30t/30t. Correr NinjaTrader en US Eastern.";
                 Calculate = Calculate.OnBarClose;
                 EntriesPerDirection = 1;
                 EntryHandling = EntryHandling.AllEntries;
@@ -113,23 +107,7 @@ namespace NinjaTrader.NinjaScript.Strategies
                 rsi = RSI(RsiPeriodo, RsiSuave);
                 smaTend = SMA(MaTendencia);
                 smaRet = SMA(MaRetroceso);
-                try { srcZone = TimeZoneInfo.FindSystemTimeZoneById(IdZonaGrafico.Trim()); }
-                catch { srcZone = null; }
             }
-        }
-
-        // Hora del gráfico -> hora Argentina (UTC-3 fija, sin horario de verano).
-        // Si no hay zona válida, asume que el gráfico ya está en hora del Este y resta 2 (aprox verano).
-        private DateTime ToArt(DateTime chartTime)
-        {
-            if (srcZone == null) return chartTime.AddHours(-2);
-            try
-            {
-                DateTime unspec = DateTime.SpecifyKind(chartTime, DateTimeKind.Unspecified);
-                DateTime utc = TimeZoneInfo.ConvertTimeToUtc(unspec, srcZone);
-                return utc.AddHours(-3);   // Buenos Aires
-            }
-            catch { return chartTime.AddHours(-2); }
         }
 
         private static int HHMM(DateTime t) { return t.Hour * 100 + t.Minute; }
@@ -138,8 +116,9 @@ namespace NinjaTrader.NinjaScript.Strategies
         {
             if (BarsInProgress != 0 || CurrentBar < MaTendencia + 5) return;
 
-            DateTime art = ToArt(Time[0]);
-            int hhmm = HHMM(art);
+            // hora del gráfico TAL CUAL (hora del Este si NinjaTrader está en US Eastern). Sin conversión.
+            DateTime hora = Time[0];
+            int hhmm = HHMM(hora);
             bool enVentana = hhmm >= InicioHHMM && hhmm < FinHHMM;
 
             // ---- aplanado al fin de la ventana (sin overnight) ----
@@ -163,7 +142,7 @@ namespace NinjaTrader.NinjaScript.Strategies
             }
 
             // ---- entradas (solo si estamos planos y dentro de la ventana) ----
-            if (ExcluirMiercoles && art.DayOfWeek == DayOfWeek.Wednesday) return;
+            if (ExcluirMiercoles && hora.DayOfWeek == DayOfWeek.Wednesday) return;
 
             bool cruzaArriba = rsi[0] > RsiInf && rsi[1] < RsiInf;
             bool cruzaAbajo  = rsi[0] < RsiSup && rsi[1] > RsiSup;

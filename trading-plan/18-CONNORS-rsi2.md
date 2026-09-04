@@ -40,18 +40,17 @@ Positivo en 2022 (bear market) y 2023 — años que ninguna grilla de optimizaci
 - Falta confirmarlo **en papel** antes de real.
 
 ## Cómo correrlo en Sim101
-1. **NinjaTrader en US Eastern** (Tools → Options → General → Time zone). El bot convierte a hora
-   Argentina para la ventana (Argentina es UTC-3 fija, sin horario de verano, así que la conversión
-   es estable — a diferencia del adaptativo).
+1. **NinjaTrader en US Eastern** (Tools → Options → General → Time zone) — **OBLIGATORIO y verificalo**.
+   El bot NO convierte zonas (la conversión rompía el aplanado): usa la hora del gráfico tal cual. Con
+   NinjaTrader en US Eastern, la ventana 0800-1200 es hora del Este = 09:00-13:00 ART en verano de EE.UU.
 2. Compilá `ConnorsRsi2` (F5).
 3. New → **Chart**. Instrumento **MES 09-26**. Tipo de barra = **Minute**, valor **15**.
 4. *Days to load* = **90** (para que la SMA 200 arranque caliente; overnight/Globex, no solo RTH).
 5. Click derecho → **Strategies…** → agregá **ConnorsRsi2**. Propiedades:
    - **Contratos** = 1
    - **Stop / Target (ticks)** = 30 / 30
-   - **Inicio / Fin ventana (HHMM ART)** = 900 / 1300
+   - **Inicio / Fin ventana (HHMM ET)** = 800 / 1200
    - **Excluir miércoles** = True
-   - **Zona del gráfico** = **Eastern Standard Time** (con NinjaTrader en US Eastern)
    - **Account** = **Sim101**, **Enabled** = True
 6. OK. Queda corriendo junto al adaptativo (son estrategias distintas, no se pisan).
 

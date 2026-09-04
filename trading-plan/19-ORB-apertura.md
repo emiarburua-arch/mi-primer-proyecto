@@ -32,7 +32,9 @@ comporta en vivo y aprender. **No se opera en real.** El bot validado para real 
   Es gestión de riesgo real; por eso quedó activado. Pero no alcanza para salvar el sistema.
 
 ## Cómo correrlo en Sim101 (solo observación)
-1. NinjaTrader en **US Eastern**.
+1. NinjaTrader en **US Eastern** — **OBLIGATORIO y verificalo**. El bot NO convierte zonas: usa la
+   hora del gráfico tal cual, así que si NinjaTrader no está en US Eastern los horarios quedan mal
+   (fue el bug que dejaba posiciones overnight en el primer backtest).
 2. Compilá `OrbApertura` (F5).
 3. Chart **MES 09-26**, barras de **1 minuto** (fills precisos de la ruptura y el break-even).
 4. *Days to load* = 10-30 (no necesita media larga).
@@ -40,8 +42,7 @@ comporta en vivo y aprender. **No se opera en real.** El bot validado para real 
    - **Contratos** = 1
    - **Apertura RTH (HHMM ET)** = 930, **Minutos del rango** = 30
    - **Break-even a +N ticks** = 50
-   - **Aplanado (HHMM ART)** = 1300
-   - **Zona del gráfico** = **Eastern Standard Time**
+   - **Aplanado (HHMM ET)** = 1200 (≈13:00 ART en verano; poné 1100 para 13:00 ART en invierno)
    - **Account** = **Sim101**, **Enabled** = True
 6. Corré los tres bots en Sim si querés (adaptativo + Connors + ORB) y compará varias semanas.
 
