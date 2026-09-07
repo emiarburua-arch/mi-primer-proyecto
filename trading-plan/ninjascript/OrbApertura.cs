@@ -127,17 +127,22 @@ namespace NinjaTrader.NinjaScript.Strategies
                 return;
             }
 
-            // ---- gestión de la posición abierta: stop dinámico (extremo contrario -> break-even) ----
+            // ---- gestión de la posición abierta: stop MANUAL al cierre de cada vela (1 min) ----
+            // Stop = extremo contrario del rango de HOY (orbLo/orbHi), o break-even si ya avanzó +BeTicks.
+            // Se maneja a mano (no SetStopLoss) porque SetStopLoss por precio se queda pegado a un valor
+            // viejo entre operaciones. Salida por mercado al cierre de la vela que rompe el stop.
             if (Position.MarketPosition == MarketPosition.Long)
             {
                 if (BeTicks > 0 && !beActivated && High[0] >= entryPrice + BeTicks * TickSize) beActivated = true;
-                SetStopLoss(CalculationMode.Price, beActivated ? entryPrice : orbLo);
+                double sp = beActivated ? entryPrice : orbLo;
+                if (Low[0] <= sp) ExitLong("stopLong");
                 return;
             }
             if (Position.MarketPosition == MarketPosition.Short)
             {
                 if (BeTicks > 0 && !beActivated && Low[0] <= entryPrice - BeTicks * TickSize) beActivated = true;
-                SetStopLoss(CalculationMode.Price, beActivated ? entryPrice : orbHi);
+                double sp = beActivated ? entryPrice : orbHi;
+                if (High[0] >= sp) ExitShort("stopShort");
                 return;
             }
 
