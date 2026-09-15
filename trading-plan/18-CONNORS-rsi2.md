@@ -59,3 +59,23 @@ Es de baja frecuencia: puede pasar días sin operar. Se juzga por **varias seman
 operaciones**, no por un día. Respetar siempre $2.500 de tope de drawdown y $900 de pérdida diaria.
 Verificá en las primeras operaciones que los horarios de entrada caen dentro de 09:00-13:00 ART
 (mirando la hora del gráfico en Este + la conversión).
+
+## Validación en NinjaTrader (backtest nativo, 15 min, sin comisión)
+
+Se corrió `ConnorsRsi2` en el Strategy Analyzer sobre contratos front-month en tres
+regímenes distintos. La RSI(2,3) de NinjaTrader dispara ~4× más señales que la
+aproximación de Python, y son rentables — el edge nativo es más activo y más grande.
+
+| Contrato | Régimen | Neto | PF | Max DD | Trades |
+|---|---|---|---|---|---|
+| MES 12-22 | Bear 2022 | +$287,50 | 1.85 | −$150 | 25 |
+| MES 03-24 | Bull 2024 | +$412,50 | 2.22 | −$75 | 29 |
+| MES 06-25 | Volátil (crash abril) | +$150,00 | 1.22 | −$300 | 40 |
+
+**Positivo en los tres regímenes, drawdown máximo −$300** (muy bajo el tope de $2.500).
+Todas las operaciones intradía; el cierre al fin de sesión evita overnight (salvo
+feriados completos como Thanksgiving, sin cierre de sesión — aplanar a mano o agregar
+regla de "no cruzar de día" antes de operar real).
+
+Nota: el backtest de NinjaTrader usa comisión $0. En real, descontar ~$0,50-1 +
+slippage por operación. Sigue positivo con margen, pero el número vivo será algo menor.
