@@ -99,7 +99,7 @@ namespace NinjaTrader.NinjaScript.Strategies
                 Calculate = Calculate.OnBarClose;
                 EntriesPerDirection = 1;
                 EntryHandling = EntryHandling.AllEntries;
-                IsExitOnSessionCloseStrategy = false;
+                IsExitOnSessionCloseStrategy = true;   // red de seguridad: nunca overnight (aunque falte la vela del aplanado en feriados)
                 BarsRequiredToTrade = 210;
             }
             else if (State == State.DataLoaded)
