@@ -1,79 +1,79 @@
 ﻿Nº;Fecha;Hora;Símbolo;C/L;Patrón;Resultado $;Categoría;Tipo de contexto;Qué se ve en la captura
-1;2026-01-02;12:03;CL;L;Giro+VC;254,68;A;Barrida de min/max del rango (Asia/EU/zona 60m) y recuperación;"Barre el mínimo del rango EU en tendencia bajista y recupera; largo tras recuperar"
-2;2026-01-07;12:37;CL;L;Giro+VC;-175,32;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Largo en el mínimo de Asia durante la caída de EU, sin barrida; sigue cayendo"
-3;2026-01-08;11:42;CL;C;Giro+VC;194,68;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Corto en la resistencia tras un rally (va contra la tendencia); llega al objetivo corto"
-4;2026-01-08;12:33;CL;C;ESTRUC+FV;-115,32;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Segundo corto del día contra la tendencia alcista; el precio sube +80t"
-5;2026-01-09;11:33;CL;L;ESTRUC+VC;354,68;B;Ruptura temprana del rango a favor de tendencia;"Ruptura del máximo de Asia en la apertura con impulso, a favor de 60m; largo"
-6;2026-01-09;12:28;CL;L;ESTRUC+VC;294,68;B;Ruptura temprana del rango a favor de tendencia;Segunda entrada de continuación de la misma ruptura
-7;2026-01-13;12:07;CL;L;ESTRUC+VC;294,68;B;Ruptura temprana del rango a favor de tendencia;"Ruptura de resistencia 60m (60.8) con impulso; largo en el retroceso"
-8;2026-01-15;11:28;CL;L;Giro+FV;-155,32;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);Largo en plena caída intradía, sin barrida previa
-9;2026-01-15;12:24;CL;L;Giro+FV;-155,32;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);Segundo largo en la misma caída
-10;2026-01-16;11:56;CL;C;ESTRUC+VC;-165,32;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Corto abajo tras una caída, a mitad del rango; rebota"
-11;2026-01-19;11:46;CL;L;ESTRUC+VC;4,68;B;Ruptura temprana del rango a favor de tendencia;"Ruptura del máximo de Asia; llega a 1 tick del objetivo y vuelve (BE)"
-12;2026-01-20;11:46;CL;L;ESTRUC+VC;-205,32;B;Ruptura temprana del rango a favor de tendencia;"Ruptura de zona 60m; avanza 24/34 y falla"
-13;2026-01-22;11:30;CL;L;ESTRUC+VC;-105,32;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Largo arriba del rebote (+50t) en tendencia bajista; barre el stop y luego sube"
-14;2026-02-11;12:51;CL;C;ESTRUC+FV;-125,32;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Corto abajo tras una caída de -100t; rebota"
-15;2026-02-12;11:51;CL;L;Giro+VC;-205,32;E;Anticipar el giro antes de la barrida (stop barrido y luego va a objetivo);"Largo antes de barrer el mínimo de Asia; lo barre y sale en stop"
-16;2026-02-18;12:35;CL;L;ESTRUC+FV;354,68;B;Ruptura temprana del rango a favor de tendencia;Continuación tras la ruptura de 64.0 a favor de tendencia
-17;2026-02-23;11:25;CL;C;Giro+FV;-125,32;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Corto en el máximo de EU con tendencia alcista fuerte (""apresurado"")"
-18;2026-03-03;11:41;MCL;C;Giro+FV;-122,52;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);Corto a mitad del rango tras un pico, contra 60m alcista
-19;2026-03-03;12:35;MCL;C;Giro+VC;196,32;A;Barrida de min/max del rango (Asia/EU/zona 60m) y recuperación;"Corto en el re-test fallido del máximo de EU (doble techo); objetivo"
-20;2026-03-05;11:45;MCL;L;ESTRUC+FV;204,48;B;Ruptura temprana del rango a favor de tendencia;Ruptura y re-test del máximo de EU con 60m alcista
-21;2026-03-06;11:55;MCL;L;ESTRUC+VC;-360,2;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;Largo en una extensión vertical de 60m (además, error de contratos)
-22;2026-03-12;12:16;MCL;L;ESTRUC+FV;-101,84;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;Largo tarde (12:16) en máximos tras un rally de +450t
-23;2026-03-13;12:00;MCL;L;ESTRUC+VC;161,32;B;Ruptura temprana del rango a favor de tendencia;"Recupera la zona 60m y rompe el rango EU; largo de continuación"
-24;2026-03-17;12:00;MCL;L;Giro+VC;112,16;A;Barrida de min/max del rango (Asia/EU/zona 60m) y recuperación;"Barre el mínimo de EU/Asia (""manipulación"") y gira; largo"
-25;2026-03-18;11:55;MCL;L;ESTRUC+VC;-133,68;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;Largo en máximos tras un rally de +450t desde las 08:30
-26;2026-03-20;12:30;MCL;L;ESTRUC+VC;338,32;B;Ruptura temprana del rango a favor de tendencia;Ruptura del rango EU y retroceso a favor de tendencia
-27;2026-03-27;11:10;MCL;L;ESTRUC+VC;220,32;B;Ruptura temprana del rango a favor de tendencia;Ruptura del máximo de Asia y re-test temprano
-28;2026-04-01;11:15;MCL;L;ESTRUC+VC;-153,68;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);Largo a mitad del rango tras una caída fuerte de 60m
-29;2026-04-07;11:35;MCL;C;Giro+VC;-203,68;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);Corto dentro de un canal alcista, contra tendencia
-30;2026-04-08;10:45;MCL;L;ESTRUC+VC;-231,68;E;Anticipar el giro antes de la barrida (stop barrido y luego va a objetivo);"Largo tras el colapso, antes de la barrida; stop barrido y luego objetivo"
-31;2026-04-09;10:13;MCL;C;Giro+VC;-163,68;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Corto temprano en el máximo de Asia con tendencia alcista; sube +300t"
-32;2026-04-09;11:53;MCL;L;ESTRUC+FV;-203,68;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;Largo en máximos tras un rally de +300t, dentro de la resistencia 60m
-33;2026-04-10;11:05;MCL;L;ESTRUC+VC;-155,52;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;Largo arriba del rebote en un día bajista
-34;2026-04-14;11:37;MCL;C;ESTRUC+VC;-143,68;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Corto abajo tras una caída de -350t; rebota"
-35;2026-04-15;11:08;MCL;L;Giro+VC;32,32;A;Barrida de min/max del rango (Asia/EU/zona 60m) y recuperación;"Barre el mínimo del rango EU y gira; cerrado antes (+18t)"
-36;2026-04-16;11:07;MCL;L;ESTRUC+VC;228,32;B;Ruptura temprana del rango a favor de tendencia;Ruptura del máximo de Asia en la apertura y re-test
-37;2026-04-17;10:46;MCL;L;Giro+FV;-201,84;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);Largo en pleno crash de -600t (cuchillo cayendo)
-38;2026-04-23;11:40;MCL;L;ESTRUC+VC;414,32;A;Barrida de min/max del rango (Asia/EU/zona 60m) y recuperación;"Barre el mínimo de Asia y hace un mínimo más alto; largo"
-39;2026-04-28;11:41;MCL;L;ESTRUC+VC;-173,68;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;Largo después del gran rally de Asia, en la zona alta de 60m
-40;2026-04-29;10:42;MCL;L;ESTRUC+FV;370,32;B;Ruptura temprana del rango a favor de tendencia;Ruptura del máximo de Asia en la apertura EU, a favor de tendencia
-41;2026-05-13;11:28;MCL;L;ESTRUC+VC;-167,68;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;Largo en máximos tras un pico de ruptura (+300t en el día)
-42;2026-05-14;10:57;MCL;L;ESTRUC+VC;-25,68;F;Otro / neutro;"Largo a mitad del rango; cerrado en BE por horario"
-43;2026-05-15;13:40;MCL;C;Giro+VC;22,32;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Corto en el re-test del máximo con tendencia alcista; cerrado antes (+22t)"
-44;2026-05-21;11:23;MCL;C;Giro+VC;-193,68;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);Corto en un retroceso dentro de una tendencia alcista fuerte
-45;2026-05-26;10:36;MCL;L;ESTRUC+VC;130,32;B;Ruptura temprana del rango a favor de tendencia;"Ruptura del máximo de Asia en la apertura; objetivo parcial"
-46;2026-05-26;11:28;MCL;C;Giro+VC;-149,68;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);Corto buscando giro en el máximo justo tras la ruptura alcista (2ª del día)
-47;2026-06-02;13:17;MCL;L;ESTRUC+VC;222,48;B;Ruptura temprana del rango a favor de tendencia;Ruptura del máximo de EU y continuación
-48;2026-06-03;11:47;MCL;L;ESTRUC+VC;117,48;A;Barrida de min/max del rango (Asia/EU/zona 60m) y recuperación;"Barre el mínimo de EU dentro de la demanda 60m y recupera; parcial +41t"
+1;2026-01-02;12:03;CL;L;Giro+VC;254,68;A;Barrida de min/max del rango (Europa/Asia/zona 60m) y recuperación;"Asia sube; Europa barre máx. de Asia y cae todo el día cerrando en mínimos; América barre el mín. de Europa y gira al alza"
+2;2026-01-07;12:37;CL;L;Giro+VC;-175,32;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Europa sube y cierra en máximos (doble techo); América cae y rompe el mín. de Europa"
+3;2026-01-08;11:42;CL;C;Giro+VC;194,68;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Europa sube en tendencia y cierra en máximos; América retrocede ~40t dentro de Europa y luego continúa al alza hasta la zona 60m"
+4;2026-01-08;12:33;CL;C;ESTRUC+FV;-115,32;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Europa sube en tendencia y cierra en máximos; América retrocede ~40t dentro de Europa y luego continúa al alza hasta la zona 60m"
+5;2026-01-09;11:33;CL;L;ESTRUC+VC;354,68;B;Ruptura temprana del rango a favor de tendencia;"Europa en rango cerrando arriba; América rompe el máx. de Europa con explosion y continúa"
+6;2026-01-09;12:28;CL;L;ESTRUC+VC;294,68;B;Ruptura temprana del rango a favor de tendencia;"Europa en rango cerrando arriba; América rompe el máx. de Europa con explosion y continúa"
+7;2026-01-13;12:07;CL;L;ESTRUC+VC;294,68;B;Ruptura temprana del rango a favor de tendencia;"Europa rompe el máx. de Asia y consolida; América barre la parte baja y rompe el máx. de Europa con explosion"
+8;2026-01-15;11:28;CL;L;Giro+FV;-155,32;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Europa baja y cierra en mínimos; América lateral bajo el cierre, sin rebote (largos fallan)"
+9;2026-01-15;12:24;CL;L;Giro+FV;-155,32;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Europa baja y cierra en mínimos; América lateral bajo el cierre, sin rebote (largos fallan)"
+10;2026-01-16;11:56;CL;C;ESTRUC+VC;-165,32;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa sube hasta la zona 60m y cierra arriba; América falla en la zona y baja ~50t"
+11;2026-01-19;11:46;CL;L;ESTRUC+VC;4,68;B;Ruptura temprana del rango a favor de tendencia;"Europa barre por debajo de Asia y recupera en V hasta su máximo; América rompe el máx. de Europa y sigue"
+12;2026-01-20;11:46;CL;L;ESTRUC+VC;-205,32;B;Ruptura temprana del rango a favor de tendencia;"Europa sube y consolida en la zona 60m; América rompe el máx. de Europa (+50t) y luego devuelve"
+13;2026-01-22;11:30;CL;L;ESTRUC+VC;-105,32;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa cae todo el día hasta la zona 60m; América rebota desde la zona dentro del rango de Europa"
+14;2026-02-11;12:51;CL;C;ESTRUC+FV;-125,32;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa sube y cierra arriba; América supera el máx. de Europa 25t, falla y atraviesa el rango hacia abajo"
+15;2026-02-12;11:51;CL;L;Giro+VC;-205,32;E;Anticipar el giro antes de la barrida (stop barrido y luego va a objetivo);"Europa barre el máx. de Asia, cae y cierra en mínimos; América rompe el mín. de Europa y sigue cayendo"
+16;2026-02-18;12:35;CL;L;ESTRUC+FV;354,68;B;Ruptura temprana del rango a favor de tendencia;"Europa sube fuerte y consolida arriba; América rompe y continúa al alza"
+17;2026-02-23;11:25;CL;C;Giro+FV;-125,32;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Europa lateral sobre la zona 60m y luego sube cerrando en máximos; América rompe el máx. de Europa y sigue (el corto de giro fallo)"
+18;2026-03-03;11:41;MCL;C;Giro+FV;-122,52;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);América abre explotando sobre el máx. de Europa, falla y vuelve dentro hasta el mín.
+19;2026-03-03;12:35;MCL;C;Giro+VC;196,32;A;Barrida de min/max del rango (Europa/Asia/zona 60m) y recuperación;América abre explotando sobre el máx. de Europa, falla y vuelve dentro hasta el mín.
+20;2026-03-05;11:45;MCL;L;ESTRUC+FV;204,48;B;Ruptura temprana del rango a favor de tendencia;"Europa barre por debajo de Asia y recupera en V hasta su máximo; América rompe el máx. de Europa y sigue +200t"
+21;2026-03-06;11:55;MCL;L;ESTRUC+VC;-360,2;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa sube y cierra en máximos; América apenas rompe y queda lateral con mucha volatilidad"
+22;2026-03-12;12:16;MCL;L;ESTRUC+FV;-101,84;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Asia cae; Europa barre el mín. de Asia y sube cerrando en máximos; América rompe el máx. de Europa y sigue +300t (entrada tardia arriba perdio)"
+23;2026-03-13;12:00;MCL;L;ESTRUC+VC;161,32;B;Ruptura temprana del rango a favor de tendencia;"Asia sube; Europa barre el máx. de Asia y cae a la zona 60m; América gira al alza y recorre todo el rango de Europa"
+24;2026-03-17;12:00;MCL;L;Giro+VC;112,16;A;Barrida de min/max del rango (Europa/Asia/zona 60m) y recuperación;"Europa cae todo el día y cierra en mínimos; América se extiende -140t bajo Europa y gira de vuelta al mín. de Europa"
+25;2026-03-18;11:55;MCL;L;ESTRUC+VC;-133,68;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa explota al alza al final y cierra en máximos; América rompe +120t y se frena (largo tardio arriba perdio)"
+26;2026-03-20;12:30;MCL;L;ESTRUC+VC;338,32;B;Ruptura temprana del rango a favor de tendencia;"Europa sube, cae al mínimo y recupera (V); América rompe el máx. de Europa y sigue +200t"
+27;2026-03-27;11:10;MCL;L;ESTRUC+VC;220,32;B;Ruptura temprana del rango a favor de tendencia;"Asia y Europa suben escalonado; América sostiene y rompe el máx. de Europa +250t"
+28;2026-04-01;11:15;MCL;L;ESTRUC+VC;-153,68;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Asia se desploma; Europa barre el mín. de Asia y sube en V hasta su máx.; América barre el máx. de Europa y vuelve dentro"
+29;2026-04-07;11:35;MCL;C;Giro+VC;-203,68;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Europa barre bajo Asia y sube en V; América sigue +100t y luego se da vuelta atravesando Europa"
+30;2026-04-08;10:45;MCL;L;ESTRUC+VC;-231,68;E;Anticipar el giro antes de la barrida (stop barrido y luego va a objetivo);"Europa cae todo el día y cierra en mínimos; América barre el mín. de Europa y sube +400t"
+31;2026-04-09;10:13;MCL;C;Giro+VC;-163,68;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Europa sube y cierra en máximos; América sigue +250t hasta la zona 60m y luego se da vuelta por debajo del mín. de Europa"
+32;2026-04-09;11:53;MCL;L;ESTRUC+FV;-203,68;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa sube y cierra en máximos; América sigue +250t hasta la zona 60m y luego se da vuelta por debajo del mín. de Europa"
+33;2026-04-10;11:05;MCL;L;ESTRUC+VC;-155,52;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa supera el máx. de Asia y luego cae por debajo de Asia cerrando en mínimos; América rebota dentro de Europa (largo arriba del rebote perdio)"
+34;2026-04-14;11:37;MCL;C;ESTRUC+VC;-143,68;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa sube, falla y vuelve a cerrar en mínimos; América rompe el mín. de Europa y cae -350t"
+35;2026-04-15;11:08;MCL;L;Giro+VC;32,32;A;Barrida de min/max del rango (Europa/Asia/zona 60m) y recuperación;"Europa sube y devuelve; América barre el mín. de Europa en la 1a hora y sube hasta cerca del máx. de Europa"
+36;2026-04-16;11:07;MCL;L;ESTRUC+VC;228,32;B;Ruptura temprana del rango a favor de tendencia;"Europa rompe el máx. de Asia y consolida; América retrocede poco y rompe el máx. de Europa +180t"
+37;2026-04-17;10:46;MCL;L;Giro+FV;-201,84;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Europa cae y termín.a en un desplome (noticia); América sigue cayendo bajo el mín. de Europa"
+38;2026-04-23;11:40;MCL;L;ESTRUC+VC;414,32;A;Barrida de min/max del rango (Europa/Asia/zona 60m) y recuperación;"Europa barre el mín. de Asia al final; América hace mínimo más alto y sube por encima del máx. de Europa"
+39;2026-04-28;11:41;MCL;L;ESTRUC+VC;-173,68;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa sube +300t y gira bruscamente en su ultima hora; América queda en rango dentro de Europa"
+40;2026-04-29;10:42;MCL;L;ESTRUC+FV;370,32;B;Ruptura temprana del rango a favor de tendencia;"Asia lateral; Europa rompe el máx. de Asia +350t y consolida arriba; América rompe el máx. de Europa y sigue +250t"
+41;2026-05-13;11:28;MCL;L;ESTRUC+VC;-167,68;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa sube en tendencia y cierra en máximos; América rompe +80t y devuelve dentro de Europa (largo arriba perdio)"
+42;2026-05-14;10:57;MCL;L;ESTRUC+VC;-25,68;F;Otro / neutro;"Europa barre el máx. y el mín. de Asia (zona 60m) y recupera; América lateral dentro de Europa"
+43;2026-05-15;13:40;MCL;C;Giro+VC;22,32;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Europa en rango sobre Asia; América barre el mín. de Europa y luego rompe el máx."
+44;2026-05-21;11:23;MCL;C;Giro+VC;-193,68;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Europa barre el mín. de Asia en la zona 60m y explota al alza; América rompe +100t, gira y queda dentro"
+45;2026-05-26;10:36;MCL;L;ESTRUC+VC;130,32;B;Ruptura temprana del rango a favor de tendencia;"Europa en rango; América rompe el máx. de Europa (+100t, B gano) y el giro corto posterior perdio"
+46;2026-05-26;11:28;MCL;C;Giro+VC;-149,68;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Europa en rango; América rompe el máx. de Europa (+100t, B gano) y el giro corto posterior perdio"
+47;2026-06-02;13:17;MCL;L;ESTRUC+VC;222,48;B;Ruptura temprana del rango a favor de tendencia;"Europa cae bajo Asia y recupera en V hasta su máximo; América rompe el máx. de Europa y del rango de Asia +250t"
+48;2026-06-03;11:47;MCL;L;ESTRUC+VC;117,48;A;Barrida de min/max del rango (Europa/Asia/zona 60m) y recuperación;"Europa sube sobre Asia y luego cae a su mín.; América barre el mín. de Europa en la zona 60m y sube hasta cerca del máx. de Europa"
 49;2026-06-05;11:01;MCL;L;ESTRUC+VC;-200,52;;Sin captura;Sin captura
 50;2026-06-09;11:12;MCL;L;Giro+VC;-191,52;;Sin captura;Sin captura
-51;2026-06-12;11:21;MCL;L;ESTRUC+VC;-215,52;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;Largo en máximos tras un rally de +200t
-52;2026-06-16;10:33;MCL;C;ESTRUC+VC;-104,52;E;Anticipar el giro antes de la barrida (stop barrido y luego va a objetivo);"Corto antes de la barrida del máximo; stop barrido y luego cae"
-53;2026-06-16;13:27;MCL;C;ESTRUC+VC;9,48;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Corto abajo tras una caída, tarde (13:27); cerrado en BE"
-54;2026-06-17;11:01;MCL;C;Giro+VC;-167,36;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);Corto buscando giro tras un rally intradía de +270t
-55;2026-06-18;11:11;MCL;C;ESTRUC+VC;-185,52;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Corto abajo tras una caída de -150t; latigazo"
-56;2026-06-24;10:31;CL;C;ESTRUC+VC;-205,32;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Corto abajo tras una caída en la apertura; stop barrido y luego cae"
+51;2026-06-12;11:21;MCL;L;ESTRUC+VC;-215,52;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa cae fuerte y recupera en V; América rompe +60t, gira y vuelve dentro"
+52;2026-06-16;10:33;MCL;C;ESTRUC+VC;-104,52;E;Anticipar el giro antes de la barrida (stop barrido y luego va a objetivo);"Europa cae y cierra en mínimos; América sigue cayendo bajo el mín. de Europa (cortos tardios abajo)"
+53;2026-06-16;13:27;MCL;C;ESTRUC+VC;9,48;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa cae y cierra en mínimos; América sigue cayendo bajo el mín. de Europa (cortos tardios abajo)"
+54;2026-06-17;11:01;MCL;C;Giro+VC;-167,36;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Europa barre el mín. de Asia y sube cerrando arriba; América rompe +60t y se frena (largo arriba perdio)"
+55;2026-06-18;11:11;MCL;C;ESTRUC+VC;-185,52;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa barre el mín. de Asia y sube; América cae por debajo del mín. de Europa"
+56;2026-06-24;10:31;CL;C;ESTRUC+VC;-205,32;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa cae al final y cierra en mínimos; América sigue cayendo bajo el mín. de Europa"
 57;2026-06-25;13:00;CL;L;ESTRUC+VC;134,04;;Sin captura;Sin captura
 58;2026-06-26;11:58;MCL;L;Giro+VC;-125,52;;Sin captura;Sin captura
-59;2026-08-14;11:21;MCL;L;Giro+VC;290,8;A;Barrida de min/max del rango (Asia/EU/zona 60m) y recuperación;"Barre minimo de rango EU y recupera; largo tras recuperar"
-60;2026-08-19;11:27;MCL;L;ESTRUC+VC;290,8;A;Barrida de min/max del rango (Asia/EU/zona 60m) y recuperación;"Caida a demanda 60m (83.5) y giro en V; largo a favor de 60m alcista"
-61;2026-08-20;11:57;MCL;C;ESTRUC+VC;-159,2;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);Corto en soporte 86.0 (nivel roto) con 60m muy alcista
-62;2026-08-26;11:19;MCL;L;ESTRUC+VC;290,8;B;Ruptura temprana del rango a favor de tendencia;"Ruptura del maximo de Asia en apertura con impulso; retroceso y largo"
-63;2026-08-28;10:37;MCL;L;Giro+VC;-159,2;E;Anticipar el giro antes de la barrida (stop barrido y luego va a objetivo);"Largo antes de barrer min de Asia; stop bajo minimo obvio barrido; despues sube a ~objetivo"
-64;2026-08-31;12:23;MCL;L;Giro+VC;290,8;A;Barrida de min/max del rango (Asia/EU/zona 60m) y recuperación;"Barre min de Asia (85.2) y gira; largo tras la barrida; objetivo lento"
-65;2026-09-03;13:17;MCL;C;ESTRUC+VC;-159,2;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);Corto tarde (13:17) en minimo de rango EU con 60m alcista
-66;2026-09-09;11:02;MCL;C;Giro+VC;-159,2;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Corto buscando giro en max de Asia tras rally fuerte; sigue subiendo"
-67;2026-09-11;10:42;MCL;L;Giro+VC;294,48;A;Barrida de min/max del rango (Asia/EU/zona 60m) y recuperación;"Barre min de Asia/EU y gira; largo 50t bajo la barrida; objetivo lento"
-68;2026-09-21;10:56;MCL;L;Giro+VC;-159,2;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Largo contra caida fuerte 60m (rompio soporte 94.5); cuchillo cayendo"
-69;2026-09-21;11:42;MCL;C;ESTRUC+VC;-159,2;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Corto tarde tras caida de +100t en el minimo del rango; rebota"
-70;2026-09-24;11:56;MCL;L;ESTRUC+VC;294,48;B;Ruptura temprana del rango a favor de tendencia;"Ruptura de zona 60m (95) con tendencia alcista; largo de continuacion"
-71;2026-09-28;12:25;MCL;L;ESTRUC+VC;-159,2;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;Largo tarde (12:25) en maximos tras rally de +170t bajo resistencia 60m
-72;2026-09-29;12:24;MCL;L;ESTRUC+VC;-155,52;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Largo en resistencia (91.5) dentro de tendencia bajista; vela grande de noticia"
-73;2026-10-08;12:15;MCL;L;ESTRUC+VC;-159,2;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;Largo tarde (12:15) en el maximo del rango tras rally de +130t
-74;2026-10-09;12:25;MCL;L;ESTRUC+VC;-159,2;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;Largo tarde (12:25) en maximos tras rally de +140t en zona 60m
+59;2026-08-14;11:21;MCL;L;Giro+VC;290,8;A;Barrida de min/max del rango (Europa/Asia/zona 60m) y recuperación;"Europa en rango cayendo al final a su mínimo; América barre el mín. de Europa y sube"
+60;2026-08-19;11:27;MCL;L;ESTRUC+VC;290,8;A;Barrida de min/max del rango (Europa/Asia/zona 60m) y recuperación;"Europa sube y luego cae a la zona 60m al final; América gira desde la zona y sube recorriendo todo Europa"
+61;2026-08-20;11:57;MCL;C;ESTRUC+VC;-159,2;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Europa sube y se da vuelta con fuerza al final; América lateral dentro de Europa (corto contra 60m alcista perdio)"
+62;2026-08-26;11:19;MCL;L;ESTRUC+VC;290,8;B;Ruptura temprana del rango a favor de tendencia;"Europa en rango y sube al final cerrando en máximos; América rompe el máx. de Europa y sigue +250t"
+63;2026-08-28;10:37;MCL;L;Giro+VC;-159,2;E;Anticipar el giro antes de la barrida (stop barrido y luego va a objetivo);"Europa toca la zona 60m y cae al final a su mínimo; América barre el mín. de Europa y sube (largo entro antes de la barrida)"
+64;2026-08-31;12:23;MCL;L;Giro+VC;290,8;A;Barrida de min/max del rango (Europa/Asia/zona 60m) y recuperación;"Europa rompe el máx. de Asia, hace rango arriba y cae al final a su mínimo; América barre el mín. de Europa y sube"
+65;2026-09-03;13:17;MCL;C;ESTRUC+VC;-159,2;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Europa cae y cierra abajo; América barre el mín. de Europa y recupera (corto tarde abajo perdio)"
+66;2026-09-09;11:02;MCL;C;Giro+VC;-159,2;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Asia y Europa suben en tendenciaes, Europa cierra en máximos; América rompe el máx. de Europa y sigue (corto de giro perdio)"
+67;2026-09-11;10:42;MCL;L;Giro+VC;294,48;A;Barrida de min/max del rango (Europa/Asia/zona 60m) y recuperación;"Asia y Europa caen, Europa cierra en mínimos; América barre el mín. de Europa y sube +150t"
+68;2026-09-21;10:56;MCL;L;Giro+VC;-159,2;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Europa en rango bajo la zona 60m cerrando en su parte baja; América rompe el mín. de Europa y cae -110t (60m bajista)"
+69;2026-09-21;11:42;MCL;C;ESTRUC+VC;-159,2;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa en rango bajo la zona 60m cerrando en su parte baja; América rompe el mín. de Europa y cae -110t (60m bajista)"
+70;2026-09-24;11:56;MCL;L;ESTRUC+VC;294,48;B;Ruptura temprana del rango a favor de tendencia;"Europa explota +250t al inicio y luego rango; América rompe el máx. de Europa/zona 60m y sigue"
+71;2026-09-28;12:25;MCL;L;ESTRUC+VC;-159,2;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa cae -250t y cierra en mínimos; América barre poco el mín. y sube +170t; el largo arriba a las 12:25 perdio"
+72;2026-09-29;12:24;MCL;L;ESTRUC+VC;-155,52;D;Contra-tendencia sin barrida (atrapar cuchillo / vender un rally);"Europa cae en tendencia y cierra en mínimos; América barre el mín. de Europa y sube +150t hasta la zona; el largo arriba perdio con la noticia"
+73;2026-10-08;12:15;MCL;L;ESTRUC+VC;-159,2;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa sube y cierra en la parte alta; América barre el mín. de Europa, rompe el máx. +40t y se frena; largo arriba perdio"
+74;2026-10-09;12:25;MCL;L;ESTRUC+VC;-159,2;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa sube y cierra arriba; América retrocede al mín. de Europa, sube +150t por encima; largo arriba perdio"
 75;2026-10-15;11:36;MCL;L;ESTRUC+VC;290,8;;Sin captura;Sin captura
-76;2026-10-23;11:16;MCL;L;ESTRUC+VC;-159,2;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;Largo en maximos tras rally EU de +160t dentro de resistencia 60m (101-102)
-77;2026-10-23;11:38;MCL;L;ESTRUC+VC;-159,2;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;Reentrada larga en el mismo maximo 20 min despues
-78;2026-10-29;10:50;MCL;L;ESTRUC+VC;-159,2;E;Anticipar el giro antes de la barrida (stop barrido y luego va a objetivo);"Largo durante la caida antes de la barrida; stop barrido y luego sube a casi objetivo"
+76;2026-10-23;11:16;MCL;L;ESTRUC+VC;-159,2;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa en rango cerrando en la parte baja; América rompe el máx. de Europa +150t hasta resistencia 60m; largos arriba perdieron"
+77;2026-10-23;11:38;MCL;L;ESTRUC+VC;-159,2;C;Persecución: entrar tras un movimiento ya extendido, cerca del extremo;"Europa en rango cerrando en la parte baja; América rompe el máx. de Europa +150t hasta resistencia 60m; largos arriba perdieron"
+78;2026-10-29;10:50;MCL;L;ESTRUC+VC;-159,2;E;Anticipar el giro antes de la barrida (stop barrido y luego va a objetivo);"Europa sube y cae fuerte al final hasta su mínimo; América barre el mín. de Europa (-80t) y recupera +120t; largo entro antes de la barrida"
