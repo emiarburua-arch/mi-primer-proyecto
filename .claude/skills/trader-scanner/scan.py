@@ -600,7 +600,9 @@ def session_bars(series, day, cutoff):
         if et + datetime.timedelta(minutes=BAR_MIN) > cutoff:
             continue  # still in progress at the cutoff
         v = series.get("v")
+        os_ = series.get("o")
         out[et] = {"start": et, "c": float(c),
+                   "o": None if not os_ or os_[i] is None else float(os_[i]),
                    "h": None if not hs or hs[i] is None else float(hs[i]),
                    "l": None if not ls or ls[i] is None else float(ls[i]),
                    "v": (v[i] or 0) if v else 0}
@@ -619,15 +621,20 @@ def usable(bars, day, cutoff, n_range):
     return all(b["start"] == slot(day, k) for k, b in enumerate(bars))
 
 
-def orb_candidate(bars, n_range):
-    """Stage 1, closes only: some completed bar after the range closed at or above
-    the highest close of the range. Necessary for a breakout (range high >= any range close)."""
-    top = max(b["c"] for b in bars[:n_range])
-    return any(b["c"] >= top for b in bars[n_range:])
+def orb_candidate(bars, n_range, side=1):
+    """Stage 1, closes only: some completed bar after the range closed at or beyond
+    the extreme close of the range (highest for a long, lowest for a short). Necessary
+    for a breakout (range high >= any range close, range low <= any range close)."""
+    if side > 0:
+        top = max(b["c"] for b in bars[:n_range])
+        return any(b["c"] >= top for b in bars[n_range:])
+    bottom = min(b["c"] for b in bars[:n_range])
+    return any(b["c"] <= bottom for b in bars[n_range:])
 
 
-def orb_hit(bars, n_range):
-    """Stage 2, real highs and lows: the first completed bar to CLOSE above the range high."""
+def orb_hit(bars, n_range, side=1):
+    """Stage 2, real highs and lows: the first completed bar to CLOSE above the range
+    high (side 1) or below the range low (side -1)."""
     rng = bars[:n_range]
     if any(b["h"] is None or b["l"] is None for b in rng):
         return None
@@ -635,13 +642,72 @@ def orb_hit(bars, n_range):
     ol = min(b["l"] for b in rng)
     for k in range(n_range, len(bars)):
         b = bars[k]
-        if b["c"] > oh:
+        if (side > 0 and b["c"] > oh) or (side < 0 and b["c"] < ol):
             closes_at = b["start"] + datetime.timedelta(minutes=BAR_MIN)
+            edge = oh if side > 0 else ol
             return {"price": round(b["c"], 2), "at": clock_label(closes_at),
                     "bar_start": b["start"].strftime("%H:%M"), "bar_index": k,
                     "or_high": round(oh, 2), "or_low": round(ol, 2),
-                    "pct_over": round((b["c"] / oh - 1) * 100, 2), "_t": closes_at}
+                    "pct_over": round((b["c"] / edge - 1) * 100, 2), "_t": closes_at}
     return None
+
+
+BASE_DAYS = 20   # sessions behind the relative volume
+
+
+def prior_sessions(series, day, n_range):
+    """From a multi-day 5-minute series: [(date, opening-range volume, last close)] of the
+    complete-enough regular sessions before `day`, oldest first."""
+    per = {}
+    vs = series.get("v")
+    for i, ts in enumerate(series["t"]):
+        c = series["c"][i]
+        if c is None:
+            continue
+        et = ts_to_eastern(ts)
+        d = et.date()
+        if d >= day or et.second or et.minute % BAR_MIN:
+            continue
+        s = session(d)
+        if not s or et.time() < OPEN or et.time() >= s[1]:
+            continue
+        row = per.setdefault(d, {"or_v": 0, "n_or": 0, "last": None, "last_t": None})
+        if et < slot(d, n_range):
+            row["or_v"] += (vs[i] or 0) if vs else 0
+            row["n_or"] += 1
+        if row["last_t"] is None or et > row["last_t"]:
+            row["last_t"], row["last"] = et, float(c)
+    return [(d, r["or_v"], r["last"]) for d, r in sorted(per.items()) if r["n_or"] == n_range]
+
+
+def orb_context(series, day, bars, hit, n_range, side, spy_bars=None):
+    """What the lab measured at the trigger bar. Fields are None when the series has no
+    history (an offline one-day replay) or no volume."""
+    k = hit["bar_index"]
+    prior = prior_sessions(series, day, n_range)
+    or_v = sum(b["v"] for b in bars[:n_range])
+    base = [v for _, v, _ in prior[-BASE_DAYS:] if v > 0]
+    rvol = round(or_v / (sum(base) / len(base)), 2) if len(base) >= 5 and or_v > 0 else None
+    gap = None
+    if prior and bars[0].get("o"):
+        gap = round((bars[0]["o"] / prior[-1][2] - 1) * 100 * side, 2)
+    pv = vv = 0.0
+    for b in bars[:k + 1]:
+        h = b["h"] if b["h"] is not None else b["c"]
+        l_ = b["l"] if b["l"] is not None else b["c"]
+        pv += (h + l_ + b["c"]) / 3 * b["v"]
+        vv += b["v"]
+    vwap = round(pv / vv, 2) if vv else None
+    spy_with = None
+    if spy_bars and k < len(spy_bars) and spy_bars[k]["start"] == bars[k]["start"]:
+        spv = svv = 0.0
+        for b in spy_bars[:k + 1]:
+            spv += (b["h"] + b["l"] + b["c"]) / 3 * b["v"] if b["h"] is not None else b["c"] * b["v"]
+            svv += b["v"]
+        if svv:
+            spy_with = (spy_bars[k]["c"] - spv / svv) * side > 0
+    trig = round(bars[k]["v"] / (or_v / n_range), 2) if or_v else None
+    return {"rvol": rvol, "gap_pct": gap, "vwap": vwap, "spy_with": spy_with, "trigger_vol_x": trig}
 
 
 def orb_window(now_utc, at, or_minutes, until, explicit_day=None):
@@ -684,7 +750,7 @@ def orb_window(now_utc, at, or_minutes, until, explicit_day=None):
 
 
 def scan_orb(stage1, symbols, day, cutoff, or_minutes, min_price=0.0, min_volume=0, confirm=None,
-             max_confirm=None):
+             max_confirm=None, sides=(1,), spy=None, min_rvol=None, min_gap=None, spy_with=False):
     """stage1 = {SYM: series} with closes (spark or v8). confirm(sym) -> series with highs/lows
     (None = use the stage-1 series). With confirm and max_confirm, only the max_confirm most
     traded candidates (price x volume so far) are confirmed; the rest are counted as unconfirmed.
@@ -707,15 +773,18 @@ def scan_orb(stage1, symbols, day, cutoff, or_minutes, min_price=0.0, min_volume
             counts["illiquid"] += 1
             continue
         counts["scanned"] += 1
-        if orb_candidate(bars, n_range):
+        if any(orb_candidate(bars, n_range, sd) for sd in sides):
             cands.append((sym, bars, bars[-1]["c"] * vol))
     counts["candidates"] = len(cands)
     if confirm is not None and max_confirm and len(cands) > max_confirm:
         cands.sort(key=lambda x: -x[2])
         counts["unconfirmed"] = len(cands) - max_confirm
         cands = cands[:max_confirm]
+    spy_bars = session_bars(spy, day, cutoff) if spy else None
+    counts["filtered"] = 0
     for sym, bars, _ in cands:
         full = bars
+        s2 = stage1.get(sym)
         if confirm is not None:
             try:
                 s2 = confirm(sym)
@@ -727,9 +796,18 @@ def scan_orb(stage1, symbols, day, cutoff, or_minutes, min_price=0.0, min_volume
                 failed[sym] = "the v8 chart has a missing bar"
                 continue
         counts["confirmed"] += 1
-        h = orb_hit(full, n_range)
-        if h:
-            hits.append(dict({"symbol": sym, "setups": ["orb"]}, **h))
+        for sd in sides:
+            h = orb_hit(full, n_range, sd)
+            if not h:
+                continue
+            ctx = orb_context(s2, day, full, h, n_range, sd, spy_bars)
+            if ((min_rvol is not None and (ctx["rvol"] is None or ctx["rvol"] < min_rvol))
+                    or (min_gap is not None and (ctx["gap_pct"] is None or ctx["gap_pct"] < min_gap))
+                    or (spy_with and ctx["spy_with"] is not True)):
+                counts["filtered"] += 1
+                continue
+            hits.append(dict({"symbol": sym, "side": "long" if sd > 0 else "short",
+                              "setups": ["orb" if sd > 0 else "orb_short"]}, **dict(h, **ctx)))
     hits.sort(key=lambda x: (x["_t"], x["symbol"]))
     for h in hits:
         del h["_t"]
@@ -959,6 +1037,12 @@ def cmd_orb(a):
                     raise ScanError("offline replay: give --at HH:MM or --now \"YYYY-MM-DD HH:MM\"")
     day, cutoff = orb_window(now, at, a.or_minutes, until, explicit_day)
     symbols = read_symbols(a, offline_syms)
+    sides = {"long": (1,), "short": (-1,), "both": (1, -1)}[a.side]
+    min_rvol, min_gap = a.min_rvol, a.min_gap
+    if a.in_play:
+        min_rvol = 2.0 if min_rvol is None else min_rvol
+        min_gap = 2.0 if min_gap is None else min_gap
+    spy = (data or {}).get("SPY") if a.offline else None
     confirm = None
     if not a.offline:
         today = to_eastern(parse_now(None)).date()
@@ -976,9 +1060,15 @@ def cmd_orb(a):
             done.append(sym)
             if len(done) % 50 == 0:
                 progress(a, "  stage 2: %d v8 charts so far" % len(done))
-            return parse_chart(yahoo_get(chart_path(sym, rng, "%dm" % BAR_MIN)), sym)
+            # a month of 5-minute bars: today's highs and lows plus the 20 sessions behind
+            # the relative volume and the gap. Same one request as before.
+            return parse_chart(yahoo_get(chart_path(sym, "1mo", "%dm" % BAR_MIN)), sym)
+        try:
+            spy = parse_chart(yahoo_get(chart_path("SPY", rng, "%dm" % BAR_MIN)), "SPY")
+        except (ScanError, ValueError, KeyError) as e:
+            progress(a, "  SPY: %s (the SPY column stays empty)" % e)
     hits, counts, failed2 = scan_orb(data, symbols, day, cutoff, a.or_minutes, a.min_price, a.min_volume, confirm,
-                                     a.max_confirm)
+                                     a.max_confirm, sides, spy, min_rvol, min_gap, a.spy_with)
     failed = dict(failed or {})
     failed.update(failed2)
     nfailed = len([s for s in symbols if s in failed])
@@ -987,7 +1077,9 @@ def cmd_orb(a):
            "as_of": as_of, "universe": len(symbols), "scanned": counts["scanned"], "failed": nfailed,
            "unconfirmed": counts["unconfirmed"], "source": "yahoo", "or_minutes": a.or_minutes,
            "interval": "%dm" % BAR_MIN,
-           "filters": {"min_price": a.min_price, "min_volume": a.min_volume}, "note": NOTE, "hits": hits}
+           "side": a.side,
+           "filters": {"min_price": a.min_price, "min_volume": a.min_volume, "min_rvol": min_rvol,
+                       "min_gap_pct": min_gap, "spy_with": a.spy_with}, "note": NOTE, "hits": hits}
     if a.offline:
         doc["offline"] = os.path.basename(a.offline.rstrip("/"))
     if not a.no_write:
@@ -1006,21 +1098,47 @@ def cmd_orb(a):
     if counts["unconfirmed"]:
         print("PARTIAL: %s more candidates were not checked (only the %s most traded are; --max-confirm 0 "
               "checks all)." % ("{:,}".format(counts["unconfirmed"]), "{:,}".format(a.max_confirm)))
+    if counts.get("filtered"):
+        print("Filters (%s) dropped %d breakout%s." % (_filters_label(min_rvol, min_gap, a.spy_with),
+                                                     counts["filtered"], "" if counts["filtered"] == 1 else "s"))
+    beyond = {"long": "above their opening-range high", "short": "below their opening-range low",
+              "both": "beyond their opening range"}[a.side]
     if hits:
-        print("%d of %s charts closed above their opening-range high by %s:"
+        print("%d of %s charts closed %s by %s:"
               % (len(hits), ("the %s checked" % "{:,}".format(counts["confirmed"])) if counts["unconfirmed"]
-                 else "{:,}".format(counts["scanned"]), clock_label(cutoff)))
+                 else "{:,}".format(counts["scanned"]), beyond, clock_label(cutoff)))
+        print("  %8s  %-6s %-5s %10s  %-22s %8s %6s %7s %4s" % ("at", "symbol", "side", "price", "range", "beyond",
+                                                               "rvol", "gap", "SPY"))
         for h in hits[:a.show]:
-            print("  %8s  %-6s %10s  range %s to %s  %+.2f%% over" % (
-                h["at"], h["symbol"], money(h["price"]), _p(h["or_low"]), _p(h["or_high"]), h["pct_over"]))
+            print("  %8s  %-6s %-5s %10s  %-22s %+7.2f%% %6s %7s %4s" % (
+                h["at"], h["symbol"], h["side"], money(h["price"]), "%s to %s" % (_p(h["or_low"]), _p(h["or_high"])),
+                h["pct_over"], "-" if h["rvol"] is None else "%.1fx" % h["rvol"],
+                "-" if h["gap_pct"] is None else "%+.1f%%" % h["gap_pct"],
+                "-" if h["spy_with"] is None else ("with" if h["spy_with"] else "vs")))
+        print("  (gap is signed in the trade's direction: + means it gapped the way you would trade it)")
         if len(hits) > a.show:
             print("  ... and %d more in the watchlist (--show N for more)." % (len(hits) - a.show))
     else:
-        print("No chart closed above its opening-range high by %s." % clock_label(cutoff))
+        print("No chart closed %s by %s%s." % (beyond.replace("their", "its"), clock_label(cutoff),
+                                             " that passed the filters" if counts.get("filtered") else ""))
+    if any(h["side"] == "short" for h in hits):
+        print("SHORTS: trader-entry, trader-exit, trader-budget and trader-risk are long-only; a short here is "
+              "for your own platform, and only if your broker can borrow it (watch the short-sale rule after -10%).")
     if not a.no_write:
         print("Wrote %s (mode orb, %d hit%s)." % (a.out, len(hits), "" if len(hits) == 1 else "s"))
     print(NOTE + " Next: pick one chart, then /trader-news TICKER and /trader-entry TICKER.")
     return 0 if hits else 1
+
+
+def _filters_label(min_rvol, min_gap, spy_with):
+    parts = []
+    if min_rvol is not None:
+        parts.append("rvol >= %gx" % min_rvol)
+    if min_gap is not None:
+        parts.append("gap >= %g%% with the trade" % min_gap)
+    if spy_with:
+        parts.append("SPY on the trade's side of its VWAP")
+    return ", ".join(parts) or "none"
 
 
 def _p(x):
@@ -1065,6 +1183,13 @@ def main(argv=None):
     p.add_argument("--at", help="cut the clock at this New York time, HH:MM")
     p.add_argument("--until", help="no new entries after HH:MM (default: config no_entries_after, 15:30)")
     p.add_argument("--config", default="trader/config.json")
+    p.add_argument("--side", choices=("long", "short", "both"), default="long",
+                   help="long breakouts above the range (default), short breakdowns below it, or both")
+    p.add_argument("--min-rvol", type=float, help="opening-range volume vs its 20-session average, e.g. 2")
+    p.add_argument("--min-gap", type=float, help="gap in %% in the trade's direction, e.g. 2")
+    p.add_argument("--spy-with", action="store_true", help="SPY on the trade's side of its own VWAP")
+    p.add_argument("--in-play", action="store_true",
+                   help="shortcut for --min-rvol 2 --min-gap 2 (what the lab found worth a look)")
     a = ap.parse_args(argv)
     if not a.cmd:
         ap.print_help()

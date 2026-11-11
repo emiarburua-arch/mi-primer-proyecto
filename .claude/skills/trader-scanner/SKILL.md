@@ -12,7 +12,12 @@ description: >-
   "what is breaking out", "opening range breakouts", "scan for bull flags",
   "oversold stocks", "pre-market scan", "build my watchlist", "what should I
   look at today", or at the start of a trading day before /trader-news.
-argument-hint: "[universe | daily | orb] [--at HH:MM]"
+  Also scans short breakdowns (--side short|both), measures relative volume,
+  gap, VWAP and SPY at each trigger, filters stocks "in play" (--in-play),
+  and tests those filters on 60 days of bars (lab.py). Use for "stocks in
+  play", "gap and go", "short setups", "relative volume", "does this filter
+  work", "backtest the scanner".
+argument-hint: "[universe | daily | orb | lab] [--at HH:MM] [--side long|short|both] [--in-play]"
 ---
 
 # trader-scanner
@@ -33,6 +38,10 @@ python3 "${CLAUDE_SKILL_DIR}/scan.py" daily --symbols TSLA,NVDA,AMD  # or --watc
 python3 "${CLAUDE_SKILL_DIR}/scan.py" orb                            # after 9:50 AM ET -> trader/watchlist.json
 python3 "${CLAUDE_SKILL_DIR}/scan.py" orb --at 10:15                 # cut the clock at 10:15 AM ET
 python3 "${CLAUDE_SKILL_DIR}/scan.py" orb --watchlist trader/watchlist.json --json
+python3 "${CLAUDE_SKILL_DIR}/scan.py" orb --side both --in-play         # in play, long and short
+python3 "${CLAUDE_SKILL_DIR}/scan.py" orb --min-rvol 3 --min-gap 3 --spy-with
+python3 "${CLAUDE_SKILL_DIR}/lab.py" fetch --top 500                     # 60 days of 5-minute bars -> trader/lab/
+python3 "${CLAUDE_SKILL_DIR}/lab.py" test                                # every filter, long and short, in R
 ```
 
 Flags: `--min-price 5` and `--min-volume` (daily 1,000,000, orb 0),
@@ -41,6 +50,51 @@ Flags: `--min-price 5` and `--min-volume` (daily 1,000,000, orb 0),
 to read saved Yahoo files, `--no-write`, `--show N`, `--json`. Exit code 0
 when the scan found something, 1 when it found nothing or could not run (the
 reason is one plain line).
+
+## Context and filters (orb)
+
+Every orb hit now carries what the lab measures at the trigger bar:
+
+| field | what |
+| --- | --- |
+| `side` | `long` (closed above the range high) or `short` (closed below the range low) |
+| `rvol` | opening-range volume / its average over the previous 20 sessions |
+| `gap_pct` | 9:30 open vs the previous close, signed in the trade's direction (+ = gapped your way) |
+| `vwap` | the session VWAP through the trigger bar |
+| `spy_with` | SPY is on the trade's side of its own VWAP at that bar |
+| `trigger_vol_x` | the trigger bar's volume / the average opening-range bar |
+
+Stage 2 fetches a month of 5-minute bars per candidate instead of one day
+(still one request) so rvol and gap can be computed, plus one SPY chart. An
+offline one-day replay has no history: rvol and gap are `null` there, and a
+filter on them drops every hit (it says so).
+
+Flags: `--side long|short|both` (default long, the original behaviour),
+`--min-rvol X`, `--min-gap PCT` (in the trade's direction), `--spy-with`,
+`--in-play` (= `--min-rvol 2 --min-gap 2`).
+
+Shorts are for the user's own platform: trader-entry, trader-exit,
+trader-budget and trader-risk are long-only, trader-risk blocks short sales
+unless the config allows them, and a stock down 10% from its previous close
+triggers the short-sale rule (shorts only on an uptick) for the rest of that
+day and the next. Say this whenever a short hit is shown.
+
+## The lab (does a filter help?)
+
+`lab.py fetch` ranks the universe by dollar volume and caches 60 days of
+5-minute bars for the top N (default 500) plus SPY and QQQ. `lab.py test`
+replays the skill's rule on every session with 10 sessions of history behind
+it: 15-minute range, entry at the close of the first bar beyond it, stop at
+the range midpoint, target `--target` R (2), flat at 3:55 PM, no entries
+after 3:30 PM, a bar touching both stop and target counts as the stop,
+`--cost` cents a share a side (1). It prints, for long and short, each filter
+with trades, days, % target, % stop, average R after costs, the average R in
+each half of the period, and a day-clustered t-stat.
+
+How to read it, and say it this way: a row is worth a look only when both
+halves agree in sign and |t| > 2. Sixty sessions is one market regime; a
+filter that worked there can stop working. Results from a run on 2026-09-03
+to 2026-11-11 are in `research/` at the project root when they exist.
 
 ## What it reads and writes
 
