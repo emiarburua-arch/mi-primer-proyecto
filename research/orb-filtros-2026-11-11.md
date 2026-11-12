@@ -137,3 +137,14 @@ SHORT  filter                           trades  days   tgt%  stop%   avg R     1
 
 Research on ~40 sessions, not a prediction. A row only counts if both halves agree and |t| > 2.
 ```
+
+---
+
+## Corrección (2026-11-12): la ventaja de los cortos depende de pocos días
+
+Repetí el estudio con más acciones (1.500, unas 9.500 rupturas con gap a favor) y probé unas 48.000 combinaciones de filtros y formas de ejecutar la operación. Una parte de los días se usó para elegir la combinación y otra parte para validarla.
+
+- **El corto "en juego"** (rango de 15 minutos, stop en la mitad del rango, volumen relativo ≥ 2 y gap ≥ 2 %) da +0,12R por operación en total. Pero **sin el mejor día (2026-11-05) da −0,02R, y sin los 3 mejores días da −0,14R.** La "consistencia" que vi en las dos mitades del período venía de días de venta generalizada del mercado.
+- **La mejor combinación encontrada** acierta el objetivo de 2R en el 48,6 % de los casos, con +0,45R por operación. Le exige al corto volumen relativo ≥ 1,5, gap ≥ 2 % a favor, el SPY por debajo de su VWAP y que la acción también haya caído el día anterior, y pone el stop en el máximo de la barra que da la señal. Pero **111 de sus 368 operaciones caen en un solo día (2026-11-05)**. Sin los 3 mejores días acierta el 29 % y da −0,13R.
+- **Lo que sí es estructural:** poner el stop en el extremo de la barra que da la señal, en lugar de la mitad del rango, sube la tasa de objetivos de 2R de ~17 % a ~40 %, porque el objetivo queda más cerca. Aun así, en los días normales el resultado sigue sin ser positivo.
+- **Conclusión:** con 49 sesiones no hay evidencia de un sistema ORB en acciones que acierte ~50 % con objetivo 2:1 de forma robusta. Lo que existe es un efecto de **días de pánico**: cuando el mercado entero vende, los cortos con gap a la baja funcionan muy bien. Para estudiar un filtro que detecte esos días hacen falta muchos más días de historia.
