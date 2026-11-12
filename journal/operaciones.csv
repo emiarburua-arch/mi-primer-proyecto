@@ -1,0 +1,2 @@
+id,fecha,hora_entrada,hora_salida,accion,lado,entrada,stop,objetivo,salida,acciones,comisiones,riesgo_por_accion,R,resultado_usd,estado,en_juego,rvol,gap_pct,tipo_dia,cuenta,setup,notas
+1,2026-11-12,09:50,,JBS,corto,11.85,12.01,11.53,11.53,,,0.1600,2.00,,objetivo,si,3.2,3.5,venta,,"ORB 15m corto, stop mitad del rango",señal del escaneo 9:51; día de venta por noticia NVDA
