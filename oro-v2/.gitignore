@@ -1,0 +1,5 @@
+# datos de precio exportados de NinjaTrader (pesados, no se versionan)
+raw/
+data/
+*.txt
+*.pkl
