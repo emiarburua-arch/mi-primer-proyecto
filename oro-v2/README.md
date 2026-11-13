@@ -15,12 +15,16 @@ python backtest/gold_bt.py data/ resultados/  # versiones de sesgo A/B/C x salid
 - Se saltan los días de roll / con ventana incompleta y los 2 primeros días tras un hueco de datos.
 - Sin filtro de noticias (la ventana arranca 08:45 NY, después de los datos de las 08:30).
 
-## Resultado v0 (ene–jul y oct–nov 2026, 167 días)
+## Resultado v1 (ene–nov 2026, 212 días) — NO aprobado
 
 | Sesgo | Salida | Trades | % acierto | PF | Esperanza | Neto | DD máx |
 |---|---|---|---|---|---|---|---|
-| A sin sesgo | 2R | 140 | 33,6% | 0,93 | −0,07R | −$771 | −24,9R |
-| B 1h vs EMA50 | 2R | 85 | 41,2% | 1,21 | +0,16R | +$1.321 | −9,9R |
-| C oráculo | 2R | 88 | 46,6% | 1,52 | +0,32R | +$3.069 | −6,9R |
+| A sin sesgo | 2R | 172 | 29,7% | 0,78 | −0,18R | −$3.233 | −46,8R |
+| B 1h vs EMA50 | 2R | 109 | 35,8% | 0,98 | +0,00R | −$139 | −23,1R |
+| C oráculo | 2R | 104 | 43,3% | 1,34 | +0,22R | +$2.553 | −11,3R |
+
+v0 (sin agosto–septiembre) daba B = +0,16R / PF 1,21: era efecto de la muestra.
+Agosto–octubre 2026 costó −21R a la versión B. Incluso con el sesgo perfecto (C),
+el motor de pullback a la EMA 20 convierte la dirección en poca ventaja (PF 1,34).
 
 Detalle completo en `resultados/resumen.csv` y una planilla de trades por variante.
