@@ -1,6 +1,6 @@
 # Trading Plan – Micro E-mini Nasdaq-100 (MNQ)
 
-> Estado: **BORRADOR v0.7** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
+> Estado: **BORRADOR v0.8** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
 > Horarios en hora de Nueva York (ET).
 
 ---
@@ -129,8 +129,8 @@ Cuanto **mayor** la temporalidad, más **de fondo** es la dirección que marca s
 Si hay rangos activos con objetivos opuestos, **manda el de mayor temporalidad** como dirección de fondo.
 
 - **Operar en contra del fondo (P9):** **permitido**, pero solo hasta un **objetivo de temporalidad menor** (ej. el
-  objetivo de 60m) y con **menor riesgo**.
-  - `PENDIENTE P9b` – ¿Cuánto menos riesgo? (ej. la mitad del riesgo normal).
+  objetivo de 60m).
+  - **Riesgo (P9b):** el mismo que cualquier trade, **siempre 150 USD**.
 - **Objetivo alcanzado (P10):** cuando una temporalidad alcanza su objetivo, se **pasa al siguiente objetivo**.
   - `PENDIENTE P10b` – ¿Cómo se elige el "siguiente objetivo"? (ej. el objetivo de otro rango activo de la misma
     temporalidad, el siguiente nivel semanal/lunes, o el de la temporalidad inmediatamente inferior).
@@ -215,8 +215,11 @@ Solo las **dos primeras horas de la sesión americana: 09:30 – 11:30 ET** (P16
 
 ## 6. Gestión del trade
 
-- **Stop loss (P17):** debajo del **último retroceso (último pivote)** en compras; encima del último pivote en ventas.
-  - `PENDIENTE P17b` – ¿Exactamente en el pivote o N ticks más allá?
+- **Stop loss (P17):** el stop es de **distancia fija**. Condición obligatoria: tiene que quedar **más allá del último
+  retroceso (último pivote)**: debajo en compras, encima en ventas. Si queda más lejos del pivote, mejor (P17b).
+  - `PENDIENTE P17c` – ¿Cuál es la distancia fija del stop (en puntos) y cuántos micros se operan?
+  - `PENDIENTE P17d` – Si el pivote queda **más lejos** que el stop fijo (el stop quedaría dentro del retroceso), ¿se
+    descarta el trade?
 - **Take profit (P18):** fijo a **2:1** (2 veces la distancia entre entrada y stop).
   - Los objetivos de rangos y niveles dan la **dirección/narrativa**, no el take profit.
 - **Break-even / parciales (P19):** **nunca**. El stop no se mueve y no se toman parciales.
@@ -228,10 +231,19 @@ Solo las **dos primeras horas de la sesión americana: 09:30 – 11:30 ET** (P16
 
 ## 7. Gestión de riesgo
 
-- `PENDIENTE P21` – Capital de la cuenta.
-- `PENDIENTE P22` – Riesgo por trade (en $ o % de cuenta) y número de contratos.
-- `PENDIENTE P23` – Máximo de trades por día y pérdida diaria máxima.
-- `PENDIENTE P24` – Días / eventos que no se operan (FOMC, CPI, NFP, festivos, etc.).
+- **Cuenta (P21):** cuenta de fondeo, **prueba de 50.000 USD**.
+  - `PENDIENTE P21b` – Reglas de la prueba: objetivo de ganancia, drawdown máximo (trailing o estático) y límite de
+    pérdida diaria de la firma, para verificar que el plan las respeta.
+- **Riesgo por trade (P22):** **150 USD** (1R = 150 USD), en todos los trades, también los que van contra la
+  dirección de fondo.
+- **Límites diarios (P23):**
+  - Máximo **3 trades** por día.
+  - Pérdida máxima diaria: **2R (300 USD)**. Al llegar, no se opera más ese día.
+- **Días y noticias (P24):**
+  - **No se opera en feriados de EE. UU.**
+  - Con noticias: **no se opera desde 5 minutos antes** de la noticia, y se vuelve a operar cuando el precio
+    **recupera la estabilidad** (evaluado a ojo, discrecional).
+  - `PENDIENTE P24b` – ¿Qué noticias cuentan? (ej. solo alto impacto de EE. UU.: CPI, NFP, FOMC, PPI, etc.).
 
 ---
 
@@ -265,3 +277,6 @@ Solo las **dos primeras horas de la sesión americana: 09:30 – 11:30 ET** (P16
 | 2026-11-19 | P11: Asia 18:00–03:00, Europa 03:00–09:30, América 09:30–16:00 (ET). P16: entradas solo 09:30–11:30 ET. |
 | 2026-11-19 | P12d: la orden limit dura solo durante la vela de confirmación. P12c: volumen evaluado a ojo contra el volumen del día. |
 | 2026-11-19 | P17: stop en el último pivote. P18: take profit fijo 2:1. P19: sin break-even ni parciales. P20: cierre manual al final de la sesión americana si sigue abierto. |
+| 2026-11-19 | P17b: stop de distancia fija, siempre más allá del último pivote. |
+| 2026-11-19 | P21: cuenta de fondeo, prueba 50k. P22/P9b: 150 USD por trade, siempre. P23: máximo 3 trades y 2R de pérdida diaria. |
+| 2026-11-19 | P24: no se opera feriados de EE. UU.; con noticias, pausa desde 5 min antes hasta que el precio se estabilice (a ojo). |
