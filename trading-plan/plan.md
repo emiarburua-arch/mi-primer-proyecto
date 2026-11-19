@@ -154,7 +154,7 @@ Se marcan máximo y mínimo de cada sesión.
 Con sesgo/narrativa **alcista**:
 1. El precio barre el **mínimo de la sesión Asia o Europa**.
 2. Aparece una **vela de confirmación** (ver 5.3).
-3. Entrada → en la **vela de confirmación** (ver 5.3 y 5.5).
+3. Entrada → en la **vela de confirmación** (ver 5.3 y 5.4).
 - `PENDIENTE P12b` – ¿La entrada tipo 1 también exige la estructura de 5.3 (máximos y mínimos más altos) después de la
   barrida, o solo la secuencia vela verde + ruptura de su máximo?
 
@@ -166,7 +166,7 @@ Con la continuación ya iniciada en dirección deseada:
 1. Se espera un **retroceso**. `PENDIENTE P13` – definir retroceso (ej. ¿N velas contrarias?, ¿hasta qué nivel?: 50% del impulso, nivel de sesión, mitad de la vela anterior…).
 2. Se espera una **nueva vela en dirección deseada**.
 3. Se espera la **vela de confirmación** (5.3).
-4. Entrada → ver 5.5.
+4. Entrada → ver 5.4.
 - `PENDIENTE P14` – ¿Cómo se define "continuación comenzada"? (ej. ya hubo entrada tipo 1, o rompió un máximo de sesión, etc.).
 
 ### 5.3 Vela de confirmación
@@ -184,13 +184,13 @@ la vela siguiente que rompe su mínimo es la confirmación.
 - **Sin confirmación (P15c):** si la vela siguiente **no** rompe el máximo de la vela verde, se espera una **nueva vela
   verde** con su confirmación, **siempre que la estructura siga siendo válida**.
 
-### 5.5 Tipo de orden de entrada (P12)
+### 5.4 Tipo de orden de entrada (P12)
 
 Las entradas son **siempre con orden stop limit**, a **1 tick** de la rotura de la vela de confirmación.
 
 - `PENDIENTE P12-precio` – Confirmar el precio exacto con un ejemplo (ver conversación).
 
-### 5.4 Ventana horaria de ejecución
+### 5.5 Ventana horaria de ejecución
 
 `PENDIENTE P16` – ¿En qué horario se buscan entradas? (ej. solo 09:30–11:30, toda la sesión americana, también Londres).
 
