@@ -1,6 +1,6 @@
 # Trading Plan – Micro E-mini Nasdaq-100 (MNQ)
 
-> Estado: **BORRADOR v0.3** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
+> Estado: **BORRADOR v0.4** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
 > Horarios en hora de Nueva York (ET).
 
 ---
@@ -25,8 +25,19 @@ Se aplica igual en cualquier temporalidad (D, 4h, 60m).
 
 | Condición de B | Sesgo para C | Objetivo |
 |---|---|---|
-| `B.close > A.high` | Alcista (continuación) | `PENDIENTE P1` |
-| `B.close < A.low` | Bajista (continuación) | `PENDIENTE P1` |
+| `B.close > A.high` | Alcista (continuación) | Proyección del rango de A (ver abajo) |
+| `B.close < A.low` | Bajista (continuación) | Proyección del rango de A (ver abajo) |
+
+**Objetivos de continuación (P1) – solo como referencia.** Se proyecta el tamaño del rango de A (`R = A.high − A.low`)
+desde el extremo roto:
+
+| Referencia | Alcista | Bajista |
+|---|---|---|
+| 100% | `A.high + 1·R` | `A.low − 1·R` |
+| 200% | `A.high + 2·R` | `A.low − 2·R` |
+| 300% | `A.high + 3·R` | `A.low − 3·R` |
+
+Si el precio continúa, se toma la siguiente proyección (200%, 300%, etc.).
 
 ### 1.2 Escenario REVERSIÓN (B *activa el rango* de A)
 
@@ -62,7 +73,7 @@ Un rango activado **no se borra** porque la vela C no llegue al objetivo. La his
 
 - **Inside bar (P2):** B queda dentro de A sin perforar ningún extremo → **neutral**. Se observa cómo se mueve la
   siguiente vela.
-  - `PENDIENTE P2b` – Esa siguiente vela, ¿se compara contra el rango de **A** (la vela madre) o contra el de **B** (la inside bar)?
+  - `PENDIENTE P2b` – Confirmar: esa siguiente vela, ¿se compara contra el rango de **A** (la vela madre) o contra el de **B** (la inside bar)?
 - **Outside bar (P3):** B perfora **ambos** extremos de A y cierra dentro → **no activa ningún rango**.
 
 ---
@@ -143,8 +154,7 @@ Se marcan máximo y mínimo de cada sesión.
 Con sesgo/narrativa **alcista**:
 1. El precio barre el **mínimo de la sesión Asia o Europa**.
 2. Aparece una **vela de confirmación** (ver 5.3).
-3. Entrada → en la **vela de confirmación** (ver 5.3). `PENDIENTE P12` – confirmar precio exacto (propuesta: orden stop
-   1 tick por encima del máximo de la vela verde).
+3. Entrada → en la **vela de confirmación** (ver 5.3 y 5.5).
 - `PENDIENTE P12b` – ¿La entrada tipo 1 también exige la estructura de 5.3 (máximos y mínimos más altos) después de la
   barrida, o solo la secuencia vela verde + ruptura de su máximo?
 
@@ -156,7 +166,7 @@ Con la continuación ya iniciada en dirección deseada:
 1. Se espera un **retroceso**. `PENDIENTE P13` – definir retroceso (ej. ¿N velas contrarias?, ¿hasta qué nivel?: 50% del impulso, nivel de sesión, mitad de la vela anterior…).
 2. Se espera una **nueva vela en dirección deseada**.
 3. Se espera la **vela de confirmación** (5.3).
-4. Entrada → igual que P12.
+4. Entrada → ver 5.5.
 - `PENDIENTE P14` – ¿Cómo se define "continuación comenzada"? (ej. ya hubo entrada tipo 1, o rompió un máximo de sesión, etc.).
 
 ### 5.3 Vela de confirmación
@@ -171,10 +181,14 @@ Con la continuación ya iniciada en dirección deseada:
 **Venta:** inverso. Máximos y mínimos más bajos (L2 < L1, H2 < H1); en el retroceso, primera vela que cierra en rojo;
 la vela siguiente que rompe su mínimo es la confirmación.
 
-- `PENDIENTE P15b` – ¿Cómo se identifica un máximo/mínimo de la estructura (swing)? (ej. discrecional, o un máximo con
-  N velas más bajas a cada lado).
-- `PENDIENTE P15c` – Si la vela inmediatamente siguiente **no** rompe el máximo de la vela verde, ¿se cancela, o se
-  espera a otra vela verde mientras L2 no se pierda?
+- **Sin confirmación (P15c):** si la vela siguiente **no** rompe el máximo de la vela verde, se espera una **nueva vela
+  verde** con su confirmación, **siempre que la estructura siga siendo válida**.
+
+### 5.5 Tipo de orden de entrada (P12)
+
+Las entradas son **siempre con orden stop limit**, a **1 tick** de la rotura de la vela de confirmación.
+
+- `PENDIENTE P12-precio` – Confirmar el precio exacto con un ejemplo (ver conversación).
 
 ### 5.4 Ventana horaria de ejecución
 
@@ -218,3 +232,6 @@ la vela siguiente que rompe su mínimo es la confirmación.
 | 2026-11-19 | P5b: cada semana se buscan nuevos rangos y objetivos; rangos importantes no desactivados pueden mantenerse. |
 | 2026-11-19 | P7: manipular = activar un rango sobre niveles semanales/lunes; puede darse en varias velas y varias perforaciones; profundidad discrecional. |
 | 2026-11-19 | P15: confirmación = estructura de máximos/mínimos más altos, primera vela verde en el retroceso, vela siguiente que rompe su máximo. |
+| 2026-11-19 | P1: objetivos de continuación = proyecciones del rango de A (100%, 200%, 300%…), solo como referencia. |
+| 2026-11-19 | P15c: sin confirmación se espera nueva vela verde + confirmación mientras la estructura siga válida. |
+| 2026-11-19 | P12: entradas siempre con orden stop limit a 1 tick de la rotura de la vela de confirmación. |
