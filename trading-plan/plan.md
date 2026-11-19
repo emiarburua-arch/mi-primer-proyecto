@@ -55,7 +55,7 @@ Un rango activado **no se borra** porque la vela C no llegue al objetivo. La his
   - Mientras tanto, cada invalidación discrecional se registra en el diario (fecha, temporalidad, rango, motivo) para
     poder comparar después con la regla objetiva.
 - `PENDIENTE P5b` – ¿Los rangos activos **caducan** después de cierto tiempo / número de velas, o quedan activos indefinidamente?
-- `PENDIENTE P5c` – Si hay rangos activos con **objetivos en direcciones opuestas**, ¿cuál tiene prioridad? (ej. el de mayor temporalidad, el más reciente, el objetivo más cercano).
+- **Prioridad (P5c):** si hay rangos activos con objetivos opuestos, manda el de **mayor temporalidad** (ver sección 3.1).
 
 ### 1.4 Casos sin definir
 
@@ -94,11 +94,20 @@ Si el precio **manipula un extremo** (semanal o del lunes), lo probable es que v
 
 Orden de lectura: **Semanal → Diario → 4h → 60m → 5m (ejecución)**.
 
-- `PENDIENTE P9` – Regla de combinación. Propuesta a validar:
-  - La temporalidad mayor con sesgo activo define la **dirección y el objetivo** de la narrativa.
-  - Las temporalidades menores se usan para encontrar el **momento**: se opera cuando su modelo A-B-C apunta en la
-    dirección del objetivo mayor.
-  - Si una temporalidad menor contradice a la mayor → ¿se espera, se opera igual, o se cambia de dirección?
+### 3.1 Jerarquía de temporalidades (P5c)
+
+Cuanto **mayor** la temporalidad, más **de fondo** es la dirección que marca su rango activo:
+
+- **Diario** = un trasatlántico: la dirección cambia lento y pesa mucho. Marca la dirección y el objetivo **de la semana**.
+- **4h / 60m** = la dirección y los objetivos intermedios dentro de esa semana.
+- **5m** = una lancha rápida: el sesgo cambia rápido. Es el gráfico **de operativa** (ejecución).
+
+Si hay rangos activos con objetivos opuestos, **manda el de mayor temporalidad** como dirección de fondo.
+
+- `PENDIENTE P9` – ¿Se permiten entradas en 5m **en contra** de la dirección de fondo? Opciones:
+  - (a) No, solo se opera a favor de la temporalidad mayor.
+  - (b) Sí, pero solo hasta un objetivo de temporalidad menor (ej. hasta el objetivo de 60m) y con menor riesgo.
+  - (c) Se opera a favor de la temporalidad intermedia más cercana (60m) aunque contradiga al diario.
 - `PENDIENTE P10` – ¿Qué pasa cuando la temporalidad mayor ya alcanzó su objetivo? (ej. diario reversión alcista ya tocó `A.high`).
 
 ---
@@ -177,4 +186,5 @@ Con la continuación ya iniciada en dirección deseada:
 | 2026-11-19 | P4 cerrado: activar un rango = B perfora un extremo de A, vuelve a ingresar y cierra dentro de A; objetivo = extremo contrario de A. |
 | 2026-11-19 | Los rangos activados quedan activos aunque C no llegue al objetivo; pueden convivir varios rangos activos. |
 | 2026-11-19 | P5: la invalidación de un rango activo es discrecional (el mercado continuó sin darle importancia). Se registra en el diario; queda pendiente una regla objetiva que la aproxime. |
+| 2026-11-19 | P5c: a mayor temporalidad, dirección más de fondo (trasatlántico vs lancha). Se opera en 5m; las temporalidades mayores dan dirección y objetivo de la semana. |
 | 2026-11-18 | Entradas en 5m: barrida de máx/mín de Asia o Europa + vela de confirmación; o retroceso en continuación + vela en dirección + confirmación. |
