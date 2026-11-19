@@ -1,6 +1,6 @@
 # Trading Plan – Micro E-mini Nasdaq-100 (MNQ)
 
-> Estado: **BORRADOR v0.2** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
+> Estado: **BORRADOR v0.3** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
 > Horarios en hora de Nueva York (ET).
 
 ---
@@ -54,13 +54,16 @@ Un rango activado **no se borra** porque la vela C no llegue al objetivo. La his
     distancia recorrida en contra, cierre fuera de A por el lado activado, o N velas sin avanzar hacia el objetivo).
   - Mientras tanto, cada invalidación discrecional se registra en el diario (fecha, temporalidad, rango, motivo) para
     poder comparar después con la regla objetiva.
-- `PENDIENTE P5b` – ¿Los rangos activos **caducan** después de cierto tiempo / número de velas, o quedan activos indefinidamente?
+- **Renovación semanal (P5b):** cada semana se buscan **nuevos rangos y objetivos**. Un rango de semanas anteriores
+  que sea importante y **no haya sido desactivado** puede mantenerse en la narrativa (decisión discrecional).
 - **Prioridad (P5c):** si hay rangos activos con objetivos opuestos, manda el de **mayor temporalidad** (ver sección 3.1).
 
-### 1.4 Casos sin definir
+### 1.4 Casos especiales
 
-- `PENDIENTE P2` – B cierra dentro de A **sin** haber perforado ningún extremo (inside bar).
-- `PENDIENTE P3` – B perfora **ambos** extremos de A y cierra dentro (outside bar): ¿activa los dos rangos, ninguno, o el último perforado?
+- **Inside bar (P2):** B queda dentro de A sin perforar ningún extremo → **neutral**. Se observa cómo se mueve la
+  siguiente vela.
+  - `PENDIENTE P2b` – Esa siguiente vela, ¿se compara contra el rango de **A** (la vela madre) o contra el de **B** (la inside bar)?
+- **Outside bar (P3):** B perfora **ambos** extremos de A y cierra dentro → **no activa ningún rango**.
 
 ---
 
@@ -85,7 +88,15 @@ Un rango activado **no se borra** porque la vela C no llegue al objetivo. La his
 
 Si el precio **manipula un extremo** (semanal o del lunes), lo probable es que vaya hacia el extremo opuesto.
 
-- `PENDIENTE P7` – Definición exacta de "manipular": ¿perfora el nivel y una vela de 60m cierra de vuelta dentro? ¿Otra temporalidad? ¿En cuántas velas máximo debe volver?
+**Manipular (P7)** es el mismo concepto que **activar un rango**, aplicado a los niveles semanales y del lunes, con dos
+diferencias:
+
+- **No hace falta una sola vela:** puede ser un **conjunto de velas** que se mantiene del otro lado del nivel.
+- Puede haber **varias perforaciones**: ej. una caída perfora el nivel, una nueva caída lo vuelve a perforar, y luego
+  el precio sale al alza de vuelta dentro del rango → manipulación del extremo inferior, objetivo el extremo superior.
+- **Cuánto perforó** se define de forma **discrecional**.
+- `PENDIENTE P7b` – ¿En qué temporalidad se lee la vuelta dentro del rango (60m, 4h)? ¿Qué confirma que la manipulación
+  terminó: un cierre de vela de nuevo dentro del rango?
 - `PENDIENTE P8` – ¿Si PWH/PWL y MH/ML dan lecturas opuestas, cuál manda?
 
 ---
@@ -104,11 +115,12 @@ Cuanto **mayor** la temporalidad, más **de fondo** es la dirección que marca s
 
 Si hay rangos activos con objetivos opuestos, **manda el de mayor temporalidad** como dirección de fondo.
 
-- `PENDIENTE P9` – ¿Se permiten entradas en 5m **en contra** de la dirección de fondo? Opciones:
-  - (a) No, solo se opera a favor de la temporalidad mayor.
-  - (b) Sí, pero solo hasta un objetivo de temporalidad menor (ej. hasta el objetivo de 60m) y con menor riesgo.
-  - (c) Se opera a favor de la temporalidad intermedia más cercana (60m) aunque contradiga al diario.
-- `PENDIENTE P10` – ¿Qué pasa cuando la temporalidad mayor ya alcanzó su objetivo? (ej. diario reversión alcista ya tocó `A.high`).
+- **Operar en contra del fondo (P9):** **permitido**, pero solo hasta un **objetivo de temporalidad menor** (ej. el
+  objetivo de 60m) y con **menor riesgo**.
+  - `PENDIENTE P9b` – ¿Cuánto menos riesgo? (ej. la mitad del riesgo normal).
+- **Objetivo alcanzado (P10):** cuando una temporalidad alcanza su objetivo, se **pasa al siguiente objetivo**.
+  - `PENDIENTE P10b` – ¿Cómo se elige el "siguiente objetivo"? (ej. el objetivo de otro rango activo de la misma
+    temporalidad, el siguiente nivel semanal/lunes, o el de la temporalidad inmediatamente inferior).
 
 ---
 
@@ -131,7 +143,10 @@ Se marcan máximo y mínimo de cada sesión.
 Con sesgo/narrativa **alcista**:
 1. El precio barre el **mínimo de la sesión Asia o Europa**.
 2. Aparece una **vela de confirmación** (ver 5.3).
-3. Entrada → `PENDIENTE P12` (cierre de la vela de confirmación, o ruptura de su máximo, u orden límite).
+3. Entrada → en la **vela de confirmación** (ver 5.3). `PENDIENTE P12` – confirmar precio exacto (propuesta: orden stop
+   1 tick por encima del máximo de la vela verde).
+- `PENDIENTE P12b` – ¿La entrada tipo 1 también exige la estructura de 5.3 (máximos y mínimos más altos) después de la
+  barrida, o solo la secuencia vela verde + ruptura de su máximo?
 
 Bajista: inverso (barrida del máximo de Asia o Europa).
 
@@ -146,11 +161,20 @@ Con la continuación ya iniciada en dirección deseada:
 
 ### 5.3 Vela de confirmación
 
-`PENDIENTE P15` – Definición exacta. Opciones típicas:
-- Vela que cierra a favor (alcista: `close > open`).
-- Vela que cierra por encima del máximo de la vela anterior (aplicando el mismo modelo A-B-C en 5m).
-- Vela que cierra de vuelta dentro del rango de sesión barrido.
-- Tamaño mínimo de cuerpo (% del rango de la vela).
+**Ventana de oportunidad + confirmación (P15).** Ejemplo para **compra**:
+
+1. **Estructura:** impulso que deja un máximo (H1) → retroceso que deja un mínimo (L1) → nuevo impulso con un máximo
+   más alto (H2 > H1) → retroceso con un mínimo más alto (L2 > L1).
+2. En ese retroceso (L2), la **primera vela que cierra en verde** (`close > open`) es la **vela de referencia**.
+3. La **vela siguiente** que **rompe el máximo** de esa vela verde es la **vela de confirmación** → entrada.
+
+**Venta:** inverso. Máximos y mínimos más bajos (L2 < L1, H2 < H1); en el retroceso, primera vela que cierra en rojo;
+la vela siguiente que rompe su mínimo es la confirmación.
+
+- `PENDIENTE P15b` – ¿Cómo se identifica un máximo/mínimo de la estructura (swing)? (ej. discrecional, o un máximo con
+  N velas más bajas a cada lado).
+- `PENDIENTE P15c` – Si la vela inmediatamente siguiente **no** rompe el máximo de la vela verde, ¿se cancela, o se
+  espera a otra vela verde mientras L2 no se pierda?
 
 ### 5.4 Ventana horaria de ejecución
 
@@ -182,9 +206,15 @@ Con la continuación ya iniciada en dirección deseada:
 |---|---|
 | 2026-11-18 | Sesgo por modelo de velas A-B-C (continuación si B cierra fuera de A; reversión si B activa un extremo de A y cierra dentro, objetivo el extremo opuesto). |
 | 2026-11-18 | Las temporalidades no necesitan estar alineadas: se lee una narrativa. |
+| 2026-11-18 | Entradas en 5m: barrida de máx/mín de Asia o Europa + vela de confirmación; o retroceso en continuación + vela en dirección + confirmación. |
 | 2026-11-18 | Niveles semanales (PWH/PWL) y del lunes (MH/ML) se usan para ubicar el precio y detectar manipulación de un extremo → objetivo el extremo opuesto. |
 | 2026-11-19 | P4 cerrado: activar un rango = B perfora un extremo de A, vuelve a ingresar y cierra dentro de A; objetivo = extremo contrario de A. |
 | 2026-11-19 | Los rangos activados quedan activos aunque C no llegue al objetivo; pueden convivir varios rangos activos. |
 | 2026-11-19 | P5: la invalidación de un rango activo es discrecional (el mercado continuó sin darle importancia). Se registra en el diario; queda pendiente una regla objetiva que la aproxime. |
 | 2026-11-19 | P5c: a mayor temporalidad, dirección más de fondo (trasatlántico vs lancha). Se opera en 5m; las temporalidades mayores dan dirección y objetivo de la semana. |
-| 2026-11-18 | Entradas en 5m: barrida de máx/mín de Asia o Europa + vela de confirmación; o retroceso en continuación + vela en dirección + confirmación. |
+| 2026-11-19 | P9: se permite operar en 5m contra la dirección de fondo, solo hasta un objetivo de temporalidad menor y con menor riesgo. |
+| 2026-11-19 | P10: al alcanzar un objetivo se pasa al siguiente objetivo. |
+| 2026-11-19 | P2: inside bar = neutral, se observa la siguiente vela. P3: outside bar no activa ningún rango. |
+| 2026-11-19 | P5b: cada semana se buscan nuevos rangos y objetivos; rangos importantes no desactivados pueden mantenerse. |
+| 2026-11-19 | P7: manipular = activar un rango sobre niveles semanales/lunes; puede darse en varias velas y varias perforaciones; profundidad discrecional. |
+| 2026-11-19 | P15: confirmación = estructura de máximos/mínimos más altos, primera vela verde en el retroceso, vela siguiente que rompe su máximo. |
