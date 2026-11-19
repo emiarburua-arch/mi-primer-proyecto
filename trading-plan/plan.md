@@ -1,6 +1,6 @@
 # Trading Plan – Micro E-mini Nasdaq-100 (MNQ)
 
-> Estado: **BORRADOR v0.5** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
+> Estado: **BORRADOR v0.6** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
 > Horarios en hora de Nueva York (ET).
 
 ---
@@ -139,10 +139,10 @@ Si hay rangos activos con objetivos opuestos, **manda el de mayor temporalidad**
 
 ## 4. Niveles de sesión (en 5m)
 
-| Sesión | Horario (ET) – `PENDIENTE P11` confirmar |
+| Sesión | Horario (ET) |
 |---|---|
 | Asia | 18:00 – 03:00 |
-| Europa | 03:00 – 08:00 |
+| Europa | 03:00 – 09:30 |
 | América | 09:30 – 16:00 |
 
 Se marcan máximo y mínimo de cada sesión.
@@ -155,25 +155,27 @@ Se marcan máximo y mínimo de cada sesión.
 
 Con sesgo/narrativa **alcista**:
 1. El precio barre el **mínimo de la sesión Asia o Europa**.
-2. Se **confirma el giro**. `PENDIENTE P12c` – ¿qué confirma el giro? (ej. el precio vuelve a cerrar por encima del
-   mínimo barrido, o rompe el último máximo previo a la barrida).
-3. Se espera un **retroceso**.
+2. Se **confirma el giro**: el precio **reingresa por encima del nivel barrido** con una **subida de volumen** (P12c).
+   - `PENDIENTE P12c-vol` – ¿Cómo se mide la subida de volumen? (ej. discrecional, o volumen de la vela mayor al
+     promedio de las últimas N velas).
+3. Se espera un **retroceso** (alcanza con una vela en contra).
 4. Al **cierre de la primera vela verde** del retroceso, se espera la **confirmación** (la vela siguiente rompe su máximo).
 5. Entrada (ver 5.4).
 
 **En el giro no hace falta estructura** de máximos y mínimos más altos (P12b). La estructura de 5.3 aplica a la
 entrada tipo 2.
 
-Bajista: inverso (barrida del máximo de Asia o Europa, primera vela roja del retroceso, ruptura de su mínimo).
+Bajista: inverso (barrida del máximo de Asia o Europa, reingreso por debajo del nivel con subida de volumen,
+primera vela roja del retroceso, ruptura de su mínimo).
 
 ### 5.2 Entrada tipo 2 – Retroceso en continuación
 
 Con la continuación ya iniciada en dirección deseada:
-1. Se espera un **retroceso**. `PENDIENTE P13` – definir retroceso (ej. ¿N velas contrarias?, ¿hasta qué nivel?: 50% del impulso, nivel de sesión, mitad de la vela anterior…).
+1. Se espera un **retroceso**: alcanza con **una vela** en contra (P13).
 2. Se espera una **nueva vela en dirección deseada**.
 3. Se espera la **vela de confirmación** (5.3).
 4. Entrada → ver 5.4.
-- `PENDIENTE P14` – ¿Cómo se define "continuación comenzada"? (ej. ya hubo entrada tipo 1, o rompió un máximo de sesión, etc.).
+- La continuación se lee con la **estructura** (ver 5.3).
 
 ### 5.3 Vela de confirmación
 
@@ -192,16 +194,23 @@ la vela siguiente que rompe su mínimo es la confirmación.
 
 ### 5.4 Tipo de orden de entrada (P12)
 
-Las entradas son **siempre con orden stop limit**, colocada **1 tick por debajo del máximo** de la vela verde de
-referencia (compra) o **1 tick por encima del mínimo** de la vela roja de referencia (venta).
+Igual para la entrada tipo 1 (giro) y tipo 2 (continuación):
 
-Ejemplo compra: máximo de la vela verde = 21000.00 → orden en **20999.75**.
+1. Se espera que la **vela de confirmación rompa** el máximo de la vela verde de referencia (compra) o el mínimo de la
+   vela roja de referencia (venta).
+2. **Recién después de la rotura**, se coloca una **orden limit**:
+   - Compra: **1 tick por debajo del máximo** de la vela verde.
+   - Venta: **1 tick por encima del mínimo** de la vela roja.
+3. La entrada se ejecuta si el precio **retrocede** hasta ese precio.
 
-- `PENDIENTE P12-límite` – ¿El precio límite es el mismo que el de activación, o queda N ticks más lejos?
+Ejemplo compra: máximo de la vela verde = 21000.00 → la vela de confirmación lo rompe → orden limit en **20999.75**.
+
+- `PENDIENTE P12d` – ¿Cuándo se **cancela** la orden limit si el precio no vuelve? (ej. si toca el objetivo antes, si
+  pasan N velas, al terminar la ventana horaria, si la estructura se invalida).
 
 ### 5.5 Ventana horaria de ejecución
 
-`PENDIENTE P16` – ¿En qué horario se buscan entradas? (ej. solo 09:30–11:30, toda la sesión americana, también Londres).
+Solo las **dos primeras horas de la sesión americana: 09:30 – 11:30 ET** (P16).
 
 ---
 
@@ -247,3 +256,7 @@ Ejemplo compra: máximo de la vela verde = 21000.00 → orden en **20999.75**.
 | 2026-11-19 | P2b: la inside bar no ocupa lugar en la secuencia; la vela siguiente toma su rol (B o C). |
 | 2026-11-19 | P12: orden stop limit 1 tick por debajo del máximo de la vela verde (compra) / 1 tick por encima del mínimo de la vela roja (venta). |
 | 2026-11-19 | P12b: en la entrada por giro no hace falta estructura; giro confirmado → retroceso → primera vela verde → confirmación → entrada. |
+| 2026-11-19 | P12 corregido: tras la rotura de la vela de confirmación se coloca orden limit 1 tick por debajo del máximo de la vela verde (compra) / por encima del mínimo de la roja (venta). |
+| 2026-11-19 | P12c: giro confirmado = reingreso por encima/debajo del nivel barrido con subida de volumen. |
+| 2026-11-19 | P13: retroceso = alcanza con una vela en contra. P14: la continuación se lee con la estructura. |
+| 2026-11-19 | P11: Asia 18:00–03:00, Europa 03:00–09:30, América 09:30–16:00 (ET). P16: entradas solo 09:30–11:30 ET. |
