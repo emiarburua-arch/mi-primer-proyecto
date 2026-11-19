@@ -1,6 +1,6 @@
 # Trading Plan – Micro E-mini Nasdaq-100 (MNQ)
 
-> Estado: **BORRADOR v0.4** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
+> Estado: **BORRADOR v0.5** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
 > Horarios en hora de Nueva York (ET).
 
 ---
@@ -73,7 +73,9 @@ Un rango activado **no se borra** porque la vela C no llegue al objetivo. La his
 
 - **Inside bar (P2):** B queda dentro de A sin perforar ningún extremo → **neutral**. Se observa cómo se mueve la
   siguiente vela.
-  - `PENDIENTE P2b` – Confirmar: esa siguiente vela, ¿se compara contra el rango de **A** (la vela madre) o contra el de **B** (la inside bar)?
+  - **P2b:** la inside bar **no ocupa lugar** en la secuencia A-B-C; la vela siguiente toma su rol:
+    - Si la inside bar es la vela **B** (dentro de A) → la siguiente vela pasa a ser la vela **B** (se compara contra A).
+    - Si la inside bar es la vela **C** (dentro de B) → la siguiente vela pasa a ser la vela **C**.
 - **Outside bar (P3):** B perfora **ambos** extremos de A y cierra dentro → **no activa ningún rango**.
 
 ---
@@ -149,16 +151,20 @@ Se marcan máximo y mínimo de cada sesión.
 
 ## 5. Gatillos de entrada (5m)
 
-### 5.1 Entrada tipo 1 – Barrida de sesión
+### 5.1 Entrada tipo 1 – Giro tras barrida de sesión
 
 Con sesgo/narrativa **alcista**:
 1. El precio barre el **mínimo de la sesión Asia o Europa**.
-2. Aparece una **vela de confirmación** (ver 5.3).
-3. Entrada → en la **vela de confirmación** (ver 5.3 y 5.4).
-- `PENDIENTE P12b` – ¿La entrada tipo 1 también exige la estructura de 5.3 (máximos y mínimos más altos) después de la
-  barrida, o solo la secuencia vela verde + ruptura de su máximo?
+2. Se **confirma el giro**. `PENDIENTE P12c` – ¿qué confirma el giro? (ej. el precio vuelve a cerrar por encima del
+   mínimo barrido, o rompe el último máximo previo a la barrida).
+3. Se espera un **retroceso**.
+4. Al **cierre de la primera vela verde** del retroceso, se espera la **confirmación** (la vela siguiente rompe su máximo).
+5. Entrada (ver 5.4).
 
-Bajista: inverso (barrida del máximo de Asia o Europa).
+**En el giro no hace falta estructura** de máximos y mínimos más altos (P12b). La estructura de 5.3 aplica a la
+entrada tipo 2.
+
+Bajista: inverso (barrida del máximo de Asia o Europa, primera vela roja del retroceso, ruptura de su mínimo).
 
 ### 5.2 Entrada tipo 2 – Retroceso en continuación
 
@@ -186,9 +192,12 @@ la vela siguiente que rompe su mínimo es la confirmación.
 
 ### 5.4 Tipo de orden de entrada (P12)
 
-Las entradas son **siempre con orden stop limit**, a **1 tick** de la rotura de la vela de confirmación.
+Las entradas son **siempre con orden stop limit**, colocada **1 tick por debajo del máximo** de la vela verde de
+referencia (compra) o **1 tick por encima del mínimo** de la vela roja de referencia (venta).
 
-- `PENDIENTE P12-precio` – Confirmar el precio exacto con un ejemplo (ver conversación).
+Ejemplo compra: máximo de la vela verde = 21000.00 → orden en **20999.75**.
+
+- `PENDIENTE P12-límite` – ¿El precio límite es el mismo que el de activación, o queda N ticks más lejos?
 
 ### 5.5 Ventana horaria de ejecución
 
@@ -235,3 +244,6 @@ Las entradas son **siempre con orden stop limit**, a **1 tick** de la rotura de 
 | 2026-11-19 | P1: objetivos de continuación = proyecciones del rango de A (100%, 200%, 300%…), solo como referencia. |
 | 2026-11-19 | P15c: sin confirmación se espera nueva vela verde + confirmación mientras la estructura siga válida. |
 | 2026-11-19 | P12: entradas siempre con orden stop limit a 1 tick de la rotura de la vela de confirmación. |
+| 2026-11-19 | P2b: la inside bar no ocupa lugar en la secuencia; la vela siguiente toma su rol (B o C). |
+| 2026-11-19 | P12: orden stop limit 1 tick por debajo del máximo de la vela verde (compra) / 1 tick por encima del mínimo de la vela roja (venta). |
+| 2026-11-19 | P12b: en la entrada por giro no hace falta estructura; giro confirmado → retroceso → primera vela verde → confirmación → entrada. |
