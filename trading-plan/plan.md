@@ -1,6 +1,6 @@
 # Trading Plan – Micro E-mini Nasdaq-100 (MNQ)
 
-> Estado: **BORRADOR v0.6** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
+> Estado: **BORRADOR v0.7** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
 > Horarios en hora de Nueva York (ET).
 
 ---
@@ -156,8 +156,7 @@ Se marcan máximo y mínimo de cada sesión.
 Con sesgo/narrativa **alcista**:
 1. El precio barre el **mínimo de la sesión Asia o Europa**.
 2. Se **confirma el giro**: el precio **reingresa por encima del nivel barrido** con una **subida de volumen** (P12c).
-   - `PENDIENTE P12c-vol` – ¿Cómo se mide la subida de volumen? (ej. discrecional, o volumen de la vela mayor al
-     promedio de las últimas N velas).
+   - La subida de volumen se evalúa **a ojo**, comparando con el volumen que se viene teniendo **en el día** (discrecional).
 3. Se espera un **retroceso** (alcanza con una vela en contra).
 4. Al **cierre de la primera vela verde** del retroceso, se espera la **confirmación** (la vela siguiente rompe su máximo).
 5. Entrada (ver 5.4).
@@ -205,8 +204,8 @@ Igual para la entrada tipo 1 (giro) y tipo 2 (continuación):
 
 Ejemplo compra: máximo de la vela verde = 21000.00 → la vela de confirmación lo rompe → orden limit en **20999.75**.
 
-- `PENDIENTE P12d` – ¿Cuándo se **cancela** la orden limit si el precio no vuelve? (ej. si toca el objetivo antes, si
-  pasan N velas, al terminar la ventana horaria, si la estructura se invalida).
+- **Vigencia (P12d):** la orden limit dura **solo durante la vela de confirmación**. Si no se ejecuta antes del cierre
+  de esa vela, se cancela.
 
 ### 5.5 Ventana horaria de ejecución
 
@@ -216,10 +215,14 @@ Solo las **dos primeras horas de la sesión americana: 09:30 – 11:30 ET** (P16
 
 ## 6. Gestión del trade
 
-- **Stop loss** – `PENDIENTE P17` (ej. debajo de la mecha de la barrida ± N ticks, debajo de la vela de confirmación).
-- **Take profit** – `PENDIENTE P18` (ej. siguiente nivel de la narrativa: extremo opuesto de sesión, de A, del lunes o de la semana; ¿R mínimo exigido para tomar el trade?).
-- **Break-even / parciales** – `PENDIENTE P19`.
-- **Salida por tiempo** – `PENDIENTE P20` (ej. cerrar todo a las 15:55).
+- **Stop loss (P17):** debajo del **último retroceso (último pivote)** en compras; encima del último pivote en ventas.
+  - `PENDIENTE P17b` – ¿Exactamente en el pivote o N ticks más allá?
+- **Take profit (P18):** fijo a **2:1** (2 veces la distancia entre entrada y stop).
+  - Los objetivos de rangos y niveles dan la **dirección/narrativa**, no el take profit.
+- **Break-even / parciales (P19):** **nunca**. El stop no se mueve y no se toman parciales.
+- **Salida (P20):** una vez colocado, el trade se cierra solo por stop o target. **Única excepción:** si llega el
+  **final de la sesión americana (16:00 ET)** con el trade abierto, se cierra manual. No se dejan posiciones para el
+  día siguiente.
 
 ---
 
@@ -260,3 +263,5 @@ Solo las **dos primeras horas de la sesión americana: 09:30 – 11:30 ET** (P16
 | 2026-11-19 | P12c: giro confirmado = reingreso por encima/debajo del nivel barrido con subida de volumen. |
 | 2026-11-19 | P13: retroceso = alcanza con una vela en contra. P14: la continuación se lee con la estructura. |
 | 2026-11-19 | P11: Asia 18:00–03:00, Europa 03:00–09:30, América 09:30–16:00 (ET). P16: entradas solo 09:30–11:30 ET. |
+| 2026-11-19 | P12d: la orden limit dura solo durante la vela de confirmación. P12c: volumen evaluado a ojo contra el volumen del día. |
+| 2026-11-19 | P17: stop en el último pivote. P18: take profit fijo 2:1. P19: sin break-even ni parciales. P20: cierre manual al final de la sesión americana si sigue abierto. |
