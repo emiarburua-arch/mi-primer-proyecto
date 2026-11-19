@@ -1,6 +1,6 @@
 # Trading Plan – Micro E-mini Nasdaq-100 (MNQ)
 
-> Estado: **BORRADOR v0.1** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
+> Estado: **BORRADOR v0.2** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
 > Horarios en hora de Nueva York (ET).
 
 ---
@@ -28,19 +28,34 @@ Se aplica igual en cualquier temporalidad (D, 4h, 60m).
 | `B.close > A.high` | Alcista (continuación) | `PENDIENTE P1` |
 | `B.close < A.low` | Bajista (continuación) | `PENDIENTE P1` |
 
-### 1.2 Escenario REVERSIÓN (B cierra *in balance* tras activar un extremo de A)
+### 1.2 Escenario REVERSIÓN (B *activa el rango* de A)
 
-| Condición de B | Sesgo para C | Objetivo |
-|---|---|---|
-| `B.low < A.low` y `A.low ≤ B.close ≤ A.high` | Alcista (reversión) | `A.high` (rango opuesto) |
-| `B.high > A.high` y `A.low ≤ B.close ≤ A.high` | Bajista (reversión) | `A.low` (rango opuesto) |
+**Definición de rango:** el rango de A es su máximo (`A.high`) y su mínimo (`A.low`).
 
-### 1.3 Casos sin definir
+**Activar un rango:** la vela B **perfora** un extremo de A, **vuelve a ingresar** dentro de A y **cierra dentro** de A.
+Al activarse, el **extremo contrario** de A queda marcado como objetivo.
 
-- `PENDIENTE P2` – B cierra dentro de A **sin** haber activado ningún extremo (inside bar).
-- `PENDIENTE P3` – B activa **ambos** extremos de A y cierra dentro (outside bar).
-- `PENDIENTE P4` – ¿"activar el rango inferior" significa perforar `A.low`, o basta con entrar en la mitad inferior de A (debajo del 50%)?
-- `PENDIENTE P5` – ¿El sesgo de C se invalida si C rompe algún nivel? (ej. sesgo alcista de reversión invalidado si C cierra / hace nuevo mínimo por debajo de `B.low`).
+| Condición de B | Extremo activado | Sesgo | Objetivo |
+|---|---|---|---|
+| `B.low < A.low` y `A.low ≤ B.close ≤ A.high` | Inferior | Alcista (reversión) | `A.high` |
+| `B.high > A.high` y `A.low ≤ B.close ≤ A.high` | Superior | Bajista (reversión) | `A.low` |
+
+### 1.3 Rangos activos (memoria de la narrativa)
+
+Un rango activado **no se borra** porque la vela C no llegue al objetivo. La historia se va encadenando:
+
+- Cada activación crea un **rango activo** con: temporalidad, vela A de origen, extremo activado, objetivo y fecha/hora.
+- Pueden convivir **varios rangos activos a la vez** (en la misma o distintas temporalidades).
+- Si se activa un rango nuevo, el anterior **sigue activo** hasta que se cierre.
+- Un rango activo se cierra cuando **el precio alcanza su objetivo**.
+- `PENDIENTE P5` – ¿Existe alguna condición de **invalidación** además de alcanzar el objetivo? (ej. el precio cierra fuera de A por el lado del extremo activado, o supera el mínimo/máximo de la barrida de B).
+- `PENDIENTE P5b` – ¿Los rangos activos **caducan** después de cierto tiempo / número de velas, o quedan activos indefinidamente?
+- `PENDIENTE P5c` – Si hay rangos activos con **objetivos en direcciones opuestas**, ¿cuál tiene prioridad? (ej. el de mayor temporalidad, el más reciente, el objetivo más cercano).
+
+### 1.4 Casos sin definir
+
+- `PENDIENTE P2` – B cierra dentro de A **sin** haber perforado ningún extremo (inside bar).
+- `PENDIENTE P3` – B perfora **ambos** extremos de A y cierra dentro (outside bar): ¿activa los dos rangos, ninguno, o el último perforado?
 
 ---
 
@@ -154,4 +169,6 @@ Con la continuación ya iniciada en dirección deseada:
 | 2026-11-18 | Sesgo por modelo de velas A-B-C (continuación si B cierra fuera de A; reversión si B activa un extremo de A y cierra dentro, objetivo el extremo opuesto). |
 | 2026-11-18 | Las temporalidades no necesitan estar alineadas: se lee una narrativa. |
 | 2026-11-18 | Niveles semanales (PWH/PWL) y del lunes (MH/ML) se usan para ubicar el precio y detectar manipulación de un extremo → objetivo el extremo opuesto. |
+| 2026-11-19 | P4 cerrado: activar un rango = B perfora un extremo de A, vuelve a ingresar y cierra dentro de A; objetivo = extremo contrario de A. |
+| 2026-11-19 | Los rangos activados quedan activos aunque C no llegue al objetivo; pueden convivir varios rangos activos. |
 | 2026-11-18 | Entradas en 5m: barrida de máx/mín de Asia o Europa + vela de confirmación; o retroceso en continuación + vela en dirección + confirmación. |
