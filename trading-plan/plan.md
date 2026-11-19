@@ -48,7 +48,12 @@ Un rango activado **no se borra** porque la vela C no llegue al objetivo. La his
 - Pueden convivir **varios rangos activos a la vez** (en la misma o distintas temporalidades).
 - Si se activa un rango nuevo, el anterior **sigue activo** hasta que se cierre.
 - Un rango activo se cierra cuando **el precio alcanza su objetivo**.
-- `PENDIENTE P5` – ¿Existe alguna condición de **invalidación** además de alcanzar el objetivo? (ej. el precio cierra fuera de A por el lado del extremo activado, o supera el mínimo/máximo de la barrida de B).
+- **Invalidación (P5 – discrecional):** un rango activo se invalida cuando el mercado **continúa sin darle importancia**
+  al rango (sigue su camino sin reaccionar hacia el objetivo). Lo decide el trader.
+  - `PENDIENTE P5-proxy` – Regla objetiva que aproxime esta decisión, para poder testearla (ver propuestas en la conversación:
+    distancia recorrida en contra, cierre fuera de A por el lado activado, o N velas sin avanzar hacia el objetivo).
+  - Mientras tanto, cada invalidación discrecional se registra en el diario (fecha, temporalidad, rango, motivo) para
+    poder comparar después con la regla objetiva.
 - `PENDIENTE P5b` – ¿Los rangos activos **caducan** después de cierto tiempo / número de velas, o quedan activos indefinidamente?
 - `PENDIENTE P5c` – Si hay rangos activos con **objetivos en direcciones opuestas**, ¿cuál tiene prioridad? (ej. el de mayor temporalidad, el más reciente, el objetivo más cercano).
 
@@ -171,4 +176,5 @@ Con la continuación ya iniciada en dirección deseada:
 | 2026-11-18 | Niveles semanales (PWH/PWL) y del lunes (MH/ML) se usan para ubicar el precio y detectar manipulación de un extremo → objetivo el extremo opuesto. |
 | 2026-11-19 | P4 cerrado: activar un rango = B perfora un extremo de A, vuelve a ingresar y cierra dentro de A; objetivo = extremo contrario de A. |
 | 2026-11-19 | Los rangos activados quedan activos aunque C no llegue al objetivo; pueden convivir varios rangos activos. |
+| 2026-11-19 | P5: la invalidación de un rango activo es discrecional (el mercado continuó sin darle importancia). Se registra en el diario; queda pendiente una regla objetiva que la aproxime. |
 | 2026-11-18 | Entradas en 5m: barrida de máx/mín de Asia o Europa + vela de confirmación; o retroceso en continuación + vela en dirección + confirmación. |
