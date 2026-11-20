@@ -1,6 +1,6 @@
 # Trading Plan – Micro E-mini Nasdaq-100 (MNQ)
 
-> Estado: **v1.0** – reglas definidas. Listo para validar.
+> Estado: **v1.1** – reglas definidas; en curso la sección 8 (reglas para validación automática).
 > Horarios en hora de Nueva York (ET).
 
 ---
@@ -268,6 +268,33 @@ Solo las **dos primeras horas de la sesión americana: 09:30 – 11:30 ET** (P16
 
 ---
 
+## 8. Reglas para validación automática
+
+Versión objetiva de las partes discrecionales, para poder validar con datos históricos. En vivo se puede seguir
+leyendo a ojo; estas reglas son las que usa el código.
+
+### 8.1 Manipulación de un nivel (barrida válida)
+
+Aplica a la barrida de máximos/mínimos de sesión (entrada tipo 1, sección 5.1).
+
+Una barrida de un nivel es **manipulación válida** si se cumplen las dos condiciones:
+
+1. **Máximo 2 perforaciones** del nivel. Si lo perfora una tercera vez, ya no es manipulación válida.
+2. **Profundidad máxima: 15% del rango de la sesión** a la que pertenece el nivel. Si el precio va más allá, se
+   considera ruptura, no manipulación.
+
+`Profundidad máxima = 0,15 × (máximo de la sesión − mínimo de la sesión)`
+
+Ejemplo: la sesión americana perfora el mínimo de Europa. Europa: máximo 21100, mínimo 21000 → rango 100 pts →
+profundidad máxima 15 pts. El precio puede bajar hasta **20985**; si toca 20984,75 o menos, no es manipulación.
+
+- `PENDIENTE V1` – ¿Qué separa una perforación de la siguiente? (propuesta: entre una y otra, al menos una vela de 5m
+  cierra de vuelta dentro del nivel).
+- `PENDIENTE V2` – ¿La misma regla (2 perforaciones, 15%) aplica a los niveles semanales y del lunes (rango de
+  referencia = rango de la semana anterior / del lunes)?
+
+---
+
 ## Registro de decisiones
 
 | Fecha | Decisión |
@@ -307,3 +334,4 @@ Solo las **dos primeras horas de la sesión americana: 09:30 – 11:30 ET** (P16
 | 2026-11-20 | P21b: prueba 3.000 USD de beneficio, 2.500 trailing, 1.000 pérdida diaria. P24b: solo noticias de alto impacto. |
 | 2026-11-20 | P6: estado semanal = información para la hipótesis. P7b: manipulación se lee en 60m, se opera en 5m. P8: mandan los niveles del lunes. P10b: siguiente objetivo = el que esté primero. |
 | 2026-11-20 | P5: la invalidación de rangos activos queda discrecional, sin regla objetiva. Plan cerrado en v1.0. |
+| 2026-11-20 | Manipulación válida (validación automática): máximo 2 perforaciones del nivel y profundidad máxima del 15% del rango de la sesión del nivel. |
