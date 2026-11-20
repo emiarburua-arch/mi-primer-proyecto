@@ -1,6 +1,6 @@
 # Trading Plan – Micro E-mini Nasdaq-100 (MNQ)
 
-> Estado: **v1.1** – reglas definidas; en curso la sección 8 (reglas para validación automática).
+> Estado: **v1.2** – reglas definidas, incluida la versión objetiva para validación automática (sección 8).
 > Horarios en hora de Nueva York (ET).
 
 ---
@@ -298,6 +298,40 @@ Ejemplo: la sesión americana perfora el mínimo de Europa. Europa: máximo 2110
 profundidad máxima 15 pts. El precio puede bajar hasta **20985**; si toca 20984,75 o menos, no es manipulación.
 
 
+### 8.2 Pivotes de la estructura (D1) – 5m
+
+- **Máximo pivote:** vela de 5m cuyo máximo es mayor que el de las **2 velas anteriores y las 2 siguientes**.
+- **Mínimo pivote:** vela de 5m cuyo mínimo es menor que el de las 2 velas anteriores y las 2 siguientes.
+- El pivote se considera confirmado recién cuando **cierran las 2 velas siguientes** (no se usa información futura).
+- **Estructura alcista válida** mientras ninguna vela cierre por debajo del último mínimo más alto (L2).
+  **Estructura bajista válida** mientras ninguna vela cierre por encima del último máximo más bajo.
+
+### 8.3 Invalidación de un rango activo (D2)
+
+Aplica **solo a los rangos de velas** del modelo A-B-C (sección 1.3), no a los niveles de sesión, de la semana
+anterior ni del lunes.
+
+Un rango activo queda invalidado si ocurre **cualquiera** de estas dos cosas:
+
+1. Una vela **de la misma temporalidad** cierra más allá del extremo de la barrida de B
+   (ej. se activó el extremo inferior de A → una vela cierra por debajo de `B.low`).
+2. Pasan **N velas** de esa temporalidad sin alcanzar el objetivo:
+
+   | Temporalidad | N velas |
+   |---|---|
+   | Diario | 5 |
+   | 4h | 6 |
+   | 60m | 8 |
+
+### 8.4 Volumen en el giro (D4)
+
+La vela de reingreso tiene **subida de volumen** si su volumen es **≥ 1,5 veces** el volumen promedio de las velas de
+5m de **ese mismo horario** en los **últimos 20 días** de sesión (volumen relativo).
+
+### 8.5 Noticias de alto impacto (D5)
+
+No se opera desde **5 minutos antes** hasta **15 minutos después** de una noticia de alto impacto.
+
 ---
 
 ## Registro de decisiones
@@ -341,3 +375,4 @@ profundidad máxima 15 pts. El precio puede bajar hasta **20985**; si toca 20984
 | 2026-11-20 | P5: la invalidación de rangos activos queda discrecional, sin regla objetiva. Plan cerrado en v1.0. |
 | 2026-11-20 | Manipulación válida (validación automática): máximo 2 perforaciones del nivel y profundidad máxima del 15% del rango de la sesión del nivel. |
 | 2026-11-20 | V1: perforaciones separadas por al menos una vela de la temporalidad de lectura cerrando dentro del nivel (5m sesiones, 60m semana/lunes). V2: la regla de manipulación aplica también a niveles semanales y del lunes. |
+| 2026-11-20 | D1: pivote = 2 velas a cada lado en 5m. D2: invalidación de rangos de velas por cierre más allá de la barrida de B o N velas (D 5, 4h 6, 60m 8). D4: volumen relativo ≥ 1,5× mismo horario últimos 20 días. D5: sin operar de −5 a +15 min de noticias de alto impacto. |
