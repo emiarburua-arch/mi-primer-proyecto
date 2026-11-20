@@ -1,6 +1,6 @@
 # Trading Plan – Micro E-mini Nasdaq-100 (MNQ)
 
-> Estado: **v1.2** – reglas definidas, incluida la versión objetiva para validación automática (sección 8).
+> Estado: **v1.3** – reglas definidas, incluida la versión objetiva para validación automática (sección 8).
 > Horarios en hora de Nueva York (ET).
 
 ---
@@ -323,6 +323,14 @@ Un rango activo queda invalidado si ocurre **cualquiera** de estas dos cosas:
    | 4h | 6 |
    | 60m | 8 |
 
+**Vigencia de los rangos del lunes y de la semana anterior.** No se invalidan por las reglas anteriores (ni por
+cierre ni por cantidad de velas):
+
+| Rango | Se desactiva solo cuando… |
+|---|---|
+| Lunes (MH/ML) | se forma el rango del **lunes siguiente** |
+| Semana anterior (PWH/PWL) | se forma el rango de la **semana siguiente** |
+
 ### 8.4 Volumen en el giro (D4)
 
 La vela de reingreso tiene **subida de volumen** si su volumen es **≥ 1,5 veces** el volumen promedio de las velas de
@@ -376,3 +384,4 @@ No se opera desde **5 minutos antes** hasta **15 minutos después** de una notic
 | 2026-11-20 | Manipulación válida (validación automática): máximo 2 perforaciones del nivel y profundidad máxima del 15% del rango de la sesión del nivel. |
 | 2026-11-20 | V1: perforaciones separadas por al menos una vela de la temporalidad de lectura cerrando dentro del nivel (5m sesiones, 60m semana/lunes). V2: la regla de manipulación aplica también a niveles semanales y del lunes. |
 | 2026-11-20 | D1: pivote = 2 velas a cada lado en 5m. D2: invalidación de rangos de velas por cierre más allá de la barrida de B o N velas (D 5, 4h 6, 60m 8). D4: volumen relativo ≥ 1,5× mismo horario últimos 20 días. D5: sin operar de −5 a +15 min de noticias de alto impacto. |
+| 2026-11-20 | 8.3: el rango del lunes solo se desactiva con el rango del lunes siguiente; el de la semana anterior, con el de la semana siguiente. |
