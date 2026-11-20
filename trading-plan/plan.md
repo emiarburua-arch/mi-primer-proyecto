@@ -1,6 +1,6 @@
 # Trading Plan – Micro E-mini Nasdaq-100 (MNQ)
 
-> Estado: **BORRADOR v0.8** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
+> Estado: **BORRADOR v0.9** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
 > Horarios en hora de Nueva York (ET).
 
 ---
@@ -217,9 +217,18 @@ Solo las **dos primeras horas de la sesión americana: 09:30 – 11:30 ET** (P16
 
 - **Stop loss (P17):** el stop es de **distancia fija**. Condición obligatoria: tiene que quedar **más allá del último
   retroceso (último pivote)**: debajo en compras, encima en ventas. Si queda más lejos del pivote, mejor (P17b).
-  - `PENDIENTE P17c` – ¿Cuál es la distancia fija del stop (en puntos) y cuántos micros se operan?
-  - `PENDIENTE P17d` – Si el pivote queda **más lejos** que el stop fijo (el stop quedaría dentro del retroceso), ¿se
-    descarta el trade?
+  - **Dos tamaños de stop (P17c)**, siempre arriesgando **150 USD** (MNQ: 1 tick = 0,25 pts = 0,50 USD por micro):
+
+    | Stop | Puntos | Riesgo por micro | Micros | Riesgo total | Target 2:1 |
+    |---|---|---|---|---|---|
+    | 75 ticks | 18,75 | 37,50 USD | **4** | 150 USD | 150 ticks (37,5 pts) = 300 USD |
+    | 150 ticks | 37,5 | 75,00 USD | **2** | 150 USD | 300 ticks (75 pts) = 300 USD |
+
+  - El tamaño se elige **según la volatilidad**.
+    - `PENDIENTE P17e` – ¿Cómo se mide la volatilidad para elegir: a ojo, o con una referencia (ej. ATR de 5m)?
+  - **Si el stop no cubre el pivote, el trade no se toma (P17d).**
+    - `PENDIENTE P17f` – Si el stop de 75 no cubre el pivote pero el de 150 sí, ¿se puede pasar al de 150, o el tamaño
+      lo decide solo la volatilidad?
 - **Take profit (P18):** fijo a **2:1** (2 veces la distancia entre entrada y stop).
   - Los objetivos de rangos y niveles dan la **dirección/narrativa**, no el take profit.
 - **Break-even / parciales (P19):** **nunca**. El stop no se mueve y no se toman parciales.
@@ -280,3 +289,4 @@ Solo las **dos primeras horas de la sesión americana: 09:30 – 11:30 ET** (P16
 | 2026-11-19 | P17b: stop de distancia fija, siempre más allá del último pivote. |
 | 2026-11-19 | P21: cuenta de fondeo, prueba 50k. P22/P9b: 150 USD por trade, siempre. P23: máximo 3 trades y 2R de pérdida diaria. |
 | 2026-11-19 | P24: no se opera feriados de EE. UU.; con noticias, pausa desde 5 min antes hasta que el precio se estabilice (a ojo). |
+| 2026-11-20 | P17c: stop de 75 ticks (4 micros) o 150 ticks (2 micros) según volatilidad, siempre 150 USD de riesgo. P17d: si el stop no cubre el pivote, no se toma el trade. |
