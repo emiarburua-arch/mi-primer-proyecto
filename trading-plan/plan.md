@@ -275,23 +275,28 @@ leyendo a ojo; estas reglas son las que usa el código.
 
 ### 8.1 Manipulación de un nivel (barrida válida)
 
-Aplica a la barrida de máximos/mínimos de sesión (entrada tipo 1, sección 5.1).
+Aplica a:
+
+| Nivel | Temporalidad de lectura | Rango de referencia para el 15% |
+|---|---|---|
+| Máx/mín de sesión (Asia, Europa) – entrada tipo 1 (5.1) | 5m | Rango de esa sesión |
+| Máx/mín de la semana anterior (PWH/PWL) – sección 2.3 | 60m | Rango de la semana anterior |
+| Máx/mín del lunes (MH/ML) – sección 2.3 | 60m | Rango del lunes |
 
 Una barrida de un nivel es **manipulación válida** si se cumplen las dos condiciones:
 
 1. **Máximo 2 perforaciones** del nivel. Si lo perfora una tercera vez, ya no es manipulación válida.
-2. **Profundidad máxima: 15% del rango de la sesión** a la que pertenece el nivel. Si el precio va más allá, se
+   - **Separación entre perforaciones (V1):** entre una perforación y la siguiente, al menos **una vela de la
+     temporalidad de lectura** (5m para sesiones, 60m para semana/lunes) cierra de vuelta dentro del nivel. Varias
+     velas seguidas del otro lado del nivel cuentan como una sola perforación.
+2. **Profundidad máxima: 15% del rango de referencia** (la sesión, semana o lunes a la que pertenece el nivel). Si el precio va más allá, se
    considera ruptura, no manipulación.
 
-`Profundidad máxima = 0,15 × (máximo de la sesión − mínimo de la sesión)`
+`Profundidad máxima = 0,15 × (máximo del rango de referencia − mínimo del rango de referencia)`
 
 Ejemplo: la sesión americana perfora el mínimo de Europa. Europa: máximo 21100, mínimo 21000 → rango 100 pts →
 profundidad máxima 15 pts. El precio puede bajar hasta **20985**; si toca 20984,75 o menos, no es manipulación.
 
-- `PENDIENTE V1` – ¿Qué separa una perforación de la siguiente? (propuesta: entre una y otra, al menos una vela de 5m
-  cierra de vuelta dentro del nivel).
-- `PENDIENTE V2` – ¿La misma regla (2 perforaciones, 15%) aplica a los niveles semanales y del lunes (rango de
-  referencia = rango de la semana anterior / del lunes)?
 
 ---
 
@@ -335,3 +340,4 @@ profundidad máxima 15 pts. El precio puede bajar hasta **20985**; si toca 20984
 | 2026-11-20 | P6: estado semanal = información para la hipótesis. P7b: manipulación se lee en 60m, se opera en 5m. P8: mandan los niveles del lunes. P10b: siguiente objetivo = el que esté primero. |
 | 2026-11-20 | P5: la invalidación de rangos activos queda discrecional, sin regla objetiva. Plan cerrado en v1.0. |
 | 2026-11-20 | Manipulación válida (validación automática): máximo 2 perforaciones del nivel y profundidad máxima del 15% del rango de la sesión del nivel. |
+| 2026-11-20 | V1: perforaciones separadas por al menos una vela de la temporalidad de lectura cerrando dentro del nivel (5m sesiones, 60m semana/lunes). V2: la regla de manipulación aplica también a niveles semanales y del lunes. |
