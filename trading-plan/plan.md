@@ -1,6 +1,6 @@
 # Trading Plan – Micro E-mini Nasdaq-100 (MNQ)
 
-> Estado: **v1.3** – reglas definidas, incluida la versión objetiva para validación automática (sección 8).
+> Estado: **v1.4** – reglas definidas, incluida la versión objetiva para validación automática (sección 8).
 > Horarios en hora de Nueva York (ET).
 
 ---
@@ -277,26 +277,40 @@ leyendo a ojo; estas reglas son las que usa el código.
 
 Aplica a:
 
-| Nivel | Temporalidad de lectura | Rango de referencia para el 15% |
+| Nivel | Temporalidad de lectura | Rango de referencia |
 |---|---|---|
 | Máx/mín de sesión (Asia, Europa) – entrada tipo 1 (5.1) | 5m | Rango de esa sesión |
 | Máx/mín de la semana anterior (PWH/PWL) – sección 2.3 | 60m | Rango de la semana anterior |
 | Máx/mín del lunes (MH/ML) – sección 2.3 | 60m | Rango del lunes |
 
-Una barrida de un nivel es **manipulación válida** si se cumplen las dos condiciones:
+Una barrida de un nivel es **manipulación válida** si se cumplen las tres condiciones:
 
-1. **Máximo 2 perforaciones** del nivel. Si lo perfora una tercera vez, ya no es manipulación válida.
-   - **Separación entre perforaciones (V1):** entre una perforación y la siguiente, al menos **una vela de la
-     temporalidad de lectura** (5m para sesiones, 60m para semana/lunes) cierra de vuelta dentro del nivel. Varias
-     velas seguidas del otro lado del nivel cuentan como una sola perforación.
-2. **Profundidad máxima: 15% del rango de referencia** (la sesión, semana o lunes a la que pertenece el nivel). Si el precio va más allá, se
-   considera ruptura, no manipulación.
+1. **Profundidad máxima: 20% del rango de referencia.** Si el precio va más allá, se considera ruptura, no manipulación.
 
-`Profundidad máxima = 0,15 × (máximo del rango de referencia − mínimo del rango de referencia)`
+   `Profundidad máxima = 0,20 × (máximo del rango de referencia − mínimo del rango de referencia)`
 
-Ejemplo: la sesión americana perfora el mínimo de Europa. Europa: máximo 21100, mínimo 21000 → rango 100 pts →
-profundidad máxima 15 pts. El precio puede bajar hasta **20985**; si toca 20984,75 o menos, no es manipulación.
+   Ejemplo: la sesión americana perfora el mínimo de Europa. Europa: máximo 21100, mínimo 21000 → rango 100 pts →
+   profundidad máxima 20 pts. El precio puede bajar hasta **20980**; si toca 20979,75 o menos, no es manipulación.
 
+2. **Máximo 2 perforaciones** del nivel. Si lo perfora una tercera vez, ya no es manipulación válida.
+   - Oscilar pegado al nivel es **una sola perforación** (un solo movimiento).
+   - `EN CALIBRACIÓN V1` – Qué separa una perforación de la siguiente. La regla "una vela cerrando dentro" resultó
+     demasiado estricta (captura 1), y una distancia fija no separó bien los casos (capturas 1 y 2). Se define con
+     datos exportados.
+
+3. **Giro claro después de la manipulación** – condición más importante:
+   - La vela de reingreso tiene **subida de volumen** (regla 8.4).
+   - Después del reingreso, el precio **se aleja del nivel** hacia dentro del rango al menos **X% del rango de
+     referencia** en un máximo de **N velas**.
+   - `EN CALIBRACIÓN V3` – Valores de X y N, a fijar con datos exportados de los ejemplos.
+
+**Ejemplos de calibración** (valores estimados desde capturas, ver `entrenamiento/`):
+
+| Caso | Profundidad | Perforaciones | Giro | Veredicto del trader |
+|---|---|---|---|---|
+| Captura 1 (crudo, máx. Europa) | ~8% | 1 | claro, con volumen | ✅ manipulación |
+| Captura 2 (NQ, mín. Europa) | ~18% | 2 | claro, con impulso | ✅ manipulación |
+| Captura 3 (NQ, máx. sesión americana, 9–10 nov) | ~16% | 4+ | ninguno | ❌ no es manipulación |
 
 ### 8.2 Pivotes de la estructura (D1) – 5m
 
@@ -385,3 +399,4 @@ No se opera desde **5 minutos antes** hasta **15 minutos después** de una notic
 | 2026-11-20 | V1: perforaciones separadas por al menos una vela de la temporalidad de lectura cerrando dentro del nivel (5m sesiones, 60m semana/lunes). V2: la regla de manipulación aplica también a niveles semanales y del lunes. |
 | 2026-11-20 | D1: pivote = 2 velas a cada lado en 5m. D2: invalidación de rangos de velas por cierre más allá de la barrida de B o N velas (D 5, 4h 6, 60m 8). D4: volumen relativo ≥ 1,5× mismo horario últimos 20 días. D5: sin operar de −5 a +15 min de noticias de alto impacto. |
 | 2026-11-20 | 8.3: el rango del lunes solo se desactiva con el rango del lunes siguiente; el de la semana anterior, con el de la semana siguiente. |
+| 2026-11-20 | 8.1 recalibrada con 3 capturas: profundidad máxima 20%; el giro claro (volumen + alejamiento del nivel) pasa a ser condición principal; separación de perforaciones y valores del giro en calibración con datos. |
