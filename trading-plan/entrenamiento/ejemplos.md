@@ -17,3 +17,11 @@ Profundidad, retroceso y giro se expresan en % del rango de referencia.
 - La **profundidad** sola no separa casos (C2 18% válida, C3 16% inválida) → límite fijado en 20% como filtro grueso.
 - Lo que separa válidas de inválidas es el **giro claro**: en las válidas el precio se aleja ≥ ~24% del rango en ≤ 8
   velas de 5m; en la inválida, ~5% en 12 velas.
+
+---
+
+# Ejemplos de calibración – Ejecución
+
+| # | Captura | Tipo | Secuencia leída (estimada) | Stop / Target | Resultado | Veredicto trader |
+|---|---|---|---|---|---|---|
+| C5 | `c5_mnq_trade_giro_valido.png` | Giro (tipo 1) sobre mín. Europa ~27600 (mismo día que C2/C4) | Perforación 1 (~27519) → reingreso fuerte (~27650) → retroceso = perforación 2 (~27590) → primera vela verde (máx. ~27634) → confirmación rompe su máximo → limit ~27633 | 300 ticks (~27558) / 600 ticks (~27783), 1 micro | Target alcanzado (+2R) | ✅ válido (horario ignorado) |
