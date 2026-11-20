@@ -1,6 +1,6 @@
 # Trading Plan – Micro E-mini Nasdaq-100 (MNQ)
 
-> Estado: **BORRADOR v0.10** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
+> Estado: **BORRADOR v0.11** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
 > Horarios en hora de Nueva York (ET).
 
 ---
@@ -225,7 +225,8 @@ Solo las **dos primeras horas de la sesión americana: 09:30 – 11:30 ET** (P16
     | 150 ticks | 37,5 | 75,00 USD | **2** | 150 USD | 300 ticks (75 pts) = 300 USD |
     | 300 ticks | 75 | 150,00 USD | **1** | 150 USD | 600 ticks (150 pts) = 300 USD |
 
-  - El tamaño se elige **según la volatilidad, medida con el ATR (P17e)**:
+  - El tamaño se elige **según la volatilidad, medida con el ATR(14) de 60m (P17e, P17g)**, en **puntos** (unidad de
+    precio que muestra la plataforma):
 
     | ATR | Stop |
     |---|---|
@@ -233,11 +234,8 @@ Solo las **dos primeras horas de la sesión americana: 09:30 – 11:30 ET** (P16
     | de 100 a 200 | 150 ticks (2 micros) |
     | mayor a 200 | 300 ticks (1 micro) |
 
-    - `PENDIENTE P17g` – ATR de qué temporalidad y período (ej. ATR(14) diario o de 60m), y si los umbrales 100/200
-      están en puntos o en ticks.
-  - **Si el stop no cubre el pivote, el trade no se toma (P17d).**
-    - `PENDIENTE P17f` – Si el stop de 75 no cubre el pivote pero el de 150 sí, ¿se puede pasar al de 150, o el tamaño
-      lo decide solo la volatilidad?
+  - **Si el stop que corresponde por ATR no cubre el pivote, el trade se descarta (P17d, P17f).** No se cambia a un
+    stop más grande.
 - **Take profit (P18):** fijo a **2:1** (2 veces la distancia entre entrada y stop).
   - Los objetivos de rangos y niveles dan la **dirección/narrativa**, no el take profit.
 - **Break-even / parciales (P19):** **nunca**. El stop no se mueve y no se toman parciales.
@@ -300,3 +298,4 @@ Solo las **dos primeras horas de la sesión americana: 09:30 – 11:30 ET** (P16
 | 2026-11-19 | P24: no se opera feriados de EE. UU.; con noticias, pausa desde 5 min antes hasta que el precio se estabilice (a ojo). |
 | 2026-11-20 | P17c: stop de 75 ticks (4 micros) o 150 ticks (2 micros) según volatilidad, siempre 150 USD de riesgo. P17d: si el stop no cubre el pivote, no se toma el trade. |
 | 2026-11-20 | P17c/P17e: tercer tamaño de stop, 300 ticks con 1 micro. Elección por ATR: <100 → 75 ticks, 100–200 → 150 ticks, >200 → 300 ticks. |
+| 2026-11-20 | P17g: ATR(14) de 60m, en puntos. P17f: si el stop que corresponde por ATR no cubre el pivote, se descarta el trade. |
