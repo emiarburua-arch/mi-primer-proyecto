@@ -1,6 +1,6 @@
 # Trading Plan – Micro E-mini Nasdaq-100 (MNQ)
 
-> Estado: **BORRADOR v0.11** – en definición. No se testea nada hasta cerrar todos los `PENDIENTE`.
+> Estado: **v1.0** – reglas definidas. Listo para validar.
 > Horarios en hora de Nueva York (ET).
 
 ---
@@ -60,11 +60,9 @@ Un rango activado **no se borra** porque la vela C no llegue al objetivo. La his
 - Si se activa un rango nuevo, el anterior **sigue activo** hasta que se cierre.
 - Un rango activo se cierra cuando **el precio alcanza su objetivo**.
 - **Invalidación (P5 – discrecional):** un rango activo se invalida cuando el mercado **continúa sin darle importancia**
-  al rango (sigue su camino sin reaccionar hacia el objetivo). Lo decide el trader.
-  - `PENDIENTE P5-proxy` – Regla objetiva que aproxime esta decisión, para poder testearla (ver propuestas en la conversación:
-    distancia recorrida en contra, cierre fuera de A por el lado activado, o N velas sin avanzar hacia el objetivo).
-  - Mientras tanto, cada invalidación discrecional se registra en el diario (fecha, temporalidad, rango, motivo) para
-    poder comparar después con la regla objetiva.
+  al rango (sigue su camino sin reaccionar hacia el objetivo). Lo decide el trader. **Queda discrecional, sin regla
+  objetiva.**
+  - Cada invalidación se registra en el diario (fecha, temporalidad, rango, motivo).
 - **Renovación semanal (P5b):** cada semana se buscan **nuevos rangos y objetivos**. Un rango de semanas anteriores
   que sea importante y **no haya sido desactivado** puede mantenerse en la narrativa (decisión discrecional).
 - **Prioridad (P5c):** si hay rangos activos con objetivos opuestos, manda el de **mayor temporalidad** (ver sección 3.1).
@@ -95,7 +93,8 @@ Un rango activado **no se borra** porque la vela C no llegue al objetivo. La his
 | Dentro de la semana anterior | `PWL ≤ precio ≤ PWH` |
 | Por debajo de la semana anterior | precio `< PWL` |
 
-`PENDIENTE P6` – ¿Cómo condiciona este estado la operativa? (ej. solo largos por encima, ambos lados dentro, etc., o solo es información para la narrativa).
+**Uso (P6):** este estado **no condiciona** la operativa directamente; es **información para formular la hipótesis**
+de la semana.
 
 ### 2.3 Manipulación de un extremo
 
@@ -108,9 +107,9 @@ diferencias:
 - Puede haber **varias perforaciones**: ej. una caída perfora el nivel, una nueva caída lo vuelve a perforar, y luego
   el precio sale al alza de vuelta dentro del rango → manipulación del extremo inferior, objetivo el extremo superior.
 - **Cuánto perforó** se define de forma **discrecional**.
-- `PENDIENTE P7b` – ¿En qué temporalidad se lee la vuelta dentro del rango (60m, 4h)? ¿Qué confirma que la manipulación
-  terminó: un cierre de vela de nuevo dentro del rango?
-- `PENDIENTE P8` – ¿Si PWH/PWL y MH/ML dan lecturas opuestas, cuál manda?
+- **Temporalidad (P7b):** la manipulación y el reingreso se leen en **60m**. La operativa siempre se ejecuta en **5m**.
+- **Conflicto de niveles (P8):** si los niveles de la semana anterior (PWH/PWL) y los del lunes (MH/ML) dan lecturas
+  opuestas, **mandan los del lunes**.
 
 ---
 
@@ -132,8 +131,7 @@ Si hay rangos activos con objetivos opuestos, **manda el de mayor temporalidad**
   objetivo de 60m).
   - **Riesgo (P9b):** el mismo que cualquier trade, **siempre 150 USD**.
 - **Objetivo alcanzado (P10):** cuando una temporalidad alcanza su objetivo, se **pasa al siguiente objetivo**.
-  - `PENDIENTE P10b` – ¿Cómo se elige el "siguiente objetivo"? (ej. el objetivo de otro rango activo de la misma
-    temporalidad, el siguiente nivel semanal/lunes, o el de la temporalidad inmediatamente inferior).
+  - **Siguiente objetivo (P10b):** el que **esté primero** (el más cercano en la dirección del movimiento).
 
 ---
 
@@ -248,8 +246,15 @@ Solo las **dos primeras horas de la sesión americana: 09:30 – 11:30 ET** (P16
 ## 7. Gestión de riesgo
 
 - **Cuenta (P21):** cuenta de fondeo, **prueba de 50.000 USD**.
-  - `PENDIENTE P21b` – Reglas de la prueba: objetivo de ganancia, drawdown máximo (trailing o estático) y límite de
-    pérdida diaria de la firma, para verificar que el plan las respeta.
+  - **Reglas de la prueba (P21b):**
+
+    | Regla | USD | En R (1R = 150 USD) |
+    |---|---|---|
+    | Objetivo de beneficio | 3.000 | 20R |
+    | Drawdown máximo (trailing) | 2.500 | 16,7R |
+    | Pérdida diaria máxima de la firma | 1.000 | 6,7R |
+
+    El límite propio del plan (2R = 300 USD por día) queda muy por debajo del límite diario de la firma.
 - **Riesgo por trade (P22):** **150 USD** (1R = 150 USD), en todos los trades, también los que van contra la
   dirección de fondo.
 - **Límites diarios (P23):**
@@ -259,7 +264,7 @@ Solo las **dos primeras horas de la sesión americana: 09:30 – 11:30 ET** (P16
   - **No se opera en feriados de EE. UU.**
   - Con noticias: **no se opera desde 5 minutos antes** de la noticia, y se vuelve a operar cuando el precio
     **recupera la estabilidad** (evaluado a ojo, discrecional).
-  - `PENDIENTE P24b` – ¿Qué noticias cuentan? (ej. solo alto impacto de EE. UU.: CPI, NFP, FOMC, PPI, etc.).
+  - Solo cuentan las noticias de **alto impacto** (P24b).
 
 ---
 
@@ -299,3 +304,6 @@ Solo las **dos primeras horas de la sesión americana: 09:30 – 11:30 ET** (P16
 | 2026-11-20 | P17c: stop de 75 ticks (4 micros) o 150 ticks (2 micros) según volatilidad, siempre 150 USD de riesgo. P17d: si el stop no cubre el pivote, no se toma el trade. |
 | 2026-11-20 | P17c/P17e: tercer tamaño de stop, 300 ticks con 1 micro. Elección por ATR: <100 → 75 ticks, 100–200 → 150 ticks, >200 → 300 ticks. |
 | 2026-11-20 | P17g: ATR(14) de 60m, en puntos. P17f: si el stop que corresponde por ATR no cubre el pivote, se descarta el trade. |
+| 2026-11-20 | P21b: prueba 3.000 USD de beneficio, 2.500 trailing, 1.000 pérdida diaria. P24b: solo noticias de alto impacto. |
+| 2026-11-20 | P6: estado semanal = información para la hipótesis. P7b: manipulación se lee en 60m, se opera en 5m. P8: mandan los niveles del lunes. P10b: siguiente objetivo = el que esté primero. |
+| 2026-11-20 | P5: la invalidación de rangos activos queda discrecional, sin regla objetiva. Plan cerrado en v1.0. |
