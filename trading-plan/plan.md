@@ -1,6 +1,6 @@
 # Trading Plan – Micro E-mini Nasdaq-100 (MNQ)
 
-> Estado: **v1.4** – reglas definidas, incluida la versión objetiva para validación automática (sección 8).
+> Estado: **v1.5** – reglas definidas, incluida la versión objetiva para validación automática (sección 8).
 > Horarios en hora de Nueva York (ET).
 
 ---
@@ -300,9 +300,8 @@ Una barrida de un nivel es **manipulación válida** si se cumplen las tres cond
 
 3. **Giro claro después de la manipulación** – condición más importante:
    - La vela de reingreso tiene **subida de volumen** (regla 8.4).
-   - Después del reingreso, el precio **se aleja del nivel** hacia dentro del rango al menos **X% del rango de
-     referencia** en un máximo de **N velas**.
-   - `EN CALIBRACIÓN V3` – Valores de X y N, a fijar con datos exportados de los ejemplos.
+   - Después del reingreso, el precio **se aleja del nivel** hacia dentro del rango al menos **20% del rango de
+     referencia** en un máximo de **12 velas de 5m** (1 hora). Valores provisionales, a confirmar con datos.
 
 **Ejemplos de calibración** (valores estimados desde capturas, ver `entrenamiento/`):
 
@@ -311,6 +310,7 @@ Una barrida de un nivel es **manipulación válida** si se cumplen las tres cond
 | Captura 1 (crudo, máx. Europa) | ~8% | 1 | claro, con volumen | ✅ manipulación |
 | Captura 2 (NQ, mín. Europa) | ~18% | 2 | claro, con impulso | ✅ manipulación |
 | Captura 3 (NQ, máx. sesión americana, 9–10 nov) | ~16% | 4+ | ninguno | ❌ no es manipulación |
+| Captura 4a (NQ, máx. Europa) | ~10% | 1 | ~31% en ~6 velas | ✅ manipulación |
 
 ### 8.2 Pivotes de la estructura (D1) – 5m
 
@@ -400,3 +400,4 @@ No se opera desde **5 minutos antes** hasta **15 minutos después** de una notic
 | 2026-11-20 | D1: pivote = 2 velas a cada lado en 5m. D2: invalidación de rangos de velas por cierre más allá de la barrida de B o N velas (D 5, 4h 6, 60m 8). D4: volumen relativo ≥ 1,5× mismo horario últimos 20 días. D5: sin operar de −5 a +15 min de noticias de alto impacto. |
 | 2026-11-20 | 8.3: el rango del lunes solo se desactiva con el rango del lunes siguiente; el de la semana anterior, con el de la semana siguiente. |
 | 2026-11-20 | 8.1 recalibrada con 3 capturas: profundidad máxima 20%; el giro claro (volumen + alejamiento del nivel) pasa a ser condición principal; separación de perforaciones y valores del giro en calibración con datos. |
+| 2026-11-20 | 8.1 giro claro: alejamiento ≥ 20% del rango de referencia en ≤ 12 velas de 5m (provisional). |
