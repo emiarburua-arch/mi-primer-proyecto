@@ -1,6 +1,6 @@
 # Trading Plan – Micro E-mini Nasdaq-100 (MNQ)
 
-> Estado: **v1.5** – reglas definidas, incluida la versión objetiva para validación automática (sección 8).
+> Estado: **v1.6** – reglas definidas, incluida la versión objetiva para validación automática (sección 8).
 > Horarios en hora de Nueva York (ET).
 
 ---
@@ -314,11 +314,18 @@ Una barrida de un nivel es **manipulación válida** si se cumplen las tres cond
 
 ### 8.2 Pivotes de la estructura (D1) – 5m
 
-- **Máximo pivote:** vela de 5m cuyo máximo es mayor que el de las **2 velas anteriores y las 2 siguientes**.
-- **Mínimo pivote:** vela de 5m cuyo mínimo es menor que el de las 2 velas anteriores y las 2 siguientes.
-- El pivote se considera confirmado recién cuando **cierran las 2 velas siguientes** (no se usa información futura).
-- **Estructura alcista válida** mientras ninguna vela cierre por debajo del último mínimo más alto (L2).
-  **Estructura bajista válida** mientras ninguna vela cierre por encima del último máximo más bajo.
+Se marcan **swings significativos** (método zigzag), no cada micro-pivote, para acercarse a la lectura del trader
+(ver `entrenamiento/ejemplos.md`, C6).
+
+- **Máximo pivote:** el precio más alto alcanzado antes de que el precio **baje desde ahí al menos 1 × ATR(14) de 5m**.
+- **Mínimo pivote:** el precio más bajo alcanzado antes de que el precio **suba desde ahí al menos 1 × ATR(14) de 5m**.
+- El pivote queda **confirmado en el momento en que se completa ese movimiento** (no se usa información futura).
+- Las oscilaciones menores a 1 × ATR(14) de 5m se ignoran: forman parte del mismo pivote.
+- **Estructura alcista válida** mientras ninguna vela cierre por debajo del último mínimo pivote más alto (L2).
+  **Estructura bajista válida** mientras ninguna vela cierre por encima del último máximo pivote más bajo.
+- El **stop debe cubrir** el último pivote definido por esta regla (sección 6).
+- Multiplicador 1 × ATR **provisional**: se calibra con datos comparando con las marcas del trader (se probarán
+  0,75 / 1 / 1,5).
 
 ### 8.3 Invalidación de un rango activo (D2)
 
@@ -401,3 +408,4 @@ No se opera desde **5 minutos antes** hasta **15 minutos después** de una notic
 | 2026-11-20 | 8.3: el rango del lunes solo se desactiva con el rango del lunes siguiente; el de la semana anterior, con el de la semana siguiente. |
 | 2026-11-20 | 8.1 recalibrada con 3 capturas: profundidad máxima 20%; el giro claro (volumen + alejamiento del nivel) pasa a ser condición principal; separación de perforaciones y valores del giro en calibración con datos. |
 | 2026-11-20 | 8.1 giro claro: alejamiento ≥ 20% del rango de referencia en ≤ 12 velas de 5m (provisional). |
+| 2026-11-20 | 8.2 pivotes: se reemplaza "2 velas a cada lado" por zigzag con reversión mínima de 1 × ATR(14) de 5m (provisional), para marcar solo swings significativos. Stop por ATR(14) 60m confirmado en C5. |
