@@ -37,3 +37,11 @@ Profundidad, retroceso y giro se expresan en % del rango de referencia.
   → La regla de 2 velas a cada lado (8.2) probablemente marca pivotes de más. A calibrar con datos.
 - Manipulación válida no implica trade: si la entrada queda lejos del pivote, el stop no entra y se descarta,
   aunque luego el precio vaya a favor (C8). El backtest medirá cuántos ganadores se pierden por esta regla.
+
+---
+
+# Ejemplos de calibración – Modelo A-B-C (regla 1.2)
+
+| # | Captura | Lectura | Coincide con la regla |
+|---|---|---|---|
+| C9 | `c9_esquema_abc_rango_activado.png` (esquema) | A: vela verde, máximo = línea violeta, mínimo = línea amarilla. B: perfora el máximo de A y cierra dentro de A → activa el extremo superior → sesgo bajista, objetivo = mínimo de A. C: vela roja que alcanza el objetivo. | ✅ `B.high > A.high` y `A.low ≤ B.close ≤ A.high` → objetivo `A.low` |
