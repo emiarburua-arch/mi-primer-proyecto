@@ -1,6 +1,6 @@
 # Trading Plan – Micro E-mini Nasdaq-100 (MNQ)
 
-> Estado: **v1.6** – reglas definidas, incluida la versión objetiva para validación automática (sección 8).
+> Estado: **v1.7** – reglas definidas, incluida la versión objetiva para validación automática (sección 8).
 > Horarios en hora de Nueva York (ET).
 
 ---
@@ -294,9 +294,11 @@ Una barrida de un nivel es **manipulación válida** si se cumplen las tres cond
 
 2. **Máximo 2 perforaciones** del nivel. Si lo perfora una tercera vez, ya no es manipulación válida.
    - Oscilar pegado al nivel es **una sola perforación** (un solo movimiento).
-   - `EN CALIBRACIÓN V1` – Qué separa una perforación de la siguiente. La regla "una vela cerrando dentro" resultó
-     demasiado estricta (captura 1), y una distancia fija no separó bien los casos (capturas 1 y 2). Se define con
-     datos exportados.
+   - **Separación entre perforaciones (V1, provisional):** una perforación termina cuando **3 velas seguidas** de la
+     temporalidad de lectura (5m para sesiones, 60m para semana/lunes) **cierran de vuelta dentro** del nivel. Si
+     después el precio vuelve a cruzar el nivel, es una nueva perforación. Cierres sueltos dentro del nivel no
+     cortan la perforación. (Una vela sola resultó demasiado estricta – captura 1 –, y una distancia fija no separó
+     bien las capturas 1 y 2.) A confirmar con datos.
 
 3. **Giro claro después de la manipulación** – condición más importante:
    - La vela de reingreso tiene **subida de volumen** (regla 8.4).
@@ -409,3 +411,4 @@ No se opera desde **5 minutos antes** hasta **15 minutos después** de una notic
 | 2026-11-20 | 8.1 recalibrada con 3 capturas: profundidad máxima 20%; el giro claro (volumen + alejamiento del nivel) pasa a ser condición principal; separación de perforaciones y valores del giro en calibración con datos. |
 | 2026-11-20 | 8.1 giro claro: alejamiento ≥ 20% del rango de referencia en ≤ 12 velas de 5m (provisional). |
 | 2026-11-20 | 8.2 pivotes: se reemplaza "2 velas a cada lado" por zigzag con reversión mínima de 1 × ATR(14) de 5m (provisional), para marcar solo swings significativos. Stop por ATR(14) 60m confirmado en C5. |
+| 2026-11-24 | V1 provisional: una perforación termina con 3 cierres seguidos dentro del nivel; un nuevo cruce después es otra perforación. |

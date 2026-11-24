@@ -10,6 +10,7 @@ Profundidad, retroceso y giro se expresan en % del rango de referencia.
 | C3 | `c3_nq_20261109_max_sesion_usa_invalida.png` | NQ | Máx. sesión USA ~28010 | ~720 | ~16% | 4+ | ninguno: ~5% en 12 velas, lateral, poco volumen | ❌ no válida |
 | C4a | `c4_nq_manip_max_y_min_europa_validas.png` | NQ | Máx. Europa ~28045 | ~445 | ~10% | 1 | ~31% en ~6 velas, con volumen | ✅ válida |
 | C4b | (misma captura, mismo día que C2) | NQ | Mín. Europa ~27600 | ~445 | ~18% | 2 | ~34% en ~8 velas | ✅ válida |
+| C10 | `c10_nq_max_sesion_usa_muchas_roturas_invalida.png` | NQ (mismo día que C3) | Máx. sesión USA (línea azul) | — | — | 4+ (tramos largos dentro del nivel entre cruces) | lateral | ❌ no válida: demasiadas roturas |
 
 ## Aprendizajes
 
