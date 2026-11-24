@@ -27,6 +27,7 @@ Profundidad, retroceso y giro se expresan en % del rango de referencia.
 | C5 | `c5_mnq_trade_giro_valido.png` | Giro (tipo 1) sobre mín. Europa ~27600 (mismo día que C2/C4) | Perforación 1 (~27519) → reingreso fuerte (~27650) → retroceso = perforación 2 (~27590) → primera vela verde (máx. ~27634) → confirmación rompe su máximo → limit ~27633 | 300 ticks (~27558) / 600 ticks (~27783), 1 micro | Target alcanzado (+2R) | ✅ válido (horario ignorado) |
 | C6 | `c6_mnq_estructura_y_pivote_stop.png` | Mismo trade que C5, con la estructura marcada | Bajista: ~27950 → ~27740 → ~27850 → ~27620 → ~27700 → ~27525. Alcista: ~27640 → **pivote ~27580–27590 (zona 13:05–13:35, cubierto por el stop)** → ~27760 → ~27690 → ~27790 → ~27690 → ~27830 → ~27775 → ~27910 | Stop 300 ticks cubre el pivote; 150 ticks (~27595) no lo cubriría | — | ✅ |
 | C7 | `c7_crudo_stop_no_cubre_descartado.png` | Crudo (solo ilustrativo) | Para cubrir el mínimo previo (~79,05) desde la entrada (~79,55) hacía falta un stop de 60 ticks; el stop máximo en CL es 30 ticks | 30 ticks no cubre el pivote | — | ❌ se descarta |
+| C8 | `c8_nq_stop_792_inviable_descartado.png` | Giro (venta) sobre máx. Europa ~26450 (perforación ~12%, 1 perforación, giro fuerte) | Entrada ~26340; para cubrir el máximo (~26500) hacía falta un stop de ~792 ticks (~198 pts); el máximo del plan es 300 ticks | Ningún stop permitido cubre el pivote | Habría ganado (el precio cayó a ~25100) | ❌ se descarta |
 
 ## Aprendizajes de ejecución
 
@@ -34,3 +35,5 @@ Profundidad, retroceso y giro se expresan en % del rango de referencia.
 - El trader marca **swings significativos**, no cada micro-pivote: los retrocesos que cuenta son de ~55–115 pts;
   las oscilaciones de ~20–30 pts dentro de una zona (13:05–13:35) las toma como **un solo pivote** (C6).
   → La regla de 2 velas a cada lado (8.2) probablemente marca pivotes de más. A calibrar con datos.
+- Manipulación válida no implica trade: si la entrada queda lejos del pivote, el stop no entra y se descarta,
+  aunque luego el precio vaya a favor (C8). El backtest medirá cuántos ganadores se pierden por esta regla.
