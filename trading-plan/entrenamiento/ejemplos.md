@@ -29,6 +29,7 @@ Profundidad, retroceso y giro se expresan en % del rango de referencia.
 | C6 | `c6_mnq_estructura_y_pivote_stop.png` | Mismo trade que C5, con la estructura marcada | Bajista: ~27950 → ~27740 → ~27850 → ~27620 → ~27700 → ~27525. Alcista: ~27640 → **pivote ~27580–27590 (zona 13:05–13:35, cubierto por el stop)** → ~27760 → ~27690 → ~27790 → ~27690 → ~27830 → ~27775 → ~27910 | Stop 300 ticks cubre el pivote; 150 ticks (~27595) no lo cubriría | — | ✅ |
 | C7 | `c7_crudo_stop_no_cubre_descartado.png` | Crudo (solo ilustrativo) | Para cubrir el mínimo previo (~79,05) desde la entrada (~79,55) hacía falta un stop de 60 ticks; el stop máximo en CL es 30 ticks | 30 ticks no cubre el pivote | — | ❌ se descarta |
 | C8 | `c8_nq_stop_792_inviable_descartado.png` | Giro (venta) sobre máx. Europa ~26450 (perforación ~12%, 1 perforación, giro fuerte) | Entrada ~26340; para cubrir el máximo (~26500) hacía falta un stop de ~792 ticks (~198 pts); el máximo del plan es 300 ticks | Ningún stop permitido cubre el pivote | Habría ganado (el precio cayó a ~25100) | ❌ se descarta |
+| C11 | `c11_crudo_limit_no_ejecutada.png` | Crudo (ilustrativo), compra | Primera vela verde → la vela siguiente (flecha) rompe su máximo = confirmación, pero su mínimo no baja hasta la orden limit (1 tick bajo el máximo de la verde) | Stop 30 / target 60 ticks dibujados | El precio siguió subiendo sin ejecutar | ❌ orden cancelada al cierre de la vela de confirmación (regla 5.4) |
 
 ## Aprendizajes de ejecución
 
